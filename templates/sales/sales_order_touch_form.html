@@ -1,0 +1,249 @@
+{% extends "touch_base.html" %}
+{% load static tz %}
+
+{% block title %}{% if saved_order %}訂單建立成功{% else %}接單 - {{ customer.name }}{% endif %}{% endblock %}
+
+{% block body %}
+{% if saved_order %}
+<main class="touch-main touch-order-page touch-order-page--complete" id="quick-order-success">
+  <div class="touch-order-complete-card" role="status" aria-live="polite">
+    <div class="touch-order-complete-check" aria-hidden="true">✔</div>
+    <h1 class="touch-order-complete-title">訂單建立成功</h1>
+    <p class="touch-order-complete-no">
+      <span class="touch-order-complete-no-label">訂單編號</span>
+      <strong>{{ saved_order.order_no }}</strong>
+    </p>
+    <p class="touch-order-complete-time">
+      <span class="touch-order-complete-time-label">建立時間</span>
+      {% timezone "Asia/Taipei" %}
+      <time datetime="{{ saved_order.created_at|date:'c' }}">{{ saved_order.created_at|date:"Y-m-d H:i" }}</time>
+      {% endtimezone %}
+    </p>
+    <p class="touch-order-complete-customer">{{ customer.name }}</p>
+    <div class="touch-order-complete-actions">
+      <a href="{% url 'customer_search' %}" class="touch-btn touch-btn-primary touch-btn-complete-primary" id="quick-next-customer">下一位客戶</a>
+      <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-btn touch-btn-secondary touch-btn-complete-secondary">繼續幫同客戶下單</a>
+      <a href="{% url 'sales:sales_order_detail' saved_order.pk %}" class="touch-btn touch-btn-secondary touch-btn-complete-secondary">查看訂單</a>
+    </div>
+  </div>
+</main>
+<script>
+  (function () {
+    try {
+      localStorage.removeItem("sales_order_draft_{{ customer.pk }}");
+    } catch (e) { /* ignore */ }
+    var btn = document.getElementById("quick-next-customer");
+    if (btn) {
+      setTimeout(function () { btn.focus(); }, 50);
+    }
+  })();
+</script>
+{% else %}
+<main class="touch-main touch-order-page touch-order-page--entry">
+  <form method="post" id="sales-order-form" class="touch-order-form touch-order-layout">
+    {% csrf_token %}
+    <input type="hidden" name="customer" value="{{ customer.pk }}">
+    <input type="hidden" name="order_nonce" value="{{ order_nonce }}">
+
+    <div class="touch-order-layout-head">
+      <div class="touch-order-top-bar">
+        <a href="{% url 'customer_search' %}" class="touch-back touch-back--inline" id="order-back-link">← 返回</a>
+        <header class="touch-order-header-compact">
+          <h1 class="touch-order-header-name">{{ customer.name }}</h1>
+          <p class="touch-order-header-meta" aria-label="客戶代號與區域">
+            <span class="touch-order-header-meta-detail">{{ customer.code }}{% if customer.region %} · {{ customer.region }}{% endif %}{% if copy_source_order %} · 複製 {{ copy_source_order.order_no }}{% endif %}</span>
+          </p>
+        </header>
+      </div>
+
+      {% if messages %}
+      <div class="touch-flash-messages touch-order-flash">
+        {% for message in messages %}
+        <p class="touch-flash touch-flash--{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="touch-order-pick-column">
+      {% if product_categories %}
+      <section class="touch-order-categories-bar" aria-label="產品分類">
+        <div class="touch-category-grid touch-category-grid--toolbar" id="category-grid">
+          {% for cat in product_categories %}
+          <button type="button" class="touch-category-btn{% if cat == default_category %} touch-category-btn--active{% endif %}" data-category="{{ cat }}">{{ cat }}</button>
+          {% endfor %}
+        </div>
+        <div id="series-chips" class="touch-series-chips touch-series-chips--toolbar" hidden aria-label="麵粉系列"></div>
+        <p id="category-series-hint" class="touch-category-hint touch-category-hint--compact" hidden>選系列：低筋／中筋／高筋／油條</p>
+      </section>
+      {% endif %}
+
+      <section class="touch-order-products-zone" aria-label="選擇產品">
+        <div id="category-products" class="touch-frequent-grid touch-product-grid--main" aria-live="polite"></div>
+        {% if not product_categories %}
+        <p class="touch-empty">尚無分類，請使用下方搜尋</p>
+        {% endif %}
+      </section>
+
+      {% if frequent_products or last_order %}
+      <details class="touch-disclosure touch-order-quick-picks">
+        <summary class="touch-disclosure-toggle">{% if frequent_products %}常購{% endif %}{% if frequent_products and last_order %} · {% endif %}{% if last_order %}上次訂單{% endif %}</summary>
+        <div class="touch-disclosure-body touch-order-quick-picks-body">
+          {% if frequent_products %}
+          <div class="touch-product-pick-group touch-product-pick-group--flat">
+            <div class="touch-frequent-grid" id="frequent-products">
+              {% for product in frequent_products %}
+              <div class="touch-product-card" data-product="{{ product.id }}" data-price="{{ product.last_unit_price }}"
+                   data-product-name="{{ product.name }}" data-product-sku="{{ product.sku }}"
+                   data-product-unit="{{ product.unit_label }}" data-product-spec="{{ product.spec }}">
+                <button type="button" class="touch-product-card-main touch-product-pick-main">
+                  <span class="touch-frequent-name">{{ product.name }}</span>
+                  <span class="touch-product-card-sku">{{ product.sku }}</span>
+                  <span class="touch-product-card-pack">{{ product.unit_label }}{% if product.spec %} · {{ product.spec }}{% endif %}</span>
+                  {% if product.last_unit_price != "0" %}
+                  <span class="touch-product-card-price">${{ product.last_unit_price }}</span>
+                  {% endif %}
+                </button>
+                <div class="touch-product-card-actions">
+                  <button type="button" class="touch-product-quick-add" data-add="1">+1</button>
+                  <button type="button" class="touch-product-quick-add" data-add="5">+5</button>
+                  <button type="button" class="touch-product-quick-add" data-add="10">+10</button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% if last_order %}
+          <div class="touch-product-pick-group touch-product-pick-group--flat">
+            <div class="touch-product-pick-head">
+              <div class="touch-copy-actions">
+                <button type="button" id="copy-last-order-btn" class="touch-copy-all-btn">複製全部</button>
+                <button type="button" id="copy-partial-toggle-btn" class="touch-copy-all-btn">複製部分</button>
+                <button type="button" id="copy-selected-btn" class="touch-copy-all-btn" hidden>複製已選</button>
+              </div>
+            </div>
+            <div class="touch-frequent-grid touch-frequent-grid--compact" id="last-order-products">
+              {% for item in last_order.items %}
+              <div class="touch-product-card touch-last-order-item" data-product="{{ item.id }}" data-price="{{ item.unit_price }}"
+                   data-product-name="{{ item.name }}" data-product-sku="{{ item.sku }}"
+                   data-product-unit="{{ item.unit_label }}" data-product-spec="{{ item.spec }}"
+                   data-copy-qty="{{ item.quantity }}">
+                <button type="button" class="touch-product-card-main touch-product-pick-main touch-last-order-pick">
+                  <span class="touch-frequent-name">{{ item.name }}</span>
+                  <span class="touch-product-card-sku">{{ item.sku }}</span>
+                  <span class="touch-product-card-pack">{{ item.quantity }} {{ item.unit_label }}</span>
+                  {% if item.unit_price != "0" %}
+                  <span class="touch-product-card-price">${{ item.unit_price }}</span>
+                  {% endif %}
+                </button>
+                <div class="touch-product-card-actions">
+                  <button type="button" class="touch-product-quick-add" data-add="{{ item.quantity|floatformat:0 }}">複製</button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </details>
+      {% endif %}
+
+      <details class="touch-disclosure touch-order-extras">
+        <summary class="touch-disclosure-toggle">其他：搜尋產品、訂單資料</summary>
+        <div class="touch-disclosure-body touch-order-extras-body">
+          <div class="touch-product-search-section touch-product-search-section--inline">
+            <input type="search" id="product-search" class="touch-search-input touch-search-input--compact" placeholder="料號或品名" autocomplete="off" enterkeyhint="search">
+            <div id="product-search-results" class="touch-product-results" hidden></div>
+          </div>
+          <div class="touch-order-more-fields touch-order-more-fields--inline">
+            <div class="touch-order-dates">
+              <div class="touch-form-field">
+                <label for="order_date">訂單日期</label>
+                <input type="date" id="order_date" name="order_date" value="{{ order_date }}" class="touch-input touch-input-date">
+              </div>
+              <div class="touch-form-field">
+                <label for="delivery_date">交貨日期</label>
+                <input type="date" id="delivery_date" name="delivery_date" value="{{ delivery_date }}" class="touch-input touch-input-date">
+              </div>
+            </div>
+            <div class="touch-form-field touch-form-field--wide">
+              <label for="shipping_address">送貨地址</label>
+              <input type="text" id="shipping_address" name="shipping_address" value="{{ shipping_address }}" class="touch-input">
+            </div>
+            <input type="hidden" id="payment_method" name="payment_method_display" value="{{ payment_method }}">
+            <div class="touch-form-field touch-form-field--wide">
+              <label for="special_instructions">特殊指示</label>
+              <textarea id="special_instructions" name="special_instructions" rows="2" class="touch-input">{{ special_instructions }}</textarea>
+            </div>
+            <div class="touch-form-field touch-form-field--wide">
+              <label for="notes">備註</label>
+              <textarea id="notes" name="notes" rows="2" class="touch-input">{{ notes }}</textarea>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <section class="touch-cart-section touch-cart-section--compact touch-order-cart-panel" aria-label="已選商品">
+      <div class="touch-section-head touch-section-head--calm">
+        <span class="touch-section-title">已選</span>
+        <span id="line-count" class="touch-line-count">0 項</span>
+      </div>
+      <div id="order-lines" class="touch-order-lines">
+        <p id="order-lines-empty" class="touch-order-lines-empty" hidden>—</p>
+      </div>
+      <div id="order-lines-inputs"></div>
+    </section>
+
+    <div class="touch-order-footer touch-order-footer--fixed">
+      <div class="touch-order-total">
+        <span>合計</span>
+        <strong id="order-total">$0</strong>
+      </div>
+      <button type="submit" class="touch-btn touch-btn-primary touch-btn-save" id="save-order-btn" disabled>
+        ✓ 儲存訂單
+      </button>
+    </div>
+  </form>
+</main>
+
+<div id="leave-order-modal" class="touch-leave-modal" hidden>
+  <div class="touch-leave-modal-card">
+    <h2>是否放棄本次訂單？</h2>
+    <p>尚有未儲存的商品</p>
+    <div class="touch-leave-modal-actions">
+      <button type="button" class="touch-btn touch-btn-primary" id="leave-continue-btn">繼續編輯</button>
+      <button type="button" class="touch-btn touch-btn-secondary" id="leave-draft-btn">存草稿</button>
+      <button type="button" class="touch-btn touch-btn-danger" id="leave-discard-btn">放棄</button>
+    </div>
+  </div>
+</div>
+
+<script id="frequent-products-data" type="application/json">{{ frequent_products_json|safe }}</script>
+<script id="initial-lines-data" type="application/json">{{ initial_lines_json|safe }}</script>
+<script id="default-category-products-data" type="application/json">{{ default_category_products_json|safe }}</script>
+<script id="customer-price-map-data" type="application/json">{{ customer_price_map_json|safe }}</script>
+{% if last_order %}
+<script id="last-order-data" type="application/json">{{ last_order_json|safe }}</script>
+{% endif %}
+<script>
+  window.SALES_ORDER_CONFIG = {
+    searchUrl: "{% url 'sales:product_search_api' %}",
+    customerId: {{ customer.pk }},
+    flourCategory: "麵粉",
+    flourSeries: ["低筋", "中筋", "高筋", "油條"],
+    defaultCategory: "{{ default_category|escapejs }}",
+    savedOrder: null,
+    customerPriceMap: JSON.parse(document.getElementById("customer-price-map-data").textContent),
+    frequentProducts: JSON.parse(document.getElementById("frequent-products-data").textContent),
+    initialLines: JSON.parse(document.getElementById("initial-lines-data").textContent),
+    defaultCategoryProducts: JSON.parse(document.getElementById("default-category-products-data").textContent),
+    lastOrder: document.getElementById("last-order-data")
+      ? JSON.parse(document.getElementById("last-order-data").textContent)
+      : null,
+  };
+</script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260725b"></script>
+{% endif %}
+{% endblock %}

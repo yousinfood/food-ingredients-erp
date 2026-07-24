@@ -1,0 +1,219 @@
+{% extends "touch_base.html" %}
+
+{% block title %}{{ center.name }} - 客戶中心{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <a href="{% url 'dashboard' %}{% if back_query %}?q={{ back_query|urlencode }}{% endif %}" class="touch-back">← 返回儀表板</a>
+
+  <header class="touch-center-hero">
+    <div class="touch-center-hero-row">
+      <div class="touch-center-hero-main">
+        <p class="touch-center-label">客戶中心</p>
+        <h1 class="touch-center-name">{{ center.name }}</h1>
+        <p class="touch-center-code">{{ center.code }}{% if center.region != "—" %} · {{ center.region }}{% endif %}</p>
+        {% if not center.is_active %}
+        <span class="touch-badge touch-badge--muted">已停用</span>
+        {% endif %}
+      </div>
+      <div class="touch-icon-actions" aria-label="聯絡與導航">
+        {% if center.can_call %}
+        <a href="{{ center.call_href }}" class="touch-icon-btn" aria-label="致電客戶">📞</a>
+        {% else %}
+        <span class="touch-icon-btn touch-icon-btn--disabled" aria-label="無電話號碼" aria-disabled="true">📞</span>
+        {% endif %}
+        {% if center.can_navigate %}
+        <a href="#"
+           class="touch-icon-btn"
+           id="navigate-customer"
+           aria-label="導航至配送地址"
+           data-maps-apple="{{ center.maps_apple_href }}"
+           data-maps-google="{{ center.maps_google_href }}">📍</a>
+        {% else %}
+        <span class="touch-icon-btn touch-icon-btn--disabled" aria-label="無配送地址" aria-disabled="true">📍</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if center.address != "—" %}
+    <p class="touch-center-snippet">{{ center.address }}</p>
+    {% endif %}
+  </header>
+
+  <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-primary-cta">
+    📦 新增銷售訂單
+  </a>
+
+  <nav class="touch-secondary-actions" aria-label="其他操作">
+    <a href="{% url 'sales:receive_payment' customer.pk %}" class="touch-secondary-action">💰 收款</a>
+    <a href="{% url 'sales:order_history' customer.pk %}" class="touch-secondary-action">📜 訂單</a>
+    <a href="{% url 'sales:price_history' customer.pk %}" class="touch-secondary-action">💲 價格</a>
+  </nav>
+
+  <section class="touch-finance-strip" aria-label="帳務概況">
+    <div class="touch-finance-strip-item">
+      <span class="touch-finance-strip-label">應收</span>
+      <span class="touch-finance-strip-value">{{ center.current_balance }}</span>
+    </div>
+    <div class="touch-finance-strip-item">
+      <span class="touch-finance-strip-label">最後交易</span>
+      <span class="touch-finance-strip-value touch-finance-strip-value--date">{{ center.latest_transaction_date }}</span>
+    </div>
+  </section>
+
+  {% if center.credit_used_pct is not None %}
+  <details class="touch-disclosure">
+    <summary class="touch-disclosure-toggle">信用額度 · 已使用 {{ center.credit_used_pct }}%</summary>
+    <div class="touch-disclosure-body">
+      <p class="touch-disclosure-line">信用額度 {{ center.credit_limit }}</p>
+      <div class="touch-credit-bar" aria-hidden="true">
+        <div class="touch-credit-bar-fill" style="width: {{ center.credit_used_pct }}%;"></div>
+      </div>
+    </div>
+  </details>
+  {% endif %}
+
+  <section class="touch-section">
+    <div class="touch-section-head">
+      <h2 class="touch-section-title">最近訂單</h2>
+      {% if center.order_count > 3 %}
+      <a href="{% url 'sales:order_history' customer.pk %}" class="touch-section-link">全部 {{ center.order_count }} 筆 →</a>
+      {% endif %}
+    </div>
+    {% if center.recent_orders %}
+    <ul class="touch-order-list">
+      {% for order in center.recent_orders|slice:":3" %}
+      <li>
+        <a href="{% url 'sales:sales_order_detail' order.pk %}" class="touch-order-card">
+          <div class="touch-order-card-top">
+            <strong>{{ order.order_no }}</strong>
+            <span class="touch-order-status">{{ order.get_status_display }}</span>
+          </div>
+          <div class="touch-order-card-meta">
+            <span>{{ order.order_date }}</span>
+            <span class="touch-order-amount">${{ order.total_amount|floatformat:0 }}</span>
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="touch-empty">尚無訂單紀錄</p>
+    {% endif %}
+  </section>
+
+  <details class="touch-disclosure">
+    <summary class="touch-disclosure-toggle">配送與聯絡資訊</summary>
+    <div class="touch-disclosure-body">
+      <dl class="touch-info-grid">
+        <div class="touch-info-item">
+          <dt>配送區</dt>
+          <dd>{{ center.region }}</dd>
+        </div>
+        <div class="touch-info-item">
+          <dt>固定配送日</dt>
+          <dd>{{ center.delivery_day }}</dd>
+        </div>
+        <div class="touch-info-item">
+          <dt>配送順序</dt>
+          <dd>{{ center.delivery_sequence }}</dd>
+        </div>
+        <div class="touch-info-item touch-info-item--wide">
+          <dt>配送地址</dt>
+          <dd>{{ center.address }}</dd>
+        </div>
+        <div class="touch-info-item touch-info-item--wide">
+          <dt>發票地址</dt>
+          <dd>{{ center.invoice_address }}</dd>
+        </div>
+        <div class="touch-info-item">
+          <dt>電話 1</dt>
+          <dd>
+            {% if center.phone_href %}
+            <a href="{{ center.phone_href }}" class="touch-link touch-link--phone">{{ center.phone }}</a>
+            {% else %}{{ center.phone }}{% endif %}
+          </dd>
+        </div>
+        {% if center.phone_2 != "—" %}
+        <div class="touch-info-item">
+          <dt>電話 2</dt>
+          <dd>
+            {% if center.phone_2_href %}
+            <a href="{{ center.phone_2_href }}" class="touch-link touch-link--phone">{{ center.phone_2 }}</a>
+            {% else %}{{ center.phone_2 }}{% endif %}
+          </dd>
+        </div>
+        {% endif %}
+        {% if center.phone_3 != "—" %}
+        <div class="touch-info-item">
+          <dt>電話 3</dt>
+          <dd>
+            {% if center.phone_3_href %}
+            <a href="{{ center.phone_3_href }}" class="touch-link touch-link--phone">{{ center.phone_3 }}</a>
+            {% else %}{{ center.phone_3 }}{% endif %}
+          </dd>
+        </div>
+        {% endif %}
+        {% if center.line_id != "—" %}
+        <div class="touch-info-item">
+          <dt>LINE</dt>
+          <dd>{{ center.line_id }}</dd>
+        </div>
+        {% endif %}
+        <div class="touch-info-item">
+          <dt>付款方式</dt>
+          <dd>{{ center.payment_method }}</dd>
+        </div>
+        {% if center.contact_person != "—" %}
+        <div class="touch-info-item">
+          <dt>聯絡人</dt>
+          <dd>{{ center.contact_person }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+    </div>
+  </details>
+
+  {% if center.recent_prices %}
+  <details class="touch-disclosure">
+    <summary class="touch-disclosure-toggle">最近成交價格</summary>
+    <div class="touch-disclosure-body">
+      <ul class="touch-price-list">
+        {% for row in center.recent_prices %}
+        <li class="touch-price-row">
+          <div>
+            <strong>{{ row.product_name }}</strong>
+            <span class="touch-price-sku">{{ row.product_sku }}</span>
+          </div>
+          <div class="touch-price-right">
+            <span class="touch-price-amount">${{ row.unit_price }}</span>
+            <span class="touch-price-date">{{ row.order_date }}</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      <a href="{% url 'sales:price_history' customer.pk %}" class="touch-section-link">完整價格紀錄 →</a>
+    </div>
+  </details>
+  {% endif %}
+
+  {% if center.notes != "—" %}
+  <details class="touch-disclosure">
+    <summary class="touch-disclosure-toggle">備註</summary>
+    <div class="touch-disclosure-body">
+      <p class="touch-notes">{{ center.notes|linebreaksbr }}</p>
+    </div>
+  </details>
+  {% endif %}
+</main>
+<script>
+(function () {
+  var btn = document.getElementById("navigate-customer");
+  if (!btn) return;
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+    var isApple = /iPhone|iPad|iPod|Macintosh|Mac OS X/i.test(navigator.userAgent);
+    window.location.href = isApple ? btn.dataset.mapsApple : btn.dataset.mapsGoogle;
+  });
+})();
+</script>
+{% endblock %}

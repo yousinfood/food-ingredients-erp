@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食品原料 ERP</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body class="erp-home">
+  <main class="erp-home-main">
+    <header class="erp-home-header">
+      <h1 class="erp-home-title">有信食品 ERP</h1>
+      <p class="erp-home-subtitle">客戶搜尋</p>
+    </header>
+
+    <form action="{% url 'home' %}" method="get" class="erp-search-form">
+      <div class="erp-search-grid erp-search-grid--4">
+        <label class="erp-search-field">
+          <span class="erp-search-label">客戶名稱</span>
+          <input type="text" name="name" value="{{ search_name }}" class="erp-search-input" placeholder="例：紅葡萄" autofocus>
+        </label>
+        <label class="erp-search-field">
+          <span class="erp-search-label">電話</span>
+          <input type="text" name="phone" value="{{ search_phone }}" class="erp-search-input" placeholder="例：2615727">
+        </label>
+        <label class="erp-search-field">
+          <span class="erp-search-label">客戶編號</span>
+          <input type="text" name="code" value="{{ search_code }}" class="erp-search-input" placeholder="例：CUS-S001">
+        </label>
+        <label class="erp-search-field">
+          <span class="erp-search-label">統一編號</span>
+          <input type="text" name="tax_id" value="{{ search_tax_id }}" class="erp-search-input" placeholder="例：12345678">
+        </label>
+      </div>
+      <button type="submit" class="erp-search-btn">搜尋客戶</button>
+    </form>
+
+    {% if searched and customer_results and not customer_profile %}
+    <section class="erp-customer-list">
+      <h2 class="erp-section-title">搜尋結果（{{ customer_results|length }} 筆）</h2>
+      <div class="erp-customer-list-items">
+        {% for customer in customer_results %}
+        <a href="?name={{ search_name|urlencode }}&phone={{ search_phone|urlencode }}&code={{ search_code|urlencode }}&tax_id={{ search_tax_id|urlencode }}&customer={{ customer.id }}" class="erp-customer-list-item">
+          <span class="erp-customer-list-code">{{ customer.code }}</span>
+          <span class="erp-customer-list-name">{{ customer.name }}</span>
+          <span class="erp-customer-list-phone">{{ customer.region|default:"—" }} · {{ customer.phone|default:"—" }}</span>
+          <span class="erp-customer-list-address">{{ customer.address|default:"—" }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% elif searched and not customer_results %}
+    <p class="erp-home-hint">尚無客戶資料</p>
+    {% elif not searched %}
+    <p class="erp-home-hint">輸入客戶名稱、電話、客戶編號或統編，立即查詢客戶資料。</p>
+    {% endif %}
+
+    {% if customer_profile %}
+    <section class="erp-customer-result">
+      {% if customer_results|length > 1 %}
+      <p class="erp-customer-back">
+        <a href="?name={{ search_name|urlencode }}&phone={{ search_phone|urlencode }}&code={{ search_code|urlencode }}&tax_id={{ search_tax_id|urlencode }}">← 返回搜尋結果</a>
+      </p>
+      {% endif %}
+
+      <div class="erp-info-section">
+        <h2 class="erp-section-title">① 客戶基本資料</h2>
+        <dl class="erp-info-grid">
+          <div class="erp-info-item"><dt>客戶編號</dt><dd>{{ customer_profile.code }}</dd></div>
+          <div class="erp-info-item"><dt>公司名稱</dt><dd>{{ customer_profile.name }}</dd></div>
+          <div class="erp-info-item"><dt>區域</dt><dd>{{ customer_profile.region }}</dd></div>
+          <div class="erp-info-item"><dt>電話</dt><dd>{{ customer_profile.phone }}</dd></div>
+          <div class="erp-info-item"><dt>電話 2</dt><dd>{{ customer_profile.phone_2 }}</dd></div>
+          <div class="erp-info-item"><dt>電話 3</dt><dd>{{ customer_profile.phone_3 }}</dd></div>
+          <div class="erp-info-item"><dt>地址</dt><dd>{{ customer_profile.address }}</dd></div>
+          <div class="erp-info-item"><dt>統編</dt><dd>{{ customer_profile.tax_id }}</dd></div>
+          <div class="erp-info-item"><dt>聯絡人</dt><dd>{{ customer_profile.contact_person }}</dd></div>
+          <div class="erp-info-item"><dt>付款方式</dt><dd>{{ customer_profile.payment_method }}</dd></div>
+          <div class="erp-info-item"><dt>固定配送日</dt><dd>{{ customer_profile.delivery_day }}</dd></div>
+          <div class="erp-info-item erp-info-item--wide"><dt>備註</dt><dd>{{ customer_profile.notes }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="erp-info-section">
+        <h2 class="erp-section-title">② 財務資訊</h2>
+        <dl class="erp-info-grid erp-info-grid--3">
+          <div class="erp-info-item"><dt>應收帳款</dt><dd class="erp-info-value">{{ customer_profile.accounts_receivable }}</dd></div>
+          <div class="erp-info-item"><dt>信用額度</dt><dd class="erp-info-value">{{ customer_profile.credit_limit }}</dd></div>
+          <div class="erp-info-item"><dt>最後交易日</dt><dd class="erp-info-value">{{ customer_profile.last_payment_date }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="erp-info-section">
+        <h2 class="erp-section-title">③ 最近成交資訊</h2>
+        <dl class="erp-info-grid erp-info-grid--3">
+          <div class="erp-info-item"><dt>最近成交價格</dt><dd class="erp-info-value">{{ customer_profile.last_price }}</dd></div>
+          <div class="erp-info-item"><dt>最近一次訂單日期</dt><dd class="erp-info-value">{{ customer_profile.last_order_date }}</dd></div>
+          <div class="erp-info-item erp-info-item--wide"><dt>最近購買商品</dt><dd class="erp-info-value">{{ customer_profile.last_products }}</dd></div>
+        </dl>
+      </div>
+
+      <nav class="erp-customer-actions">
+        <a href="{% url 'sales:sales_order_create' %}?customer={{ customer_profile.id }}" class="erp-customer-action-btn">新增訂單</a>
+        <a href="{% url 'sales:customer_detail' customer_profile.id %}" class="erp-customer-action-btn">客戶中心</a>
+        <a href="{% url 'reconciliation' %}" class="erp-customer-action-btn">對帳</a>
+        <a href="{% url 'routes' %}" class="erp-customer-action-btn">配送路線</a>
+      </nav>
+    </section>
+    {% endif %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - 原料詳情{% endblock %}
+
+{% block content %}
+<div class="page-header page-header--row">
+  <div>
+    <h2>{{ product.name }}</h2>
+    <p>料號：{{ product.sku }}</p>
+  </div>
+  <a href="{% url 'inventory:product_edit' product.pk %}" class="btn btn-outline">編輯</a>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-item"><div class="label">分類</div><div class="value">{{ product.category|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">品牌</div><div class="value">{{ product.brand|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">系列</div><div class="value">{{ product.series|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">包裝規格</div><div class="value">{{ product.packaging_display|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">銷售單位</div><div class="value">{{ product.get_sales_unit_display }}</div></div>
+  <div class="detail-item"><div class="label">庫存單位</div><div class="value">{{ product.get_unit_display }}</div></div>
+  <div class="detail-item"><div class="label">標準保質期</div><div class="value">{{ product.shelf_life_days }} 天</div></div>
+  <div class="detail-item"><div class="label">儲存溫度</div><div class="value">
+    {% if product.storage_temp_min or product.storage_temp_max %}
+      {{ product.storage_temp_min|default:"-" }}°C ~ {{ product.storage_temp_max|default:"-" }}°C
+    {% else %}-{% endif %}
+  </div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">庫存批次</div>
+  <table>
+    <thead>
+      <tr>
+        <th>批次號</th>
+        <th>倉庫</th>
+        <th>溫區</th>
+        <th>數量</th>
+        <th>有效期限</th>
+        <th>狀態</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for batch in batches %}
+      <tr>
+        <td>{{ batch.batch_no }}</td>
+        <td>{{ batch.warehouse.name }}</td>
+        <td>{{ batch.warehouse.get_temperature_zone_display }}</td>
+        <td>{{ batch.quantity }} {{ product.get_unit_display }}</td>
+        <td>
+          {% if batch.is_expiring_soon %}
+            <span class="badge badge-warning">{{ batch.expiry_date }}</span>
+          {% elif batch.days_to_expiry < 0 %}
+            <span class="badge badge-danger">{{ batch.expiry_date }}</span>
+          {% else %}
+            {{ batch.expiry_date }}
+          {% endif %}
+        </td>
+        <td><span class="badge badge-info">{{ batch.get_status_display }}</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="empty-state">此原料尚無庫存批次</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p><a href="{% url 'inventory:product_list' %}">← 返回原料列表</a></p>
+{% endblock %}

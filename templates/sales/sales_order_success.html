@@ -1,0 +1,90 @@
+{% extends "touch_base.html" %}
+
+{% block title %}訂單已建立 - {{ order.order_no }}{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <header class="touch-order-success-hero">
+    <div class="touch-order-success-icon">✓</div>
+    <h1>訂單已建立</h1>
+    <p class="touch-order-success-no">{{ order.order_no }}</p>
+    <p class="touch-order-success-customer">{{ customer.name }}（{{ customer.code }}）</p>
+  </header>
+
+  <section class="touch-section">
+    <h2 class="touch-section-title">訂單摘要</h2>
+    <dl class="touch-info-grid">
+      <div class="touch-info-item">
+        <dt>訂單日期</dt>
+        <dd>{{ order.order_date }}</dd>
+      </div>
+      <div class="touch-info-item">
+        <dt>交貨日期</dt>
+        <dd>{{ order.delivery_date|default:"—" }}</dd>
+      </div>
+      <div class="touch-info-item touch-info-item--wide">
+        <dt>送貨地址</dt>
+        <dd>{{ order.shipping_address|default:"—" }}</dd>
+      </div>
+    </dl>
+    <ul class="touch-order-success-lines">
+      {% for item in order.items.all %}
+      <li class="touch-order-success-line">
+        <div>
+          <strong>{{ item.product.name }}</strong>
+          <span class="touch-price-sku">{{ item.product.sku }}</span>
+        </div>
+        <div class="touch-order-success-line-right">
+          <span>{{ item.quantity }} {{ item.product.packaging_display|default:item.product.get_sales_unit_display }}</span>
+          {% if item.unit_price %}<span>${{ item.unit_price }}</span>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="touch-order-total touch-order-total--success">
+      <span>合計</span>
+      <strong>${{ order.total_amount|floatformat:0 }}</strong>
+    </div>
+  </section>
+
+  {% if nearby_recommendations %}
+  <section class="touch-section touch-nearby-section">
+    <h2 class="touch-section-title">📍 建議聯絡附近客戶</h2>
+    <p class="touch-nearby-hint">同配送區 · 依配送順序排序</p>
+    <div class="touch-nearby-list">
+      {% for row in nearby_recommendations %}
+      <article class="touch-nearby-card">
+        <div class="touch-nearby-card-main">
+          <div class="touch-result-code">{{ row.code }}</div>
+          <div class="touch-result-name">{{ row.name }}</div>
+          <div class="touch-result-meta">
+            {{ row.region }} · 順序 {{ row.delivery_sequence }}
+          </div>
+          <div class="touch-result-meta">{{ row.phone_display }}</div>
+          <div class="touch-result-meta">{{ row.address }}</div>
+          <div class="touch-result-meta">最後交易日：{{ row.last_transaction_date }}</div>
+        </div>
+        <nav class="touch-nearby-actions">
+          {% if row.phone_href %}
+          <a href="{{ row.phone_href }}" class="touch-nearby-action">📞 致電</a>
+          {% endif %}
+          <a href="{% url 'sales:customer_center' row.customer.pk %}" class="touch-nearby-action">👤 中心</a>
+          <a href="{% url 'sales:sales_order_create' %}?customer={{ row.customer.pk }}" class="touch-nearby-action touch-nearby-action--primary">📦 接單</a>
+        </nav>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% elif customer.region %}
+  <section class="touch-section">
+    <p class="touch-empty">此配送區無其他可聯絡客戶</p>
+  </section>
+  {% endif %}
+
+  <div class="touch-form-actions">
+    <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-btn touch-btn-primary">📦 再接一單（同客戶）</a>
+    <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-btn touch-btn-outline">返回客戶中心</a>
+    <a href="{% url 'dashboard' %}" class="touch-btn touch-btn-outline">返回儀表板</a>
+  </div>
+</main>
+{% endblock %}

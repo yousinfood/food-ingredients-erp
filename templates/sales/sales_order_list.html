@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}銷售訂單 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header page-header--row">
+  <div>
+    <h2>銷售訂單</h2>
+    <p>客戶訂單管理</p>
+  </div>
+  <a href="{% url 'sales:sales_order_create' %}" class="btn btn-primary">＋ 新增訂單</a>
+</div>
+
+<div class="filter-bar">
+  <a href="{% url 'sales:sales_order_list' %}" {% if not status_filter %}class="active"{% endif %}>全部</a>
+  <a href="?status=draft" {% if status_filter == 'draft' %}class="active"{% endif %}>草稿</a>
+  <a href="?status=created" {% if status_filter == 'created' %}class="active"{% endif %}>已建立</a>
+  <a href="?status=confirmed" {% if status_filter == 'confirmed' %}class="active"{% endif %}>已確認</a>
+  <a href="?status=shipped" {% if status_filter == 'shipped' %}class="active"{% endif %}>已出貨</a>
+  <a href="?status=completed" {% if status_filter == 'completed' %}class="active"{% endif %}>已完成</a>
+  <a href="?status=cancelled" {% if status_filter == 'cancelled' %}class="active"{% endif %}>已作廢</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>訂單號</th>
+        <th>客戶</th>
+        <th>狀態</th>
+        <th>訂單日期</th>
+        <th>交貨日期</th>
+        <th>金額</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>{{ order.order_no }}</strong></td>
+        <td><a href="{% url 'sales:customer_detail' order.customer.pk %}">{{ order.customer.name }}</a></td>
+        <td><span class="badge badge-info">{{ order.get_status_display }}</span></td>
+        <td>{{ order.order_date }}</td>
+        <td>{{ order.delivery_date|default:"-" }}</td>
+        <td>${{ order.total_amount|floatformat:0 }}</td>
+        <td><a href="{% url 'sales:sales_order_detail' order.pk %}">詳情 →</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty-state">尚無銷售訂單，<a href="{% url 'sales:sales_order_create' %}">建立第一筆</a></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

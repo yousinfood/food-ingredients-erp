@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.name }} - 配方詳情{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>{{ recipe.name }}</h2>
+  <p>配方代碼：{{ recipe.code }} | 版本 v{{ recipe.version }}</p>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-item"><div class="label">產出原料</div><div class="value">{{ recipe.output_product.name }}</div></div>
+  <div class="detail-item"><div class="label">標準產量</div><div class="value">{{ recipe.output_qty }} {{ recipe.output_product.get_unit_display }}</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">配方明細 (BOM)</div>
+  <table>
+    <thead>
+      <tr>
+        <th>投入原料</th>
+        <th>料號</th>
+        <th>用量</th>
+        <th>損耗率</th>
+        <th>實際用量</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in recipe.items.all %}
+      <tr>
+        <td>{{ item.ingredient.name }}</td>
+        <td>{{ item.ingredient.sku }}</td>
+        <td>{{ item.quantity }} {{ item.ingredient.get_unit_display }}</td>
+        <td>{{ item.loss_rate }}%</td>
+        <td>{{ item.actual_quantity|floatformat:3 }} {{ item.ingredient.get_unit_display }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p><a href="{% url 'production:recipe_list' %}">← 返回配方列表</a></p>
+{% endblock %}

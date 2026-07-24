@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}倉庫管理 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>倉庫管理</h2>
+  <p>倉庫與溫區配置</p>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>代碼</th>
+        <th>名稱</th>
+        <th>溫區</th>
+        <th>地址</th>
+        <th>庫存量</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for wh in warehouses %}
+      <tr>
+        <td><strong>{{ wh.code }}</strong></td>
+        <td>{{ wh.name }}</td>
+        <td><span class="badge badge-info">{{ wh.get_temperature_zone_display }}</span></td>
+        <td>{{ wh.location|default:"-" }}</td>
+        <td>{{ wh.batch_count|default:"0" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty-state">尚無倉庫資料</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

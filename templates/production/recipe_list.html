@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}配方管理 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>配方管理</h2>
+  <p>生產配方與 BOM 清單</p>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>配方代碼</th>
+        <th>名稱</th>
+        <th>產出原料</th>
+        <th>標準產量</th>
+        <th>版本</th>
+        <th>原料數</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for recipe in recipes %}
+      <tr>
+        <td><strong>{{ recipe.code }}</strong></td>
+        <td>{{ recipe.name }}</td>
+        <td>{{ recipe.output_product.name }}</td>
+        <td>{{ recipe.output_qty }} {{ recipe.output_product.get_unit_display }}</td>
+        <td>v{{ recipe.version }}</td>
+        <td>{{ recipe.items.count }}</td>
+        <td><a href="{% url 'production:recipe_detail' recipe.pk %}">詳情 →</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty-state">尚無配方資料</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

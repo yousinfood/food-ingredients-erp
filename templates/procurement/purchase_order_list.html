@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}採購單 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>採購單管理</h2>
+  <p>採購訂單追蹤</p>
+</div>
+
+<div class="filter-bar">
+  <a href="{% url 'procurement:purchase_order_list' %}" {% if not status_filter %}class="active"{% endif %}>全部</a>
+  <a href="?status=pending" {% if status_filter == 'pending' %}class="active"{% endif %}>待審核</a>
+  <a href="?status=ordered" {% if status_filter == 'ordered' %}class="active"{% endif %}>已下單</a>
+  <a href="?status=received" {% if status_filter == 'received' %}class="active"{% endif %}>已到貨</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>採購單號</th>
+        <th>供應商</th>
+        <th>狀態</th>
+        <th>下單日期</th>
+        <th>預計到貨</th>
+        <th>金額</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>{{ order.order_no }}</strong></td>
+        <td>{{ order.supplier.name }}</td>
+        <td><span class="badge badge-info">{{ order.get_status_display }}</span></td>
+        <td>{{ order.order_date }}</td>
+        <td>{{ order.expected_date|default:"-" }}</td>
+        <td>${{ order.total_amount|floatformat:0 }}</td>
+        <td><a href="{% url 'procurement:purchase_order_detail' order.pk %}">詳情 →</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty-state">尚無採購單</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

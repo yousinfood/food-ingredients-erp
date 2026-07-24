@@ -1,0 +1,45 @@
+{% extends "touch_base.html" %}
+
+{% block title %}價格紀錄 - {{ customer.name }}{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-back">← 返回客戶中心</a>
+
+  <header class="touch-header">
+    <h1>🔎 價格紀錄</h1>
+    <p>{{ customer.name }}（{{ customer.code }}）</p>
+  </header>
+
+  <section class="touch-section">
+    {% if prices %}
+    <div class="touch-table-wrap">
+      <table class="touch-table">
+        <thead>
+          <tr>
+            <th>產品</th>
+            <th>數量</th>
+            <th>單價</th>
+            <th>訂單日期</th>
+            <th>訂單號</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in prices %}
+          <tr>
+            <td>{{ row.product_name }}</td>
+            <td>{{ row.quantity }}</td>
+            <td>${{ row.unit_price }}</td>
+            <td>{{ row.order_date }}</td>
+            <td>{{ row.order_no }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="touch-empty">尚無價格紀錄（需先有銷售訂單）</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>{{ title }}</h2>
+</div>
+
+<div class="card">
+  <form method="post" class="erp-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="form-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-grid">
+      {% for field in form %}
+      <div class="form-field{% if field.field.widget.input_type == 'checkbox' %} form-field--checkbox{% endif %}">
+        {% if field.field.widget.input_type == 'checkbox' %}
+        <label>{{ field }} {{ field.label }}</label>
+        {% else %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% endif %}
+        {% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">儲存</button>
+      {% if product %}
+      <a href="{% url 'inventory:product_detail' product.pk %}" class="btn btn-outline">取消</a>
+      {% else %}
+      <a href="{% url 'inventory:product_list' %}" class="btn btn-outline">取消</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

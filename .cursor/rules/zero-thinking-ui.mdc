@@ -1,0 +1,69 @@
+---
+description: Zero Thinking UI — mandatory ERP design principles for touch-first wholesale ops
+globs: templates/**/*.html,static/css/touch.css,static/js/**
+alwaysApply: true
+---
+
+# Zero Thinking UI
+
+Complements `yousin-erp-constitution.mdc` and `order-screen-pos-design.mdc` (接單＝POS 三頁：搜尋／接單／完成).
+
+Goal: fastest daily food-ingredient wholesale ERP — not the most feature-rich.
+
+## Every screen must answer in 3 seconds
+"What does the user want to do right now?" One obvious **primary action**.
+
+## Clean ≠ hidden
+**Clean does not mean hidden.** Frequently used functions stay **always visible**.
+Hide **only** low-frequency features. Every important function must be discoverable within 3 seconds.
+If users have to hunt or think, the design failed. **Speed beats beauty.**
+
+## Visual calm（視覺噪音 = 可用性債務）
+
+接單畫面的核心問題只有一個：**下一個該點哪個商品？**
+
+- 不幫助回答這個問題的元素 → **移除、摺疊、或僅在需要時顯示**。  
+- **Design for calm** — 畫面降低焦慮，不增加焦慮；少框線、少標籤、少重複字、少裝飾留白。  
+- 非立即電話接單所需 → 放 `<details>`「其他」或側欄，不與商品搶視線。
+
+## Layout hierarchy
+1. **Primary action** (daily, high-frequency): largest button, fewest taps, top of screen.
+2. **Secondary actions** (order history, pricing, search): **visible** but compact — never buried.
+3. **Utility actions** (call, navigate): compact icon buttons in header — always visible.
+4. **Low-frequency only**: progressive disclosure via `<details>` (e.g. credit details, special instructions).
+
+## Information rules
+- Show only what helps the **current task**. Hide the rest.
+- Never duplicate the same information on one screen.
+- Auto-fill defaults from customer/product/order history — never ask twice.
+- Prefer tap/select/autocomplete over typing.
+
+## Touch & speed (iPad-first)
+- Minimize scrolling; desktop is secondary.
+- Large buttons reserved for actions done many times per day.
+- Prevent errors with defaults, suggestions, and validation — not error messages.
+- Pages must feel instant. If a feature adds taps/typing/scrolling/thinking, do not build it.
+
+## Product selection priority (Sales Order)
+Prefer tap over type. Order of UI (all **visible** on screen):
+1. Previous ordered products (tap to add / copy last order)
+2. Frequently ordered products
+3. Product categories (tap category → tap product)
+4. Search box — **visible, compact, below tap options** (typing is last resort, not hidden)
+
+Goal: 90% of orders completed without typing a product name.
+
+## System remembers; user sells
+Auto-fill prices, addresses, payment methods, and quantities from customer history.
+Never ask for the same information twice. Show "尚無資料" when real data is missing — never fake data.
+
+## Design around workflow, not database
+Screens follow salesperson tasks, not model/table structure.
+One screen = one primary task. If unsure, choose simpler — remove features that slow the workflow.
+
+## Feature gate (before implementing)
+Answer: (1) Which daily problem? (2) How often used? (3) Does it make daily ops faster?
+If no → do not implement. Success metric = order creation speed.
+
+## Visual consistency
+Reuse existing touch patterns: `touch-primary-cta`, `touch-secondary-actions`, `touch-icon-btn`, `touch-disclosure`, `touch-result-action`, `touch-frequent-btn`, `touch-category-chip`.

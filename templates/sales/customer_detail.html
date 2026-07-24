@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - 客戶詳情{% endblock %}
+
+{% block content %}
+<div class="page-header page-header--row">
+  <div>
+    <h2>{{ customer.name }}</h2>
+    <p>{{ customer.code }}{% if customer.region %} · {{ customer.region }}{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'sales:customer_edit' customer.pk %}" class="btn btn-outline">編輯</a>
+    <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="btn btn-primary">新增訂單</a>
+    <a href="{% url 'sales:customer_delete' customer.pk %}" class="btn btn-outline btn-danger">刪除</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">基本資料</div>
+  <div class="detail-grid">
+    <div class="detail-item"><div class="label">客戶編號</div><div class="value">{{ customer.code }}</div></div>
+    <div class="detail-item"><div class="label">客戶名稱</div><div class="value">{{ customer.name }}</div></div>
+    <div class="detail-item"><div class="label">區域</div><div class="value">{{ customer.region|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">聯絡人</div><div class="value">{{ customer.contact_person|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">電話 1</div><div class="value">{{ customer.phone|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">電話 2</div><div class="value">{{ customer.phone_2|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">電話 3</div><div class="value">{{ customer.phone_3|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">電子郵件</div><div class="value">{{ customer.email|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">統一編號</div><div class="value">{{ customer.tax_id|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">Line</div><div class="value">{{ customer.line_id|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">狀態</div><div class="value">{% if customer.is_active %}啟用{% else %}停用{% endif %}</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">地址</div>
+  <div class="detail-grid">
+    <div class="detail-item detail-item--wide"><div class="label">配送地址</div><div class="value">{{ customer.address|default:"-" }}</div></div>
+    <div class="detail-item detail-item--wide"><div class="label">發票地址</div><div class="value">{{ customer.invoice_address|default:"-" }}</div></div>
+    <div class="detail-item detail-item--wide"><div class="label">地圖</div><div class="value">{{ customer.map_location|default:"-" }}</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">配送與付款</div>
+  <div class="detail-grid">
+    <div class="detail-item"><div class="label">付款方式</div><div class="value">{{ customer.payment_method|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">固定配送日</div><div class="value">{{ customer.delivery_day|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">配送順序</div><div class="value">{{ customer.delivery_sequence|default:"-" }}</div></div>
+    <div class="detail-item"><div class="label">信用額度</div><div class="value">{% if customer.credit_limit is not None %}${{ customer.credit_limit|floatformat:0 }}{% else %}-{% endif %}</div></div>
+    <div class="detail-item"><div class="label">最後交易日</div><div class="value">{{ customer.last_transaction_date|default:"-" }}</div></div>
+  </div>
+</div>
+
+{% if customer.notes %}
+<div class="card">
+  <div class="card-title">備註</div>
+  <p>{{ customer.notes|linebreaksbr }}</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-title">最近訂單</div>
+  <table>
+    <thead>
+      <tr>
+        <th>訂單號</th>
+        <th>狀態</th>
+        <th>訂單日期</th>
+        <th>金額</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>{{ order.order_no }}</strong></td>
+        <td><span class="badge badge-info">{{ order.get_status_display }}</span></td>
+        <td>{{ order.order_date }}</td>
+        <td>${{ order.total_amount|floatformat:0 }}</td>
+        <td><a href="{% url 'sales:sales_order_detail' order.pk %}">詳情 →</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty-state">尚無訂單紀錄</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p><a href="{% url 'sales:customer_list' %}">← 返回客戶中心</a></p>
+{% endblock %}

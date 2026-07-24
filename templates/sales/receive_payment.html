@@ -1,0 +1,28 @@
+{% extends "touch_base.html" %}
+
+{% block title %}收款 - {{ customer.name }}{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-back">← 返回客戶中心</a>
+
+  <header class="touch-header">
+    <h1>💰 收款</h1>
+    <p>{{ customer.name }}（{{ customer.code }}）</p>
+  </header>
+
+  <section class="touch-section">
+    <dl class="touch-info-grid">
+      <div class="touch-info-item">
+        <dt>目前應收</dt>
+        <dd class="touch-info-value-money">{{ current_balance }}</dd>
+      </div>
+      <div class="touch-info-item">
+        <dt>信用額度</dt>
+        <dd class="touch-info-value-money">{{ credit_limit }}</dd>
+      </div>
+    </dl>
+    <p class="touch-empty" style="margin-top:1rem;">收款登錄功能即將推出。目前應收金額依非取消訂單合計計算。</p>
+  </section>
+</main>
+{% endblock %}

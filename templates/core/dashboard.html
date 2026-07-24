@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}儀表板 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header page-header--row">
+  <div>
+    <h2>儀表板</h2>
+    <p>有信食品 ERP 營運概況</p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'sales:sales_order_create' %}" class="btn btn-primary">＋ 新增訂單</a>
+    <a href="{% url 'sales:customer_create' %}" class="btn btn-outline">＋ 新增客戶</a>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <a href="{% url 'sales:customer_list' %}" class="stat-card stat-card--link">
+    <div class="label">啟用客戶</div>
+    <div class="value">{{ active_customers }}</div>
+  </a>
+  <a href="{% url 'inventory:product_list' %}" class="stat-card stat-card--link">
+    <div class="label">啟用產品</div>
+    <div class="value">{{ active_products }}</div>
+  </a>
+  <a href="{% url 'sales:sales_order_list' %}" class="stat-card stat-card--link">
+    <div class="label">今日訂單</div>
+    <div class="value">{{ orders_today }}</div>
+  </a>
+  <a href="{% url 'sales:sales_order_list' %}?status=confirmed" class="stat-card stat-card--link">
+    <div class="label">待處理訂單</div>
+    <div class="value">{{ pending_orders }}</div>
+  </a>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">最近訂單</div>
+    <table>
+      <thead>
+        <tr>
+          <th>訂單號</th>
+          <th>客戶</th>
+          <th>狀態</th>
+          <th>日期</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td><strong>{{ order.order_no }}</strong></td>
+          <td>{{ order.customer.name }}</td>
+          <td><span class="badge badge-info">{{ order.get_status_display }}</span></td>
+          <td>{{ order.order_date }}</td>
+          <td><a href="{% url 'sales:sales_order_detail' order.pk %}">詳情 →</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="empty-state">尚無訂單，<a href="{% url 'sales:sales_order_create' %}">建立第一筆</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">快速入口</div>
+    <div class="quick-links">
+      <a href="{% url 'sales:customer_list' %}" class="quick-link">👥 客戶中心</a>
+      <a href="{% url 'inventory:product_list' %}" class="quick-link">📦 產品管理</a>
+      <a href="{% url 'sales:sales_order_list' %}" class="quick-link">🧾 銷售訂單</a>
+      <a href="{% url 'home' %}" class="quick-link">🔍 客戶快速查詢</a>
+      <a href="{% url 'inventory:batch_list' %}" class="quick-link">📋 庫存批次</a>
+      <a href="{% url 'admin:index' %}" class="quick-link">⚙️ 管理後台</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

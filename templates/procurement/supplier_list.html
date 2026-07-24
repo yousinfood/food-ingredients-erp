@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}供應商管理 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>供應商管理</h2>
+  <p>供應商資料與認證資訊</p>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>代碼</th>
+        <th>名稱</th>
+        <th>聯絡人</th>
+        <th>電話</th>
+        <th>認證</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for supplier in suppliers %}
+      <tr>
+        <td><strong>{{ supplier.code }}</strong></td>
+        <td>{{ supplier.name }}</td>
+        <td>{{ supplier.contact_person|default:"-" }}</td>
+        <td>{{ supplier.phone|default:"-" }}</td>
+        <td>{{ supplier.certification|default:"-" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty-state">尚無供應商資料</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

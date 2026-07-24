@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ order.order_no }} - 工單詳情{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>生產工單 {{ order.order_no }}</h2>
+  <p>配方：{{ order.recipe.name }}</p>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-item"><div class="label">狀態</div><div class="value"><span class="badge badge-info">{{ order.get_status_display }}</span></div></div>
+  <div class="detail-item"><div class="label">計劃產量</div><div class="value">{{ order.planned_qty }}</div></div>
+  <div class="detail-item"><div class="label">實際產量</div><div class="value">{{ order.actual_qty|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">產出批次</div><div class="value">{{ order.batch_no|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">計劃開始</div><div class="value">{{ order.planned_start }}</div></div>
+  <div class="detail-item"><div class="label">計劃完成</div><div class="value">{{ order.planned_end|default:"-" }}</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">所需原料（依配方）</div>
+  <table>
+    <thead>
+      <tr>
+        <th>原料</th>
+        <th>單位用量</th>
+        <th>計劃總用量</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.recipe.items.all %}
+      <tr>
+        <td>{{ item.ingredient.name }} ({{ item.ingredient.sku }})</td>
+        <td>{{ item.actual_quantity|floatformat:3 }} {{ item.ingredient.get_unit_display }}</td>
+        <td>{{ item.quantity }} × {{ order.planned_qty }} {{ item.ingredient.get_unit_display }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p><a href="{% url 'production:production_order_list' %}">← 返回工單列表</a></p>
+{% endblock %}

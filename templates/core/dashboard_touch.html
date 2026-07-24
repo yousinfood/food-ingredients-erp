@@ -1,0 +1,105 @@
+{% extends "touch_base.html" %}
+
+{% block title %}儀表板 - 有信食品 ERP{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <header class="touch-header">
+    <h1>有信食品 ERP</h1>
+    <p>儀表板 · 搜尋客戶</p>
+  </header>
+
+  <form action="{% url 'dashboard' %}" method="get" class="touch-search-form touch-search-form--hero">
+    <input
+      type="search"
+      name="q"
+      value="{{ query }}"
+      class="touch-search-input touch-search-input--hero"
+      placeholder="搜尋店名、電話、地址、客戶編號"
+      autofocus
+      enterkeyhint="search"
+      autocomplete="off"
+    >
+    <button type="submit" class="touch-btn touch-btn-primary touch-btn-search">🔍 搜尋客戶</button>
+  </form>
+
+  <section class="touch-stats-row">
+    <div class="touch-stat">
+      <div class="touch-stat-value">{{ deliveries_today }}</div>
+      <div class="touch-stat-label">今日配送</div>
+    </div>
+    <div class="touch-stat">
+      <div class="touch-stat-value">{{ undelivered_today }}</div>
+      <div class="touch-stat-label">今日未送</div>
+    </div>
+    <div class="touch-stat">
+      <div class="touch-stat-value touch-stat-value--muted">{{ pending_collection_today }}</div>
+      <div class="touch-stat-label">今日待收款</div>
+    </div>
+    <div class="touch-stat">
+      <div class="touch-stat-value touch-stat-value--muted">{{ overdue_today }}</div>
+      <div class="touch-stat-label">今日欠款</div>
+    </div>
+  </section>
+
+  {% if searched and results %}
+  <h2 class="touch-results-title">搜尋結果（{{ results|length }} 筆）</h2>
+  <div class="touch-result-list">
+    {% for customer in results %}
+    <article class="touch-result-card">
+      <a href="{% url 'sales:customer_center' customer.pk %}?q={{ query|urlencode }}" class="touch-result-card-main">
+        <div class="touch-result-code">{{ customer.code }}</div>
+        <div class="touch-result-name">{{ customer.name }}</div>
+        <div class="touch-result-meta">
+          {% if customer.region %}{{ customer.region }} · {% endif %}
+          {{ customer.phone|default:"" }}
+          {% if customer.phone_2 %} / {{ customer.phone_2 }}{% endif %}
+        </div>
+        {% if customer.address %}
+        <div class="touch-result-meta">{{ customer.address }}</div>
+        {% endif %}
+      </a>
+      <nav class="touch-result-actions" aria-label="{{ customer.name }} 快速操作">
+        <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-result-action">📦 接單</a>
+        <a href="{% url 'sales:receive_payment' customer.pk %}" class="touch-result-action">💰 收款</a>
+        <a href="{% url 'sales:order_history' customer.pk %}" class="touch-result-action">📜 歷史</a>
+        <a href="{% url 'sales:price_history' customer.pk %}" class="touch-result-action">💲 價格</a>
+      </nav>
+    </article>
+    {% endfor %}
+  </div>
+  {% elif searched %}
+  <p class="touch-hint">找不到符合的客戶，請調整關鍵字後再試。</p>
+  {% else %}
+  <p class="touch-hint">輸入店名、電話、地址或客戶編號，點選結果進入客戶中心。</p>
+  {% endif %}
+
+  {% if not searched and recent_orders %}
+  <section class="touch-section" style="margin-top:1.5rem;">
+    <h2 class="touch-section-title">最近訂單</h2>
+    <div class="touch-table-wrap">
+      <table class="touch-table">
+        <thead>
+          <tr>
+            <th>訂單號</th>
+            <th>客戶</th>
+            <th>日期</th>
+            <th>狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><a href="{% url 'sales:sales_order_detail' order.pk %}">{{ order.order_no }}</a></td>
+            <td><a href="{% url 'sales:customer_center' order.customer_id %}">{{ order.customer.name }}</a></td>
+            <td>{{ order.order_date }}</td>
+            <td>{{ order.get_status_display }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

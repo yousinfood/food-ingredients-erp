@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}食品原料 ERP{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h1>🌾 食品原料 ERP</h1>
+        <p>Food Ingredients Management</p>
+      </div>
+      <nav>
+        {% for item in erp_nav %}
+        <a href="{% url item.url_name %}" class="nav-item">
+          <span>{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+        {% endfor %}
+        <a href="{% url 'admin:index' %}" class="nav-item">
+          <span>⚙️</span>
+          <span>管理後台</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <a href="{% url 'customer_search' %}" class="topbar-home">← 客戶搜尋</a>
+      </header>
+      <main class="content">
+        {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+          <div class="message message-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

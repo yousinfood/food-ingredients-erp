@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}批次管理 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>批次管理</h2>
+  <p>庫存批次與保質期追蹤</p>
+</div>
+
+<div class="filter-bar">
+  <a href="{% url 'inventory:batch_list' %}" {% if not status_filter %}class="active"{% endif %}>全部</a>
+  <a href="?status=expiring" {% if status_filter == 'expiring' %}class="active"{% endif %}>即將到期</a>
+  <a href="?status=expired" {% if status_filter == 'expired' %}class="active"{% endif %}>已過期</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>批次號</th>
+        <th>原料</th>
+        <th>倉庫</th>
+        <th>數量</th>
+        <th>有效期限</th>
+        <th>剩餘天數</th>
+        <th>狀態</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for batch in batches %}
+      <tr>
+        <td>{{ batch.batch_no }}</td>
+        <td><a href="{% url 'inventory:product_detail' batch.product.pk %}">{{ batch.product.name }}</a></td>
+        <td>{{ batch.warehouse.name }}</td>
+        <td>{{ batch.quantity }} {{ batch.product.get_unit_display }}</td>
+        <td>{{ batch.expiry_date }}</td>
+        <td>
+          {% if batch.days_to_expiry < 0 %}
+            <span class="badge badge-danger">已過期</span>
+          {% elif batch.is_expiring_soon %}
+            <span class="badge badge-warning">{{ batch.days_to_expiry }} 天</span>
+          {% else %}
+            {{ batch.days_to_expiry }} 天
+          {% endif %}
+        </td>
+        <td><span class="badge badge-info">{{ batch.get_status_display }}</span></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty-state">尚無批次資料</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

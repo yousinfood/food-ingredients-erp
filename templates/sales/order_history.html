@@ -1,0 +1,47 @@
+{% extends "touch_base.html" %}
+
+{% block title %}訂單紀錄 - {{ customer.name }}{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-back">← 返回客戶中心</a>
+
+  <header class="touch-header">
+    <h1>📜 訂單紀錄</h1>
+    <p>{{ customer.name }}（{{ customer.code }}）</p>
+  </header>
+
+  <section class="touch-section">
+    {% if orders %}
+    <div class="touch-table-wrap">
+      <table class="touch-table">
+        <thead>
+          <tr>
+            <th>訂單號</th>
+            <th>日期</th>
+            <th>狀態</th>
+            <th>金額</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td><a href="{% url 'sales:sales_order_detail' order.pk %}" class="touch-row-link">{{ order.order_no }}</a></td>
+            <td>{{ order.order_date }}</td>
+            <td>{{ order.get_status_display }}</td>
+            <td>${{ order.total_amount|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="touch-empty">尚無訂單紀錄</p>
+    {% endif %}
+  </section>
+
+  <div class="touch-form-actions">
+    <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-btn touch-btn-primary">📦 新增銷售訂單</a>
+  </div>
+</main>
+{% endblock %}

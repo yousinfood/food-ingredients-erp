@@ -1,0 +1,14 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>{% block title %}有信食品 ERP{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260725b">
+</head>
+<body class="touch-app">
+  {% block body %}{% endblock %}
+</body>
+</html>

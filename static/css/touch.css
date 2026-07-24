@@ -1,0 +1,2538 @@
+/* iPad / touch-first workflow styles */
+
+:root {
+  --touch-primary: #0f766e;
+  --touch-primary-dark: #0d9488;
+  --touch-bg: #f8fafc;
+  --touch-surface: #ffffff;
+  --touch-border: #e2e8f0;
+  --touch-text: #1e293b;
+  --touch-muted: #64748b;
+  --touch-min-tap: 52px;
+  --touch-radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+  overflow-y: auto;
+}
+
+body.touch-app {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  background: var(--touch-bg);
+  color: var(--touch-text);
+  line-height: 1.5;
+  min-height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+a { color: var(--touch-primary); text-decoration: none; }
+
+.touch-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2.5rem;
+  padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+}
+
+.touch-header {
+  margin-bottom: 1.5rem;
+}
+
+.touch-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.touch-header p {
+  color: var(--touch-muted);
+  font-size: 1rem;
+  margin-top: 0.35rem;
+}
+
+.touch-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min-tap);
+  padding: 0 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--touch-primary);
+}
+
+.touch-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.touch-search-form--hero {
+  margin-bottom: 1.75rem;
+}
+
+.touch-search-input {
+  width: 100%;
+  min-height: 56px;
+  padding: 0.85rem 1.1rem;
+  font-size: 1.125rem;
+  font-family: inherit;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  background: var(--touch-surface);
+  -webkit-appearance: none;
+}
+
+.touch-search-input--hero {
+  min-height: 76px;
+  padding: 1.1rem 1.35rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+  border-width: 3px;
+  border-radius: 16px;
+}
+
+.touch-search-input:focus {
+  outline: none;
+  border-color: var(--touch-primary);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.15);
+}
+
+.touch-search-input--hero:focus {
+  box-shadow: 0 0 0 5px rgba(15, 118, 110, 0.18);
+}
+
+.touch-btn-search {
+  min-height: 60px;
+  font-size: 1.15rem;
+}
+
+.touch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min-tap);
+  padding: 0.75rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: var(--touch-radius);
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.touch-btn-primary {
+  background: var(--touch-primary);
+  color: #fff;
+  width: 100%;
+}
+
+.touch-btn-primary:active {
+  background: var(--touch-primary-dark);
+}
+
+.touch-btn-outline {
+  background: var(--touch-surface);
+  color: var(--touch-text);
+  border: 2px solid var(--touch-border);
+}
+
+.touch-btn-secondary {
+  background: var(--touch-surface);
+  color: var(--touch-text);
+  border: 2px solid var(--touch-border);
+}
+
+.touch-btn-secondary:active {
+  background: #f8fafc;
+}
+
+.touch-hint {
+  text-align: center;
+  color: var(--touch-muted);
+  font-size: 1rem;
+  padding: 2rem 1rem;
+}
+
+.touch-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+}
+
+.touch-stat {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  padding: 0.85rem 0.5rem;
+  text-align: center;
+}
+
+.touch-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+  line-height: 1.2;
+}
+
+.touch-stat-value--muted {
+  color: var(--touch-muted);
+  font-size: 1.35rem;
+}
+
+.touch-stat-label {
+  font-size: 0.75rem;
+  color: var(--touch-muted);
+  margin-top: 0.2rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.touch-results-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.touch-result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.touch-result-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  color: inherit;
+  overflow: hidden;
+}
+
+.touch-result-card-main {
+  display: block;
+  padding: 1.15rem 1.15rem 0.85rem;
+  color: inherit;
+}
+
+.touch-result-card-main:active {
+  background: #f0fdfa;
+}
+
+.touch-result-code {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--touch-primary);
+}
+
+.touch-result-name {
+  font-size: 1.55rem;
+  font-weight: 800;
+  margin: 0.3rem 0 0.4rem;
+  line-height: 1.25;
+  color: var(--touch-text);
+}
+
+.touch-result-meta {
+  font-size: 0.95rem;
+  color: var(--touch-muted);
+  line-height: 1.45;
+}
+
+.touch-result-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 2px solid var(--touch-border);
+}
+
+.touch-result-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--touch-text);
+  text-align: center;
+  line-height: 1.25;
+  border-right: 1px solid var(--touch-border);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-result-action:last-child {
+  border-right: none;
+}
+
+.touch-result-action:active {
+  background: #f0fdfa;
+  color: var(--touch-primary);
+}
+
+/* Customer Center */
+.touch-center-hero {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  padding: 1.15rem 1.15rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.touch-center-hero-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.touch-center-hero-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.touch-center-snippet {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  color: var(--touch-muted);
+  line-height: 1.45;
+}
+
+.touch-icon-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.touch-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  font-size: 1.35rem;
+  background: var(--touch-surface);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-icon-btn:active {
+  border-color: var(--touch-primary);
+  background: #f0fdfa;
+}
+
+.touch-icon-btn--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.touch-primary-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  margin-bottom: 0.65rem;
+  padding: 0.85rem 1rem;
+  background: var(--touch-primary);
+  border: 2px solid var(--touch-primary);
+  border-radius: var(--touch-radius);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-primary-cta:active {
+  filter: brightness(0.95);
+}
+
+.touch-secondary-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-bottom: 0.85rem;
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  overflow: hidden;
+}
+
+.touch-secondary-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0.45rem 0.25rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--touch-text);
+  text-align: center;
+  line-height: 1.25;
+  border-right: 1px solid var(--touch-border);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-secondary-action:last-child {
+  border-right: none;
+}
+
+.touch-secondary-action:active {
+  background: #f0fdfa;
+  color: var(--touch-primary);
+}
+
+.touch-finance-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(180deg, #f0fdfa 0%, var(--touch-surface) 100%);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+}
+
+.touch-finance-strip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.touch-finance-strip-label {
+  font-size: 0.78rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-finance-strip-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+}
+
+.touch-finance-strip-value--date {
+  font-size: 1rem;
+  color: var(--touch-text);
+}
+
+.touch-disclosure {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.touch-disclosure-toggle {
+  padding: 0.85rem 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  color: var(--touch-text);
+}
+
+.touch-disclosure-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.touch-disclosure[open] .touch-disclosure-toggle {
+  color: var(--touch-primary);
+  border-bottom: 1px solid var(--touch-border);
+}
+
+.touch-disclosure-body {
+  padding: 0.85rem 1.1rem 1rem;
+}
+
+.touch-disclosure-line {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--touch-muted);
+}
+
+.touch-center-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--touch-muted);
+  margin-bottom: 0.35rem;
+}
+
+.touch-center-name {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.touch-center-code {
+  font-size: 1.05rem;
+  color: var(--touch-primary);
+  font-weight: 700;
+  margin-top: 0.35rem;
+}
+
+.touch-badge {
+  display: inline-block;
+  margin-top: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.touch-badge--muted {
+  background: #f1f5f9;
+  color: var(--touch-muted);
+}
+
+.touch-section--finance {
+  background: linear-gradient(180deg, #f0fdfa 0%, var(--touch-surface) 100%);
+}
+
+.touch-finance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+.touch-finance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.touch-finance-label {
+  font-size: 0.78rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-finance-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+}
+
+.touch-finance-value--muted {
+  color: var(--touch-text);
+  font-size: 1.1rem;
+}
+
+.touch-finance-value--date {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--touch-text);
+}
+
+.touch-credit-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+.touch-credit-bar-fill {
+  height: 100%;
+  background: var(--touch-primary);
+  border-radius: 999px;
+}
+
+.touch-credit-caption {
+  font-size: 0.8rem;
+  color: var(--touch-muted);
+  margin-top: 0.35rem;
+}
+
+.touch-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.touch-section-head .touch-section-title {
+  margin-bottom: 0;
+}
+
+.touch-section-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.touch-link {
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.touch-link--phone {
+  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.touch-action-btn--primary {
+  border-color: var(--touch-primary);
+  background: #ecfdf5;
+  color: var(--touch-primary);
+}
+
+.touch-order-list,
+.touch-price-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.touch-order-card {
+  display: block;
+  padding: 1rem;
+  background: #fafafa;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  color: inherit;
+}
+
+.touch-order-card:active {
+  border-color: var(--touch-primary);
+  background: #f0fdfa;
+}
+
+.touch-order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.touch-order-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--touch-muted);
+  background: #f1f5f9;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.touch-order-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: var(--touch-muted);
+}
+
+.touch-order-amount {
+  font-weight: 800;
+  color: var(--touch-primary);
+}
+
+.touch-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--touch-border);
+}
+
+.touch-price-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.touch-price-sku {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--touch-muted);
+  margin-top: 0.15rem;
+}
+
+.touch-price-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.touch-price-amount {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+}
+
+.touch-price-date {
+  font-size: 0.8rem;
+  color: var(--touch-muted);
+}
+
+.touch-notes {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--touch-text);
+}
+
+.touch-center-region {
+  display: inline-block;
+  margin-top: 0.65rem;
+  padding: 0.25rem 0.65rem;
+  background: #ecfdf5;
+  color: var(--touch-primary);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.touch-center-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.touch-center-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.touch-center-badge--muted {
+  background: #f1f5f9;
+  color: var(--touch-muted);
+}
+
+.touch-admin-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.touch-section {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  padding: 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.touch-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.85rem;
+  color: var(--touch-muted);
+}
+
+.touch-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem 1rem;
+}
+
+.touch-info-item dt {
+  font-size: 0.78rem;
+  color: var(--touch-muted);
+  margin-bottom: 0.15rem;
+}
+
+.touch-info-item dd {
+  font-size: 1.05rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.touch-info-item--wide {
+  grid-column: 1 / -1;
+}
+
+.touch-info-value-money {
+  font-size: 1.35rem;
+  color: var(--touch-primary);
+}
+
+.touch-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.touch-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 0.85rem;
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--touch-text);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.touch-action-btn:active {
+  border-color: var(--touch-primary);
+  background: #f0fdfa;
+  color: var(--touch-primary);
+}
+
+.touch-action-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.touch-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.touch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.touch-table th,
+.touch-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--touch-border);
+}
+
+.touch-table th {
+  font-size: 0.8rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-table tr:last-child td {
+  border-bottom: none;
+}
+
+.touch-empty {
+  text-align: center;
+  color: var(--touch-muted);
+  padding: 1.5rem 0.5rem;
+  font-size: 0.95rem;
+}
+
+.touch-row-link {
+  display: block;
+  min-height: var(--touch-min-tap);
+  line-height: var(--touch-min-tap);
+  font-weight: 600;
+}
+
+/* Order form touch */
+.touch-form-field {
+  margin-bottom: 1rem;
+}
+
+.touch-form-field label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--touch-muted);
+  margin-bottom: 0.4rem;
+}
+
+.touch-form-field input,
+.touch-form-field select,
+.touch-form-field textarea {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.7rem 0.9rem;
+  font-size: 1.05rem;
+  font-family: inherit;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  background: var(--touch-surface);
+}
+
+.touch-line-item {
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: #fafafa;
+}
+
+.touch-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+/* Phone order entry */
+.touch-order-page {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+}
+
+.touch-order-page--entry {
+  max-width: none;
+  padding: 0.5rem 0.65rem calc(5.5rem + env(safe-area-inset-bottom));
+  background: var(--touch-bg, #f8fafc);
+}
+
+.touch-order-page--entry .touch-order-header-meta-detail {
+  display: none;
+}
+
+.touch-order-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.touch-order-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.touch-back--inline {
+  margin-bottom: 0;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 0.35rem;
+}
+
+.touch-order-top-bar .touch-order-header-compact {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.touch-order-top-bar .touch-order-header-name {
+  font-size: 1.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.touch-order-top-bar .touch-order-header-meta {
+  font-size: 0.82rem;
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.touch-order-flash {
+  margin: 0;
+}
+
+.touch-order-pick-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.touch-order-categories-bar {
+  flex-shrink: 0;
+  background: transparent;
+  padding: 0.15rem 0 0.3rem;
+  margin: 0;
+}
+
+.touch-category-grid.touch-category-grid--toolbar {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.touch-category-grid.touch-category-grid--toolbar .touch-category-btn {
+  min-height: 52px;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.88rem;
+  background: #fff;
+  border-color: #e2e8f0;
+  color: var(--touch-text);
+}
+
+.touch-category-grid.touch-category-grid--toolbar .touch-category-btn--active {
+  background: #ecfdf5;
+  border-color: var(--touch-primary);
+  color: #047857;
+}
+
+.touch-series-chips--toolbar {
+  margin-bottom: 0.25rem;
+}
+
+.touch-series-chips--toolbar .touch-series-chip {
+  min-height: 40px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.88rem;
+}
+
+.touch-category-hint--compact {
+  margin: 0.15rem 0 0.25rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.85rem;
+}
+
+.touch-order-products-zone {
+  min-height: 0;
+}
+
+.touch-product-grid--main {
+  gap: 0.4rem;
+}
+
+.touch-product-grid--main .touch-product-card-main {
+  min-height: 58px;
+  padding: 0.45rem 0.55rem;
+}
+
+.touch-product-grid--main .touch-frequent-name {
+  font-size: 0.95rem;
+}
+
+.touch-order-quick-picks,
+.touch-order-extras {
+  margin-bottom: 0;
+}
+
+.touch-cart-section--compact {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.touch-section-head--calm {
+  margin-bottom: 0.25rem;
+}
+
+.touch-section-head--calm .touch-section-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--touch-muted);
+  margin: 0;
+}
+
+.touch-order-extras,
+.touch-order-quick-picks {
+  margin: 0;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.touch-order-extras .touch-disclosure-toggle,
+.touch-order-quick-picks .touch-disclosure-toggle {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.88rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-product-pick-group--flat {
+  margin-bottom: 0.5rem;
+}
+
+.touch-product-grid--main .touch-product-card {
+  border-color: #e2e8f0;
+  background: #fff;
+}
+
+.touch-product-grid--main .touch-product-card-main {
+  background: #fff;
+}
+
+.touch-product-grid--main .touch-product-card-series {
+  display: none;
+}
+
+.touch-order-lines-empty {
+  display: none;
+}
+
+.touch-order-cart-panel .touch-order-lines {
+  max-height: min(28vh, 200px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.touch-order-cart-panel .touch-order-line {
+  padding: 0.45rem 0.5rem;
+}
+
+.touch-order-cart-panel .touch-order-line-name {
+  font-size: 0.95rem;
+}
+
+.touch-order-layout-head {
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .touch-order-layout-head {
+    grid-area: top;
+  }
+}
+
+@media (max-width: 639px) {
+  .touch-category-grid.touch-category-grid--toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .touch-order-page--entry {
+    padding: 0.4rem 0.75rem calc(4.75rem + env(safe-area-inset-bottom));
+    height: 100dvh;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .touch-order-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) min(300px, 32vw);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "top top"
+      "pick cart";
+    gap: 0.4rem 0.55rem;
+    height: calc(100dvh - 4.75rem - env(safe-area-inset-bottom));
+    height: calc(100vh - 4.75rem - env(safe-area-inset-bottom));
+    min-height: 0;
+  }
+
+  .touch-order-top-bar {
+    grid-area: top;
+  }
+
+  .touch-order-flash {
+    grid-area: top;
+  }
+
+  .touch-order-layout-head {
+    grid-area: top;
+  }
+
+  .touch-order-pick-column {
+    grid-area: pick;
+    overflow-y: auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .touch-order-cart-panel {
+    grid-area: cart;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .touch-order-cart-panel .touch-order-lines {
+    flex: 1;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .touch-category-grid--toolbar .touch-category-btn {
+    min-height: 48px;
+    font-size: 0.92rem;
+  }
+
+  .touch-product-grid--main {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .touch-order-footer--fixed {
+    padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom));
+  }
+}
+
+.touch-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.touch-order-header-compact {
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px solid var(--touch-border);
+}
+
+.touch-order-header-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.touch-order-header-meta {
+  margin: 0.2rem 0 0;
+  color: var(--touch-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.touch-order-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.touch-order-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.touch-order-products {
+  margin-bottom: 0.85rem;
+  padding: 0.85rem;
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-primary);
+  border-radius: var(--touch-radius);
+}
+
+.touch-product-pick-group {
+  margin-bottom: 0.85rem;
+}
+
+.touch-product-pick-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.touch-product-pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.touch-product-pick-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--touch-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.touch-product-pick-head .touch-product-pick-label {
+  margin-bottom: 0;
+}
+
+.touch-copy-all-btn {
+  min-height: 36px;
+  padding: 0.35rem 0.65rem;
+  background: #fffbeb;
+  color: #92400e;
+  border: 2px solid #fcd34d;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.touch-copy-all-btn:active {
+  background: #fde68a;
+}
+
+.touch-category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.touch-category-chip {
+  min-height: 40px;
+  padding: 0.4rem 0.75rem;
+  background: #f8fafc;
+  border: 2px solid var(--touch-border);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--touch-text);
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-category-chip--active,
+.touch-category-chip:active {
+  background: #ecfdf5;
+  border-color: var(--touch-primary);
+  color: var(--touch-primary);
+}
+
+.touch-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.touch-category-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 72px;
+  padding: 0.75rem 0.5rem;
+  background: #eff6ff;
+  border: 2px solid #93c5fd;
+  border-radius: var(--touch-radius);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.touch-category-btn:active,
+.touch-category-btn--active {
+  background: #dbeafe;
+  border-color: #2563eb;
+  color: #1e40af;
+}
+
+.touch-series-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.touch-series-chip {
+  min-height: 44px;
+  padding: 0.45rem 0.85rem;
+  background: #fff7ed;
+  border: 2px solid #fdba74;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #c2410c;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-category-hint {
+  margin: 0.35rem 0 0.55rem;
+  padding: 0.65rem 0.85rem;
+  background: #fff7ed;
+  border: 2px dashed #fdba74;
+  border-radius: var(--touch-radius);
+  color: #c2410c;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.touch-loading-hint {
+  color: var(--touch-muted);
+}
+
+.touch-series-chip--active,
+.touch-series-chip:active {
+  background: #ffedd5;
+  border-color: #ea580c;
+}
+
+.touch-input-date {
+  min-height: 52px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.touch-product-search-wrap {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--touch-border);
+}
+
+.touch-product-search-wrap .touch-product-pick-label {
+  margin-bottom: 0.4rem;
+}
+
+.touch-order-more {
+  margin-bottom: 0.5rem;
+}
+
+.touch-order-more-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.touch-order-hero {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.touch-order-customer-name {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0.25rem 0;
+}
+
+.touch-order-customer-meta {
+  color: var(--touch-muted);
+  font-size: 0.95rem;
+}
+
+.touch-order-customer-address {
+  margin-top: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--touch-text);
+  font-weight: 600;
+}
+
+.touch-last-order-section {
+  background: linear-gradient(180deg, #fffbeb 0%, var(--touch-surface) 100%);
+  border-color: #fde68a;
+}
+
+.touch-last-order-meta {
+  font-size: 0.85rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-last-order-preview {
+  list-style: none;
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
+}
+
+.touch-last-order-preview li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--touch-border);
+}
+
+.touch-last-order-preview li:last-child {
+  border-bottom: none;
+}
+
+.touch-last-order-preview span {
+  color: var(--touch-muted);
+  flex-shrink: 0;
+}
+
+.touch-btn-copy {
+  width: 100%;
+  min-height: 64px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  background: #fef3c7;
+  color: #92400e;
+  border: 2px solid #fcd34d;
+  border-radius: var(--touch-radius);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.touch-btn-copy:active {
+  background: #fde68a;
+}
+
+.touch-frequent-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+}
+
+.touch-frequent-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0.65rem 0.75rem;
+  background: #ecfdf5;
+  border: 2px solid #99f6e4;
+  border-radius: var(--touch-radius);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-frequent-btn:active {
+  background: #ccfbf1;
+  border-color: var(--touch-primary);
+}
+
+.touch-frequent-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--touch-text);
+  line-height: 1.25;
+}
+
+.touch-frequent-meta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--touch-muted);
+  margin-top: 0.1rem;
+}
+
+.touch-frequent-grid--compact .touch-frequent-btn {
+  min-height: 56px;
+}
+
+.touch-cart-section {
+  margin-bottom: 0;
+  padding: 0.85rem;
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+}
+
+.touch-cart-section--hero {
+  border-color: var(--touch-primary);
+  background: linear-gradient(180deg, #ecfdf5 0%, var(--touch-surface) 100%);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.touch-frequent-price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--touch-primary);
+  margin-top: 0.15rem;
+}
+
+.touch-order-search-details {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.touch-order-search-toggle {
+  padding: 0.9rem 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  color: var(--touch-muted);
+}
+
+.touch-order-search-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.touch-order-search-details[open] .touch-order-search-toggle {
+  color: var(--touch-primary);
+  border-bottom: 1px solid var(--touch-border);
+}
+
+.touch-order-search-details .touch-product-search-section {
+  padding: 0.85rem 1.15rem 1rem;
+}
+
+.touch-search-input--compact {
+  min-height: 56px;
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  width: 100%;
+  font-family: inherit;
+}
+
+.touch-order-line-subtotal-wrap label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--touch-muted);
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.touch-order-meta {
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.touch-order-meta-toggle {
+  padding: 0.85rem 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.touch-order-meta-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.touch-order-meta-fields {
+  padding: 0 1.15rem 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.touch-form-field--wide {
+  grid-column: 1 / -1;
+}
+
+.touch-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.7rem 0.9rem;
+  font-size: 1.05rem;
+  font-family: inherit;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  background: var(--touch-surface);
+}
+
+.touch-product-search-section {
+  position: relative;
+  z-index: 2;
+}
+
+.touch-product-results {
+  margin-top: 0.65rem;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  background: var(--touch-surface);
+  max-height: 280px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.touch-product-result {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-bottom: 1px solid var(--touch-border);
+  background: var(--touch-surface);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 56px;
+}
+
+.touch-product-result:last-child {
+  border-bottom: none;
+}
+
+.touch-product-result:active {
+  background: #f0fdfa;
+}
+
+.touch-product-result-sku {
+  font-weight: 700;
+  color: var(--touch-primary);
+  font-size: 0.9rem;
+}
+
+.touch-product-result-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.touch-product-result-unit {
+  font-size: 0.85rem;
+  color: var(--touch-muted);
+}
+
+.touch-product-results-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--touch-muted);
+}
+
+.touch-line-count {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--touch-primary);
+}
+
+.touch-order-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.touch-order-line {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.7rem 0.75rem;
+  background: #fafafa;
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+}
+
+.touch-order-line-name {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.touch-order-line-spec {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
+.touch-qty-quick {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.touch-qty-quick-btn {
+  min-height: 32px;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--touch-border);
+  border-radius: 999px;
+  background: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--touch-primary);
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+
+.touch-product-pick-btn--pressed,
+.touch-frequent-btn.touch-product-pick-btn--pressed {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
+.touch-qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.touch-qty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--touch-border);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.touch-qty-btn:active:not(:disabled) {
+  background: #f0fdfa;
+  border-color: var(--touch-primary);
+}
+
+.touch-order-line-qty label,
+.touch-order-line-price label {
+  display: none;
+}
+
+.touch-qty-display {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--touch-text);
+  user-select: none;
+}
+
+.touch-input-qty {
+  display: none;
+}
+
+.touch-input-price {
+  display: none;
+}
+
+.touch-order-line-unit {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--touch-muted);
+  margin-top: 0.15rem;
+  text-align: center;
+}
+
+.touch-order-line-subtotal-wrap {
+  min-width: 56px;
+}
+
+.touch-order-line-subtotal {
+  font-weight: 800;
+  color: var(--touch-primary);
+  text-align: right;
+  font-size: 0.95rem;
+}
+
+.touch-order-line-remove {
+  min-width: 40px;
+  min-height: 40px;
+  border: 2px solid var(--touch-border);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1rem;
+  color: var(--touch-muted);
+  cursor: pointer;
+}
+
+.touch-order-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.touch-order-footer--fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  margin-top: 0;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom));
+  background: var(--touch-surface);
+  border-top: 2px solid var(--touch-border);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.touch-order-total {
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+}
+
+.touch-order-total span {
+  font-size: 0.78rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-order-total strong {
+  font-size: 1.35rem;
+  color: var(--touch-primary);
+}
+
+.touch-btn-save {
+  flex: 1;
+  min-height: 60px;
+  font-size: 1.15rem;
+}
+
+.touch-btn-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Order success */
+.touch-order-success-hero {
+  text-align: center;
+  padding: 1.5rem 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.touch-order-success-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 0.75rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: var(--touch-primary);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 64px;
+}
+
+.touch-order-success-no {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--touch-primary);
+  margin-top: 0.35rem;
+}
+
+.touch-order-success-customer {
+  color: var(--touch-muted);
+  margin-top: 0.25rem;
+}
+
+.touch-order-success-lines {
+  list-style: none;
+  margin-top: 1rem;
+  border-top: 1px solid var(--touch-border);
+}
+
+.touch-order-success-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--touch-border);
+}
+
+.touch-order-success-line-right {
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--touch-muted);
+  font-size: 0.95rem;
+}
+
+.touch-order-total--success {
+  position: static;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 2px solid var(--touch-border);
+  box-shadow: none;
+  border-bottom: none;
+  background: transparent;
+}
+
+.touch-nearby-hint {
+  font-size: 0.9rem;
+  color: var(--touch-muted);
+  margin: -0.5rem 0 0.85rem;
+}
+
+.touch-nearby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.touch-nearby-card {
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  overflow: hidden;
+  background: var(--touch-surface);
+}
+
+.touch-nearby-card-main {
+  padding: 1rem 1.15rem 0.75rem;
+}
+
+.touch-nearby-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 2px solid var(--touch-border);
+}
+
+.touch-nearby-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--touch-text);
+  border-right: 1px solid var(--touch-border);
+}
+
+.touch-nearby-action:last-child {
+  border-right: none;
+}
+
+.touch-nearby-action:active {
+  background: #f0fdfa;
+  color: var(--touch-primary);
+}
+
+.touch-nearby-action--primary {
+  background: #ecfdf5;
+  color: var(--touch-primary);
+}
+
+@media (min-width: 768px) {
+  .touch-main {
+    padding: 2rem 2rem 3rem;
+  }
+
+  .touch-search-input--hero {
+    min-height: 84px;
+    font-size: 1.45rem;
+  }
+
+  .touch-result-name {
+    font-size: 1.7rem;
+  }
+
+  .touch-result-action {
+    min-height: 72px;
+    font-size: 1.05rem;
+  }
+
+  .touch-frequent-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .touch-frequent-btn {
+    min-height: 96px;
+  }
+
+  .touch-actions {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .touch-info-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .touch-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .touch-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .touch-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .touch-order-meta-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .touch-order-line {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "info info"
+      "qty subtotal"
+      "remove remove";
+  }
+
+  .touch-order-line-info { grid-area: info; }
+  .touch-order-line-qty { grid-area: qty; }
+  .touch-order-line-subtotal-wrap { grid-area: subtotal; justify-self: end; }
+  .touch-order-line-remove { grid-area: remove; justify-self: end; }
+}
+
+/* Add-to-cart toast */
+.touch-add-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 999px;
+  background: #059669;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  max-width: calc(100vw - 2rem);
+}
+
+.touch-add-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.touch-toast-undo {
+  min-height: 36px;
+  padding: 0.25rem 0.65rem;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.touch-order-line--pulse {
+  animation: touch-line-pulse 0.4s ease;
+}
+
+@keyframes touch-line-pulse {
+  0% { background: #ecfdf5; }
+  100% { background: transparent; }
+}
+
+/* Order detail */
+.touch-order-detail-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.touch-order-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.touch-btn-sm {
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.touch-btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: 2px solid #dc2626;
+}
+
+.touch-btn-danger:active {
+  background: #b91c1c;
+}
+
+.touch-inline-form {
+  display: inline;
+  margin: 0;
+}
+
+.touch-flash-messages {
+  margin: 0.75rem 0 1rem;
+}
+
+.touch-flash {
+  padding: 0.75rem 1rem;
+  border-radius: var(--touch-radius);
+  font-weight: 600;
+}
+
+.touch-flash--success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.touch-flash--error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.touch-info-card--danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.touch-debug-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 2px dashed var(--touch-border);
+}
+
+/* Quick order mode */
+.touch-product-card {
+  display: flex;
+  flex-direction: column;
+  background: #ecfdf5;
+  border: 2px solid #99f6e4;
+  border-radius: var(--touch-radius);
+  overflow: hidden;
+}
+
+.touch-product-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 72px;
+  padding: 0.65rem 0.75rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-product-card-main:active {
+  background: #ccfbf1;
+}
+
+.touch-product-card-sku {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--touch-muted);
+  margin-top: 0.1rem;
+}
+
+.touch-product-card-pack {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--touch-muted);
+  margin-top: 0.05rem;
+}
+
+.touch-product-card-series {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0d9488;
+  margin-top: 0.1rem;
+}
+
+.touch-product-card-price {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+  margin-top: 0.2rem;
+}
+
+.touch-product-card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 2px solid #99f6e4;
+}
+
+.touch-product-quick-add {
+  min-height: 48px;
+  padding: 0.35rem 0.25rem;
+  background: #fff;
+  border: none;
+  border-right: 1px solid #99f6e4;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #047857;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-product-quick-add:last-child {
+  border-right: none;
+}
+
+.touch-product-quick-add:active {
+  background: #d1fae5;
+}
+
+.touch-frequent-grid--compact .touch-product-card-main {
+  min-height: 64px;
+}
+
+.touch-copy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.touch-copy-partial-active {
+  background: #ffedd5 !important;
+  border-color: #fb923c !important;
+  color: #c2410c !important;
+}
+
+.touch-copy-partial-mode .touch-last-order-item {
+  cursor: pointer;
+}
+
+.touch-last-order-item--selected {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.touch-copy-partial-mode .touch-last-order-item .touch-product-card-main:active {
+  background: #dbeafe;
+}
+
+.touch-search-results-grid {
+  margin-top: 0.5rem;
+}
+
+/* Order complete — full screen success (not toast, not bottom bar) */
+.touch-order-page--complete {
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 45%, var(--touch-surface) 100%);
+}
+
+.touch-order-complete-card {
+  width: min(100%, 480px);
+  padding: 2rem 1.5rem;
+  background: var(--touch-surface);
+  border: 3px solid #6ee7b7;
+  border-radius: calc(var(--touch-radius) + 6px);
+  box-shadow: 0 12px 32px rgba(5, 150, 105, 0.15);
+  text-align: center;
+}
+
+.touch-order-complete-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: #059669;
+  color: #fff;
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+  animation: touch-success-check 0.3s ease forwards;
+}
+
+@keyframes touch-success-check {
+  from {
+    transform: scale(0.65);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.touch-order-complete-title {
+  margin: 0 0 1rem;
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--touch-text);
+}
+
+.touch-order-complete-no {
+  margin: 0 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.touch-order-complete-no-label,
+.touch-order-complete-time-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--touch-muted);
+}
+
+.touch-order-complete-no strong {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #047857;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.touch-order-complete-time {
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--touch-text);
+}
+
+.touch-order-complete-customer {
+  margin: 0 0 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--touch-muted);
+}
+
+.touch-order-complete-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.touch-btn-complete-primary {
+  min-height: 76px !important;
+  font-size: 1.375rem !important;
+  font-weight: 800 !important;
+}
+
+.touch-btn-complete-secondary {
+  min-height: 60px !important;
+  font-size: 1.125rem !important;
+  font-weight: 800 !important;
+}
+
+.touch-quick-success {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.touch-quick-success-card {
+  width: min(100%, 420px);
+  padding: 1.75rem 1.25rem;
+  background: var(--touch-surface);
+  border-radius: calc(var(--touch-radius) + 4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.touch-quick-success-icon {
+  font-size: 2.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.touch-quick-success-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.touch-quick-success-no {
+  margin: 0 0 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--touch-primary);
+}
+
+.touch-quick-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.touch-btn-quick-next {
+  min-height: 72px !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+}
+
+.touch-leave-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.touch-leave-modal[hidden] {
+  display: none !important;
+}
+
+.touch-leave-modal-card {
+  width: min(100%, 400px);
+  padding: 1.5rem 1.25rem;
+  background: var(--touch-surface);
+  border-radius: var(--touch-radius);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+}
+
+.touch-leave-modal-card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.touch-leave-modal-card p {
+  margin: 0 0 1rem;
+  color: var(--touch-muted);
+  font-weight: 600;
+}
+
+.touch-leave-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

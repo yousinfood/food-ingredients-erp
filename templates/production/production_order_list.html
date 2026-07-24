@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}生產工單 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>生產工單</h2>
+  <p>生產排程與工單追蹤</p>
+</div>
+
+<div class="filter-bar">
+  <a href="{% url 'production:production_order_list' %}" {% if not status_filter %}class="active"{% endif %}>全部</a>
+  <a href="?status=planned" {% if status_filter == 'planned' %}class="active"{% endif %}>已排程</a>
+  <a href="?status=in_progress" {% if status_filter == 'in_progress' %}class="active"{% endif %}>生產中</a>
+  <a href="?status=completed" {% if status_filter == 'completed' %}class="active"{% endif %}>已完成</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>工單號</th>
+        <th>配方</th>
+        <th>計劃產量</th>
+        <th>實際產量</th>
+        <th>狀態</th>
+        <th>計劃開始</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>{{ order.order_no }}</strong></td>
+        <td>{{ order.recipe.name }}</td>
+        <td>{{ order.planned_qty }}</td>
+        <td>{{ order.actual_qty|default:"-" }}</td>
+        <td><span class="badge badge-info">{{ order.get_status_display }}</span></td>
+        <td>{{ order.planned_start }}</td>
+        <td><a href="{% url 'production:production_order_detail' order.pk %}">詳情 →</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty-state">尚無生產工單</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

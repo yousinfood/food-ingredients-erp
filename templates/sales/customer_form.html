@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>{{ title }}</h2>
+</div>
+
+<div class="card">
+  <form method="post" class="erp-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="form-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-section">
+      <div class="form-section-title">基本資料</div>
+      <div class="form-grid">
+        {% include "sales/_form_field.html" with field=form.code %}
+        {% include "sales/_form_field.html" with field=form.name %}
+        {% include "sales/_form_field.html" with field=form.region %}
+        {% include "sales/_form_field.html" with field=form.contact_person %}
+        {% include "sales/_form_field.html" with field=form.phone %}
+        {% include "sales/_form_field.html" with field=form.phone_2 %}
+        {% include "sales/_form_field.html" with field=form.phone_3 %}
+        {% include "sales/_form_field.html" with field=form.email %}
+        {% include "sales/_form_field.html" with field=form.tax_id %}
+        {% include "sales/_form_field.html" with field=form.line_id %}
+        {% include "sales/_form_field.html" with field=form.is_active checkbox=True %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">地址</div>
+      <div class="form-grid">
+        {% include "sales/_form_field.html" with field=form.address wide=True %}
+        {% include "sales/_form_field.html" with field=form.invoice_address wide=True %}
+        {% include "sales/_form_field.html" with field=form.map_location wide=True %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">配送與付款</div>
+      <div class="form-grid">
+        {% include "sales/_form_field.html" with field=form.payment_method %}
+        {% include "sales/_form_field.html" with field=form.delivery_day %}
+        {% include "sales/_form_field.html" with field=form.delivery_sequence %}
+        {% include "sales/_form_field.html" with field=form.credit_limit %}
+        {% include "sales/_form_field.html" with field=form.last_transaction_date %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">備註</div>
+      {% include "sales/_form_field.html" with field=form.notes wide=True %}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">儲存</button>
+      {% if customer %}
+      <a href="{% url 'sales:customer_detail' customer.pk %}" class="btn btn-outline">取消</a>
+      {% else %}
+      <a href="{% url 'sales:customer_list' %}" class="btn btn-outline">取消</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

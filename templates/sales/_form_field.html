@@ -1,0 +1,9 @@
+<div class="form-field{% if checkbox %} form-field--checkbox{% endif %}{% if wide %} form-field--wide{% endif %}">
+  {% if checkbox %}
+  <label>{{ field }} {{ field.label }}</label>
+  {% else %}
+  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {{ field }}
+  {% endif %}
+  {% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}
+</div>

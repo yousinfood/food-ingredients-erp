@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ order.order_no }} - 採購單詳情{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>採購單 {{ order.order_no }}</h2>
+  <p>供應商：{{ order.supplier.name }}</p>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-item"><div class="label">狀態</div><div class="value"><span class="badge badge-info">{{ order.get_status_display }}</span></div></div>
+  <div class="detail-item"><div class="label">下單日期</div><div class="value">{{ order.order_date }}</div></div>
+  <div class="detail-item"><div class="label">預計到貨</div><div class="value">{{ order.expected_date|default:"-" }}</div></div>
+  <div class="detail-item"><div class="label">總金額</div><div class="value">${{ order.total_amount|floatformat:0 }}</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">採購明細</div>
+  <table>
+    <thead>
+      <tr>
+        <th>原料</th>
+        <th>採購數量</th>
+        <th>單價</th>
+        <th>小計</th>
+        <th>已到貨</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.items.all %}
+      <tr>
+        <td>{{ item.product.name }} ({{ item.product.sku }})</td>
+        <td>{{ item.quantity }} {{ item.product.get_unit_display }}</td>
+        <td>${{ item.unit_price }}</td>
+        <td>${{ item.line_total|floatformat:0 }}</td>
+        <td>{{ item.received_qty }} / {{ item.quantity }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p><a href="{% url 'procurement:purchase_order_list' %}">← 返回採購單列表</a></p>
+{% endblock %}

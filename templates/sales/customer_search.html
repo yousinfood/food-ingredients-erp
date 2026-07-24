@@ -1,0 +1,50 @@
+{% extends "touch_base.html" %}
+
+{% block title %}客戶搜尋 - 有信食品 ERP{% endblock %}
+
+{% block body %}
+<main class="touch-main">
+  <header class="touch-header">
+    <h1>有信食品 ERP</h1>
+    <p>客戶搜尋</p>
+  </header>
+
+  <form action="{% url 'customer_search' %}" method="get" class="touch-search-form">
+    <input
+      type="search"
+      name="q"
+      value="{{ query }}"
+      class="touch-search-input"
+      placeholder="客戶名稱、電話、地址或客戶編號"
+      autofocus
+      enterkeyhint="search"
+      autocomplete="off"
+    >
+    <button type="submit" class="touch-btn touch-btn-primary">🔍 搜尋客戶</button>
+  </form>
+
+  {% if searched and results %}
+  <h2 class="touch-results-title">搜尋結果（{{ results|length }} 筆）</h2>
+  <div class="touch-result-list">
+    {% for customer in results %}
+    <a href="{% url 'sales:customer_center' customer.pk %}?q={{ query|urlencode }}" class="touch-result-card">
+      <div class="touch-result-code">{{ customer.code }}</div>
+      <div class="touch-result-name">{{ customer.name }}</div>
+      <div class="touch-result-meta">
+        {% if customer.region %}{{ customer.region }} · {% endif %}
+        {{ customer.phone|default:"" }}
+        {% if customer.phone_2 %} / {{ customer.phone_2 }}{% endif %}
+      </div>
+      {% if customer.address %}
+      <div class="touch-result-meta">{{ customer.address }}</div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% elif searched %}
+  <p class="touch-hint">找不到符合的客戶，請調整關鍵字後再試。</p>
+  {% else %}
+  <p class="touch-hint">輸入客戶名稱、電話、地址或客戶編號，點選結果進入客戶中心。</p>
+  {% endif %}
+</main>
+{% endblock %}
