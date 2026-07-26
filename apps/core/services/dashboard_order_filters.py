@@ -17,6 +17,13 @@ DASHBOARD_FILTER_LABELS = {
     TODAY_OVERDUE: "今日欠款",
 }
 
+DASHBOARD_STAT_FILTER_KEYS = {
+    "deliveries_today": TODAY_DELIVERED,
+    "undelivered_today": TODAY_UNDELIVERED,
+    "pending_collection_today": TODAY_PENDING_COLLECTION,
+    "overdue_today": TODAY_OVERDUE,
+}
+
 _DELIVERED_STATUSES = (SalesOrder.Status.SHIPPED, SalesOrder.Status.COMPLETED)
 _UNDELIVERED_STATUSES = (
     SalesOrder.Status.DRAFT,

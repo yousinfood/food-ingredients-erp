@@ -8,6 +8,10 @@ from urllib.parse import quote
 from apps.sales.services.customer_search import search_customers_ranked
 
 from .services.dashboard import get_dashboard_stats
+from .services.dashboard_order_filters import (
+    DASHBOARD_FILTER_LABELS,
+    queryset_for_dashboard_filter,
+)
 
 
 def health(request):
@@ -66,6 +70,29 @@ def customer_search_api(request):
         {
             "ok": True,
             "total": ctx["search_total"],
+            "html": html,
+        }
+    )
+
+
+@require_GET
+def dashboard_orders_api(request):
+    filter_key = request.GET.get("dashboard", "").strip()
+    qs = queryset_for_dashboard_filter(filter_key)
+    if qs is None:
+        return JsonResponse({"ok": False, "error": "無效的篩選"}, status=400)
+    orders = qs.select_related("customer").order_by("-order_date", "-created_at")[:200]
+    total = qs.count()
+    html = render_to_string(
+        "core/_dashboard_order_list.html",
+        {"orders": orders, "dashboard_filter": filter_key},
+        request=request,
+    )
+    return JsonResponse(
+        {
+            "ok": True,
+            "total": total,
+            "label": DASHBOARD_FILTER_LABELS.get(filter_key, ""),
             "html": html,
         }
     )

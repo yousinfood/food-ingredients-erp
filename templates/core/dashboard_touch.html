@@ -1,5 +1,5 @@
 {% extends "touch_base.html" %}
-{% load touch_search %}
+{% load static touch_search %}
 
 {% block title %}儀表板 - 有信食品 ERP{% endblock %}
 
@@ -32,27 +32,33 @@
   {% include "core/_customer_search_results.html" %}
   </div>
 
-  <section class="touch-stats-row">
-    <a href="{{ stat_links.deliveries_today }}" class="touch-stat touch-stat--link">
+  <section class="touch-stats-row" id="touch-dashboard-stats" aria-label="今日概況">
+    <button type="button" class="touch-stat touch-stat--btn" data-dashboard-filter="{{ stat_filter_keys.deliveries_today }}" aria-pressed="false">
       <div class="touch-stat-value">{{ deliveries_today }}</div>
       <div class="touch-stat-label">今日配送</div>
-    </a>
-    <a href="{{ stat_links.undelivered_today }}" class="touch-stat touch-stat--link">
+    </button>
+    <button type="button" class="touch-stat touch-stat--btn" data-dashboard-filter="{{ stat_filter_keys.undelivered_today }}" aria-pressed="false">
       <div class="touch-stat-value">{{ undelivered_today }}</div>
       <div class="touch-stat-label">今日未送</div>
-    </a>
-    <a href="{{ stat_links.pending_collection_today }}" class="touch-stat touch-stat--link touch-stat--muted">
+    </button>
+    <button type="button" class="touch-stat touch-stat--btn touch-stat--muted" data-dashboard-filter="{{ stat_filter_keys.pending_collection_today }}" aria-pressed="false">
       <div class="touch-stat-value touch-stat-value--muted">{{ pending_collection_today }}</div>
       <div class="touch-stat-label">今日待收款</div>
-    </a>
-    <a href="{{ stat_links.overdue_today }}" class="touch-stat touch-stat--link touch-stat--muted">
+    </button>
+    <button type="button" class="touch-stat touch-stat--btn touch-stat--muted" data-dashboard-filter="{{ stat_filter_keys.overdue_today }}" aria-pressed="false">
       <div class="touch-stat-value touch-stat-value--muted">{{ overdue_today }}</div>
       <div class="touch-stat-label">今日欠款</div>
-    </a>
+    </button>
+  </section>
+
+  <section id="touch-dashboard-panel" class="touch-dashboard-panel" hidden aria-hidden="true">
+    <button type="button" id="touch-dashboard-back" class="touch-primary-cta touch-dashboard-back">← 返回首頁</button>
+    <h2 class="touch-section-title" id="touch-dashboard-panel-title"></h2>
+    <div id="touch-dashboard-panel-body" class="touch-dashboard-panel-body" aria-live="polite"></div>
   </section>
 
   {% if not searched and recent_orders %}
-  <section class="touch-section" style="margin-top:1.5rem;">
+  <section class="touch-section touch-recent-orders" id="touch-recent-orders" style="margin-top:1.5rem;">
     <h2 class="touch-section-title">最近訂單</h2>
     <div class="touch-table-wrap">
       <table class="touch-table">
@@ -79,4 +85,8 @@
   </section>
   {% endif %}
 </main>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'js/touch_dashboard.js' %}?v=20260726a" defer></script>
 {% endblock %}

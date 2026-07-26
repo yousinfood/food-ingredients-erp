@@ -30,6 +30,47 @@ class DashboardStatLinksTests(TestCase):
         self.assertEqual(url, f"{reverse('sales:sales_order_list')}?dashboard=today_undelivered")
 
 
+class DashboardOrdersApiTests(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(code="C002", name="API 測試店")
+        self.today = timezone.localdate()
+
+    def _order(self, status, delivery_date=None):
+        return SalesOrder.objects.create(
+            order_no=f"SO-API-{SalesOrder.objects.count() + 1}",
+            customer=self.customer,
+            status=status,
+            order_date=self.today,
+            delivery_date=delivery_date or self.today,
+        )
+
+    def test_dashboard_orders_api_returns_count_and_html(self):
+        self._order(SalesOrder.Status.CREATED)
+        self._order(SalesOrder.Status.SHIPPED)
+        url = reverse("dashboard_orders_api") + "?dashboard=today_undelivered"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["total"], 1)
+        self.assertEqual(data["label"], "今日未送")
+        self.assertIn("html", data)
+        self.assertIn("SO-API", data["html"])
+
+    def test_dashboard_orders_api_unknown_filter_400(self):
+        url = reverse("dashboard_orders_api") + "?dashboard=not_a_filter"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()["ok"])
+
+    def test_dashboard_orders_api_matches_stat_count(self):
+        self._order(SalesOrder.Status.CREATED)
+        stats = get_dashboard_stats()
+        url = reverse("dashboard_orders_api") + "?dashboard=today_undelivered"
+        data = self.client.get(url).json()
+        self.assertEqual(data["total"], stats["undelivered_today"])
+
+
 class DashboardOrderFilterTests(TestCase):
     def setUp(self):
         self.customer = Customer.objects.create(code="C001", name="測試店")

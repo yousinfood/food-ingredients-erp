@@ -1,0 +1,28 @@
+<div class="touch-dashboard-order-list" data-dashboard-filter="{{ dashboard_filter }}">
+  {% if orders %}
+  <div class="touch-table-wrap">
+    <table class="touch-table">
+      <thead>
+        <tr>
+          <th>訂單號</th>
+          <th>客戶</th>
+          <th>狀態</th>
+          <th>交貨日</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'sales:sales_order_detail' order.pk %}">{{ order.order_no }}</a></td>
+          <td><a href="{% url 'sales:customer_center' order.customer_id %}">{{ order.customer.name }}</a></td>
+          <td>{{ order.get_status_display }}</td>
+          <td>{{ order.delivery_date|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="touch-empty">目前沒有符合的訂單</p>
+  {% endif %}
+</div>

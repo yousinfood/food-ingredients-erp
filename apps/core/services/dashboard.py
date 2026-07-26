@@ -1,6 +1,7 @@
 from apps.sales.models import SalesOrder
 
 from .dashboard_order_filters import (
+    DASHBOARD_STAT_FILTER_KEYS,
     TODAY_DELIVERED,
     TODAY_UNDELIVERED,
     dashboard_stat_links,
@@ -23,4 +24,5 @@ def get_dashboard_stats():
         "overdue_today": "—",
         "recent_orders": recent_orders,
         "stat_links": dashboard_stat_links(),
+        "stat_filter_keys": DASHBOARD_STAT_FILTER_KEYS,
     }

@@ -185,6 +185,24 @@ a.touch-stat--link {
   touch-action: manipulation;
 }
 
+button.touch-stat--btn {
+  display: block;
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  min-height: 4.25rem;
+  -webkit-tap-highlight-color: rgba(15, 118, 110, 0.2);
+  touch-action: manipulation;
+}
+
+button.touch-stat--btn:active,
+.touch-stat--active.touch-stat--btn {
+  border-color: var(--touch-primary);
+  background: rgba(15, 118, 110, 0.06);
+}
+
 a.touch-stat--link:active {
   border-color: var(--touch-primary);
   background: rgba(15, 118, 110, 0.06);
@@ -193,6 +211,33 @@ a.touch-stat--link:active {
 a.touch-stat--link .touch-stat-value,
 a.touch-stat--link .touch-stat-label {
   pointer-events: none;
+}
+
+button.touch-stat--btn .touch-stat-value,
+button.touch-stat--btn .touch-stat-label {
+  pointer-events: none;
+}
+
+.touch-dashboard-panel {
+  margin-bottom: 1.5rem;
+}
+
+.touch-dashboard-panel[hidden] {
+  display: none !important;
+}
+
+.touch-dashboard-back {
+  min-height: 56px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-dashboard-panel-body {
+  margin-top: 0.5rem;
 }
 
 .touch-stat-value {
