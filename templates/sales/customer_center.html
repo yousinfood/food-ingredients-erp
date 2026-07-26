@@ -26,6 +26,7 @@
         <a href="#"
            class="touch-icon-btn"
            id="navigate-customer"
+           data-touch-navigate="1"
            aria-label="導航至配送地址"
            data-maps-apple="{{ center.maps_apple_href }}"
            data-maps-google="{{ center.maps_google_href }}">📍</a>
@@ -205,15 +206,4 @@
   </details>
   {% endif %}
 </main>
-<script>
-(function () {
-  var btn = document.getElementById("navigate-customer");
-  if (!btn) return;
-  btn.addEventListener("click", function (e) {
-    e.preventDefault();
-    var isApple = /iPhone|iPad|iPod|Macintosh|Mac OS X/i.test(navigator.userAgent);
-    window.location.href = isApple ? btn.dataset.mapsApple : btn.dataset.mapsGoogle;
-  });
-})();
-</script>
 {% endblock %}

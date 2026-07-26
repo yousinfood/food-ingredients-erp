@@ -2746,3 +2746,11 @@ html.touch-is-offline body.touch-app {
 .touch-offline-banner__retry:active {
   background: rgba(255, 255, 255, 0.15);
 }
+
+.touch-location-banner {
+  background: #1d4ed8;
+}
+
+html.touch-is-location-warning body.touch-app {
+  padding-top: calc(3.25rem + env(safe-area-inset-top));
+}
