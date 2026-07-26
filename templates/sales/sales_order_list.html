@@ -5,12 +5,14 @@
 {% block content %}
 <div class="page-header page-header--row">
   <div>
-    <h2>銷售訂單</h2>
-    <p>客戶訂單管理</p>
+    <h2>{% if dashboard_label %}{{ dashboard_label }}{% else %}銷售訂單{% endif %}</h2>
+    <p>{% if dashboard_label %}依儀表板篩選{% else %}客戶訂單管理{% endif %}</p>
   </div>
+  <a href="{% url 'dashboard' %}" class="btn btn-outline">← 儀表板</a>
   <a href="{% url 'sales:sales_order_create' %}" class="btn btn-primary">＋ 新增訂單</a>
 </div>
 
+{% if not dashboard_filter %}
 <div class="filter-bar">
   <a href="{% url 'sales:sales_order_list' %}" {% if not status_filter %}class="active"{% endif %}>全部</a>
   <a href="?status=draft" {% if status_filter == 'draft' %}class="active"{% endif %}>草稿</a>
@@ -20,6 +22,7 @@
   <a href="?status=completed" {% if status_filter == 'completed' %}class="active"{% endif %}>已完成</a>
   <a href="?status=cancelled" {% if status_filter == 'cancelled' %}class="active"{% endif %}>已作廢</a>
 </div>
+{% endif %}
 
 <div class="card">
   <table>

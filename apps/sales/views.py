@@ -13,6 +13,10 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.core.services.dashboard_order_filters import (
+    DASHBOARD_FILTER_LABELS,
+    queryset_for_dashboard_filter,
+)
 from .forms import CustomerForm
 from .models import Customer, SalesOrder, SalesOrderItem
 from .services.customer_center import (
@@ -181,13 +185,25 @@ def customer_delete(request, pk):
 
 def sales_order_list(request):
     orders = SalesOrder.objects.select_related("customer").prefetch_related("items")
+    dashboard_filter = request.GET.get("dashboard", "").strip()
+    dashboard_label = None
+    if dashboard_filter:
+        filtered = queryset_for_dashboard_filter(dashboard_filter)
+        if filtered is not None:
+            orders = filtered.select_related("customer").prefetch_related("items")
+            dashboard_label = DASHBOARD_FILTER_LABELS.get(dashboard_filter)
     status = request.GET.get("status")
-    if status:
+    if status and not dashboard_filter:
         orders = orders.filter(status=status)
     return render(
         request,
         "sales/sales_order_list.html",
-        {"orders": orders, "status_filter": status},
+        {
+            "orders": orders,
+            "status_filter": status,
+            "dashboard_filter": dashboard_filter or None,
+            "dashboard_label": dashboard_label,
+        },
     )
 
 

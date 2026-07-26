@@ -1,23 +1,16 @@
-from django.utils import timezone
-
 from apps.sales.models import SalesOrder
+
+from .dashboard_order_filters import (
+    TODAY_DELIVERED,
+    TODAY_UNDELIVERED,
+    dashboard_stat_links,
+    queryset_for_dashboard_filter,
+)
 
 
 def get_dashboard_stats():
-    today = timezone.localdate()
-    today_orders = SalesOrder.objects.filter(delivery_date=today).exclude(
-        status=SalesOrder.Status.CANCELLED
-    )
-    deliveries_today = today_orders.filter(
-        status__in=[SalesOrder.Status.SHIPPED, SalesOrder.Status.COMPLETED]
-    ).count()
-    undelivered_today = today_orders.filter(
-        status__in=[
-            SalesOrder.Status.DRAFT,
-            SalesOrder.Status.CREATED,
-            SalesOrder.Status.CONFIRMED,
-        ]
-    ).count()
+    deliveries_today = queryset_for_dashboard_filter(TODAY_DELIVERED).count()
+    undelivered_today = queryset_for_dashboard_filter(TODAY_UNDELIVERED).count()
     recent_orders = (
         SalesOrder.objects.select_related("customer")
         .exclude(status=SalesOrder.Status.CANCELLED)
@@ -29,4 +22,5 @@ def get_dashboard_stats():
         "pending_collection_today": "—",
         "overdue_today": "—",
         "recent_orders": recent_orders,
+        "stat_links": dashboard_stat_links(),
     }

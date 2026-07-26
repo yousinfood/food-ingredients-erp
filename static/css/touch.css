@@ -176,6 +176,25 @@ a { color: var(--touch-primary); text-decoration: none; }
   text-align: center;
 }
 
+a.touch-stat--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  min-height: 4.25rem;
+  -webkit-tap-highlight-color: rgba(15, 118, 110, 0.2);
+  touch-action: manipulation;
+}
+
+a.touch-stat--link:active {
+  border-color: var(--touch-primary);
+  background: rgba(15, 118, 110, 0.06);
+}
+
+a.touch-stat--link .touch-stat-value,
+a.touch-stat--link .touch-stat-label {
+  pointer-events: none;
+}
+
 .touch-stat-value {
   font-size: 1.5rem;
   font-weight: 800;

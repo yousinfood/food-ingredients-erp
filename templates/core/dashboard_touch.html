@@ -33,22 +33,22 @@
   </div>
 
   <section class="touch-stats-row">
-    <div class="touch-stat">
+    <a href="{{ stat_links.deliveries_today }}" class="touch-stat touch-stat--link">
       <div class="touch-stat-value">{{ deliveries_today }}</div>
       <div class="touch-stat-label">今日配送</div>
-    </div>
-    <div class="touch-stat">
+    </a>
+    <a href="{{ stat_links.undelivered_today }}" class="touch-stat touch-stat--link">
       <div class="touch-stat-value">{{ undelivered_today }}</div>
       <div class="touch-stat-label">今日未送</div>
-    </div>
-    <div class="touch-stat">
+    </a>
+    <a href="{{ stat_links.pending_collection_today }}" class="touch-stat touch-stat--link touch-stat--muted">
       <div class="touch-stat-value touch-stat-value--muted">{{ pending_collection_today }}</div>
       <div class="touch-stat-label">今日待收款</div>
-    </div>
-    <div class="touch-stat">
+    </a>
+    <a href="{{ stat_links.overdue_today }}" class="touch-stat touch-stat--link touch-stat--muted">
       <div class="touch-stat-value touch-stat-value--muted">{{ overdue_today }}</div>
       <div class="touch-stat-label">今日欠款</div>
-    </div>
+    </a>
   </section>
 
   {% if not searched and recent_orders %}
