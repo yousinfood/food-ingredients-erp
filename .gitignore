@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 staging_customers.json
+backups/
 .env
 .venv/
 venv/

@@ -2,22 +2,27 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260726e";
+  var ASSET_TAG = "20260726f";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
     if (!form || form.dataset.touchLiveSearch === "bound") return;
     form.dataset.touchLiveSearch = "bound";
-    var input = form.querySelector('input[type="search"], input[name="q"]');
+    var input = form.querySelector('input[type="search"], input[type="text"][name="q"], input[name="q"]');
     if (!input) return;
 
-    var mount =
-      document.getElementById("touch-search-results-mount") ||
-      document.getElementById("touch-search-results-panel") ||
-      form.parentElement;
+    var mount = document.getElementById("touch-search-results-mount");
+    if (!mount) {
+      mount =
+        document.getElementById("touch-search-results-panel") ||
+        form.parentElement;
+    }
+
     var composing = false;
     var timer = null;
     var fetchAbort = null;
+    var fetchSeq = 0;
+    var pendingHtml = null;
 
     function isComposingNow() {
       return composing || input.isComposing;
@@ -36,18 +41,44 @@
       }
     }
 
-    function updateResultsHtml(html) {
-      if (!mount) return;
+    function applyResultsHtml(html) {
+      if (!mount || typeof html !== "string") return;
       var caret = saveCaret();
-      mount.innerHTML = html;
-      restoreCaret(caret);
-      if (document.activeElement !== input) {
-        input.focus({ preventScroll: true });
+      var panel = mount.querySelector("#touch-search-results-panel");
+      if (panel) {
+        var wrap = document.createElement("div");
+        wrap.innerHTML = html.trim();
+        var next = wrap.firstElementChild;
+        if (next) {
+          panel.replaceWith(next);
+        } else {
+          panel.innerHTML = html;
+        }
+      } else {
+        mount.innerHTML = html;
       }
+      restoreCaret(caret);
+    }
+
+    function flushPendingHtml() {
+      if (pendingHtml && !isComposingNow()) {
+        var html = pendingHtml;
+        pendingHtml = null;
+        applyResultsHtml(html);
+      }
+    }
+
+    function updateResultsHtml(html) {
+      if (isComposingNow()) {
+        pendingHtml = html;
+        return;
+      }
+      applyResultsHtml(html);
     }
 
     function runFetch(showAll) {
       if (isComposingNow()) return;
+
       var q = input.value.trim();
       if (q.length < MIN_CHARS) {
         if (!q.length) {
@@ -55,9 +86,6 @@
             '<div id="touch-search-results-panel" class="touch-search-results-panel">' +
               '<p class="touch-hint touch-search-empty">輸入店名、電話、地址或客戶編號，點選結果進入客戶中心。</p></div>'
           );
-          if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, "", form.getAttribute("action") || "/");
-          }
         }
         return;
       }
@@ -70,6 +98,7 @@
 
       if (fetchAbort) fetchAbort.abort();
       fetchAbort = new AbortController();
+      var seq = ++fetchSeq;
 
       fetch(url, {
         headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -80,6 +109,12 @@
           return res.json();
         })
         .then(function (data) {
+          if (seq !== fetchSeq) return;
+          if (input.value.trim() !== q) return;
+          if (isComposingNow()) {
+            if (data && typeof data.html === "string") pendingHtml = data.html;
+            return;
+          }
           if (!data || !data.ok) return;
           if (data.redirect) {
             window.location.href = data.redirect;
@@ -87,12 +122,6 @@
           }
           if (typeof data.html === "string") {
             updateResultsHtml(data.html);
-          }
-          if (window.history && window.history.replaceState) {
-            var base = form.getAttribute("action") || "/";
-            var next = base + (base.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
-            if (showAll) next += "&more=1";
-            window.history.replaceState(null, "", next);
           }
         })
         .catch(function (err) {
@@ -105,7 +134,7 @@
       clearTimeout(timer);
       timer = setTimeout(function () {
         runFetch(false);
-      }, 220);
+      }, 280);
     }
 
     function afterCompositionEnd() {
@@ -113,7 +142,9 @@
       timer = null;
       window.requestAnimationFrame(function () {
         window.requestAnimationFrame(function () {
-          if (!isComposingNow()) runFetch(false);
+          if (isComposingNow()) return;
+          flushPendingHtml();
+          runFetch(false);
         });
       });
     }

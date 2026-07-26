@@ -1,8 +1,122 @@
-from decimal import Decimal
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
 
 from django.db.models import Q
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
 
 from apps.sales.models import Customer
+
+# 從第一個字元即搜尋；資料庫明顯變大前不提高到 2 字。
+MIN_SEARCH_QUERY_LENGTH = 1
+
+TOUCH_SEARCH_LIMIT = 12
+
+
+@dataclass(frozen=True)
+class RankedCustomerSearch:
+    customers: list[Customer]
+    total_count: int
+    limit: int
+    show_all: bool
+
+    @property
+    def has_more(self) -> bool:
+        return not self.show_all and self.total_count > len(self.customers)
+
+    @property
+    def remaining_count(self) -> int:
+        return max(0, self.total_count - len(self.customers))
+
+
+def _query_filter(q: str) -> Q:
+    return (
+        Q(name__icontains=q)
+        | Q(code__icontains=q)
+        | Q(phone__icontains=q)
+        | Q(phone_2__icontains=q)
+        | Q(phone_3__icontains=q)
+        | Q(tax_id__icontains=q)
+        | Q(address__icontains=q)
+        | Q(invoice_address__icontains=q)
+        | Q(region__icontains=q)
+    )
+
+
+def _phone_digits(value: str | None) -> str:
+    return "".join(ch for ch in (value or "") if ch.isdigit())
+
+
+def customer_relevance_tier(customer: Customer, query: str) -> int:
+    """Lower = higher priority: name start → name contains → phone → address → code."""
+    q = query.strip()
+    if not q:
+        return 99
+    ql = q.casefold()
+    q_digits = _phone_digits(q)
+
+    name = (customer.name or "").casefold()
+    if name.startswith(ql):
+        return 1
+    if ql in name:
+        return 2
+
+    for phone in (customer.phone, customer.phone_2, customer.phone_3):
+        if not phone:
+            continue
+        pl = phone.casefold()
+        pd = _phone_digits(phone)
+        if q_digits and pd:
+            if pd.startswith(q_digits):
+                return 3
+            if q_digits in pd:
+                return 4
+        if ql in pl:
+            return 4
+
+    for addr in (customer.address, customer.invoice_address, customer.region):
+        if addr and ql in addr.casefold():
+            return 5
+
+    code = (customer.code or "").casefold()
+    if ql in code:
+        return 6
+    if customer.tax_id and ql in customer.tax_id.casefold():
+        return 6
+
+    return 99
+
+
+def _sort_key(customer: Customer, query: str) -> tuple:
+    tier = customer_relevance_tier(customer, query)
+    name = customer.name or ""
+    return (tier, name.casefold(), name)
+
+
+def search_customers_ranked(
+    query: str,
+    *,
+    limit: int = TOUCH_SEARCH_LIMIT,
+    show_all: bool = False,
+    active_only: bool = True,
+) -> RankedCustomerSearch:
+    q = query.strip()
+    queryset = Customer.objects.all()
+    if active_only:
+        queryset = queryset.filter(is_active=True)
+    if len(q) < MIN_SEARCH_QUERY_LENGTH:
+        return RankedCustomerSearch([], 0, limit, show_all)
+
+    matches = list(queryset.filter(_query_filter(q)))
+    matches.sort(key=lambda c: _sort_key(c, q))
+    total = len(matches)
+    if show_all:
+        shown = matches
+    else:
+        shown = matches[: max(1, limit)]
+    return RankedCustomerSearch(shown, total, limit, show_all)
 
 
 def search_customers(*, query="", name="", phone="", code="", tax_id="", address="", active_only=True):
@@ -12,17 +126,8 @@ def search_customers(*, query="", name="", phone="", code="", tax_id="", address
 
     q = query.strip()
     if q:
-        return queryset.filter(
-            Q(name__icontains=q)
-            | Q(code__icontains=q)
-            | Q(phone__icontains=q)
-            | Q(phone_2__icontains=q)
-            | Q(phone_3__icontains=q)
-            | Q(tax_id__icontains=q)
-            | Q(address__icontains=q)
-            | Q(invoice_address__icontains=q)
-            | Q(region__icontains=q)
-        ).order_by("code")
+        ranked = search_customers_ranked(q, show_all=True, active_only=active_only)
+        return ranked.customers
 
     filters = Q()
     if name:
@@ -53,16 +158,10 @@ def filter_customers(*, query="", region="", show_inactive=False):
     if region:
         customers = customers.filter(region=region)
     if query:
-        customers = customers.filter(
-            Q(name__icontains=query)
-            | Q(code__icontains=query)
-            | Q(phone__icontains=query)
-            | Q(phone_2__icontains=query)
-            | Q(phone_3__icontains=query)
-            | Q(tax_id__icontains=query)
-            | Q(contact_person__icontains=query)
-            | Q(region__icontains=query)
-        )
+        customers = customers.filter(_query_filter(query))
+        matches = list(customers)
+        matches.sort(key=lambda c: _sort_key(c, query))
+        return matches
     return customers.order_by("code")
 
 
@@ -73,6 +172,21 @@ def get_customer_regions():
         .distinct()
         .order_by("region")
     )
+
+
+def highlight_match(text: str | None, query: str) -> str:
+    if text is None:
+        return ""
+    raw = str(text)
+    q = query.strip()
+    if not q:
+        return escape(raw)
+    escaped = escape(raw)
+    try:
+        pattern = re.compile(re.escape(q), re.IGNORECASE)
+    except re.error:
+        return escaped
+    return mark_safe(pattern.sub(r'<mark class="touch-search-mark">\g<0></mark>', escaped))
 
 
 def _format_decimal(value):

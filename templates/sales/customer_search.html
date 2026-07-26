@@ -1,4 +1,5 @@
 {% extends "touch_base.html" %}
+{% load touch_search %}
 
 {% block title %}客戶搜尋 - 有信食品 ERP{% endblock %}
 
@@ -11,36 +12,47 @@
 
   <form action="{% url 'customer_search' %}" method="get" class="touch-search-form">
     <input
-      type="search"
+      type="text"
       name="q"
       value="{{ query }}"
       class="touch-search-input"
       placeholder="客戶名稱、電話、地址或客戶編號"
       autofocus
       enterkeyhint="search"
+      inputmode="search"
       autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
     >
     <button type="submit" class="touch-btn touch-btn-primary">🔍 搜尋客戶</button>
   </form>
 
   {% if searched and results %}
-  <h2 class="touch-results-title">搜尋結果（{{ results|length }} 筆）</h2>
+  <h2 class="touch-results-title">
+    搜尋結果{% if search_show_all %}（共 {{ search_total }} 筆）{% else %}（顯示 {{ results|length }} / 共 {{ search_total }} 筆）{% endif %}
+  </h2>
   <div class="touch-result-list">
     {% for customer in results %}
     <a href="{% url 'sales:customer_center' customer.pk %}?q={{ query|urlencode }}" class="touch-result-card">
-      <div class="touch-result-code">{{ customer.code }}</div>
-      <div class="touch-result-name">{{ customer.name }}</div>
+      <div class="touch-result-code">{{ customer.code|highlight_query:query }}</div>
+      <div class="touch-result-name">{{ customer.name|highlight_query:query }}</div>
       <div class="touch-result-meta">
-        {% if customer.region %}{{ customer.region }} · {% endif %}
-        {{ customer.phone|default:"" }}
-        {% if customer.phone_2 %} / {{ customer.phone_2 }}{% endif %}
+        {% if customer.region %}{{ customer.region|highlight_query:query }} · {% endif %}
+        {{ customer.phone|default:""|highlight_query:query }}
+        {% if customer.phone_2 %} / {{ customer.phone_2|highlight_query:query }}{% endif %}
       </div>
       {% if customer.address %}
-      <div class="touch-result-meta">{{ customer.address }}</div>
+      <div class="touch-result-meta">{{ customer.address|highlight_query:query }}</div>
       {% endif %}
     </a>
     {% endfor %}
   </div>
+  {% if search_has_more %}
+  <a href="{% url 'customer_search' %}?q={{ query|urlencode }}&amp;more=1" class="touch-btn touch-btn-secondary touch-search-more">
+    還有 {{ search_remaining }} 筆符合，點擊查看更多
+  </a>
+  {% endif %}
   {% elif searched %}
   <p class="touch-hint">找不到符合的客戶，請調整關鍵字後再試。</p>
   {% else %}

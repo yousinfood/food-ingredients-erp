@@ -21,7 +21,7 @@ from .services.customer_center import (
     get_order_history,
     get_price_history,
 )
-from .services.customer_search import filter_customers, get_customer_regions, search_customers
+from .services.customer_search import filter_customers, get_customer_regions, search_customers_ranked
 from .services.customer_order_context import build_order_page_context
 from .services.nearby_recommendations import build_recommendation_row, get_recommended_nearby_customers
 from .services.order_actions import (
@@ -36,12 +36,26 @@ from .services.product_search import product_to_dict, search_saleable_products
 
 def customer_search(request):
     query = request.GET.get("q", "").strip()
+    show_all = request.GET.get("more") == "1"
     searched = bool(query)
-    results = list(search_customers(query=query)) if searched else []
+    search = (
+        search_customers_ranked(query, show_all=show_all)
+        if searched
+        else None
+    )
+    results = search.customers if search else []
     return render(
         request,
         "sales/customer_search.html",
-        {"query": query, "searched": searched, "results": results},
+        {
+            "query": query,
+            "searched": searched,
+            "results": results,
+            "search_total": search.total_count if search else 0,
+            "search_has_more": search.has_more if search else False,
+            "search_remaining": search.remaining_count if search else 0,
+            "search_show_all": show_all,
+        },
     )
 
 

@@ -12,14 +12,18 @@
 
   <form action="{% url 'dashboard' %}" method="get" class="touch-search-form touch-search-form--hero">
     <input
-      type="search"
+      type="text"
       name="q"
       value="{{ query }}"
       class="touch-search-input touch-search-input--hero"
       placeholder="搜尋店名、電話、地址、客戶編號"
       autofocus
       enterkeyhint="search"
+      inputmode="search"
       autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
     >
     <button type="submit" class="touch-btn touch-btn-primary touch-btn-search">🔍 搜尋客戶</button>
   </form>

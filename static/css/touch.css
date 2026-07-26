@@ -248,6 +248,24 @@ a { color: var(--touch-primary); text-decoration: none; }
   line-height: 1.45;
 }
 
+.touch-search-mark {
+  background: #fef08a;
+  color: inherit;
+  padding: 0 0.12em;
+  border-radius: 0.15em;
+  font-weight: inherit;
+}
+
+.touch-search-more {
+  display: block;
+  width: 100%;
+  margin-top: 0.85rem;
+  min-height: 52px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .touch-result-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
