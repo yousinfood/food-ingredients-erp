@@ -70,7 +70,7 @@ railway up
 - **build：** `pip install -r requirements.txt` → `collectstatic --noinput`
 - **release：** `migrate --noinput`
 - **start：** **Gunicorn**（勿在 start 跑 seed，否則 healthcheck 會在 port 尚未監聽時失敗）
-- **healthcheck：** `GET /health/`
+- **healthcheck（手動／監控）：** `GET /health/`（Railway 內建 healthcheck 與本專案啟動時序衝突，改以 release + 外部探測）
 - **示範資料：** 新環境手動一次 `railway run python manage.py seed_data`
 
 ---
