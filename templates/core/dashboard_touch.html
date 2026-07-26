@@ -1,4 +1,5 @@
 {% extends "touch_base.html" %}
+{% load touch_search %}
 
 {% block title %}儀表板 - 有信食品 ERP{% endblock %}
 
@@ -23,6 +24,10 @@
     <button type="submit" class="touch-btn touch-btn-primary touch-btn-search">🔍 搜尋客戶</button>
   </form>
 
+  <div id="touch-search-results-mount">
+  {% include "core/_customer_search_results.html" %}
+  </div>
+
   <section class="touch-stats-row">
     <div class="touch-stat">
       <div class="touch-stat-value">{{ deliveries_today }}</div>
@@ -41,38 +46,6 @@
       <div class="touch-stat-label">今日欠款</div>
     </div>
   </section>
-
-  {% if searched and results %}
-  <h2 class="touch-results-title">搜尋結果（{{ results|length }} 筆）</h2>
-  <div class="touch-result-list">
-    {% for customer in results %}
-    <article class="touch-result-card">
-      <a href="{% url 'sales:customer_center' customer.pk %}?q={{ query|urlencode }}" class="touch-result-card-main">
-        <div class="touch-result-code">{{ customer.code }}</div>
-        <div class="touch-result-name">{{ customer.name }}</div>
-        <div class="touch-result-meta">
-          {% if customer.region %}{{ customer.region }} · {% endif %}
-          {{ customer.phone|default:"" }}
-          {% if customer.phone_2 %} / {{ customer.phone_2 }}{% endif %}
-        </div>
-        {% if customer.address %}
-        <div class="touch-result-meta">{{ customer.address }}</div>
-        {% endif %}
-      </a>
-      <nav class="touch-result-actions" aria-label="{{ customer.name }} 快速操作">
-        <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-result-action">📦 接單</a>
-        <a href="{% url 'sales:receive_payment' customer.pk %}" class="touch-result-action">💰 收款</a>
-        <a href="{% url 'sales:order_history' customer.pk %}" class="touch-result-action">📜 歷史</a>
-        <a href="{% url 'sales:price_history' customer.pk %}" class="touch-result-action">💲 價格</a>
-      </nav>
-    </article>
-    {% endfor %}
-  </div>
-  {% elif searched %}
-  <p class="touch-hint">找不到符合的客戶，請調整關鍵字後再試。</p>
-  {% else %}
-  <p class="touch-hint">輸入店名、電話、地址或客戶編號，點選結果進入客戶中心。</p>
-  {% endif %}
 
   {% if not searched and recent_orders %}
   <section class="touch-section" style="margin-top:1.5rem;">
