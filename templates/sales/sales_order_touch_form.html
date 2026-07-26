@@ -66,6 +66,7 @@
     </div>
 
     <div class="touch-order-pick-column">
+      <div class="touch-order-pick-toolbar" id="order-pick-toolbar">
       {% if product_categories %}
       <section class="touch-order-categories-bar" aria-label="產品分類">
         <div class="touch-category-grid touch-category-grid--toolbar" id="category-grid">
@@ -78,13 +79,34 @@
       </section>
       {% endif %}
 
-      <section class="touch-order-products-zone" aria-label="選擇產品">
-        <div id="category-products" class="touch-frequent-grid touch-product-grid--main" aria-live="polite"></div>
-        {% if not product_categories %}
-        <p class="touch-empty">尚無分類，請使用下方搜尋</p>
-        {% endif %}
-      </section>
+      <div class="touch-product-search-section touch-product-search-section--toolbar">
+        <input type="search" id="product-search" class="touch-search-input touch-search-input--compact" placeholder="料號或品名" autocomplete="off" enterkeyhint="search">
+        <div id="product-search-results" class="touch-product-results" hidden></div>
+      </div>
+      </div>
 
+      <div class="touch-order-products-scroll" id="order-products-scroll" tabindex="-1">
+        <section class="touch-order-products-zone" aria-label="選擇產品">
+          <div id="category-products" class="touch-frequent-grid touch-product-grid--main" aria-live="polite"></div>
+          {% if not product_categories %}
+          <p class="touch-empty">尚無分類，請使用上方搜尋</p>
+          {% endif %}
+        </section>
+      </div>
+
+    </div>
+
+    <section class="touch-cart-section touch-cart-section--compact touch-order-cart-panel" aria-label="已選商品">
+      <div class="touch-section-head touch-section-head--calm">
+        <span class="touch-section-title">已選</span>
+        <span id="line-count" class="touch-line-count">0 項</span>
+      </div>
+      <div id="order-lines" class="touch-order-lines">
+        <p id="order-lines-empty" class="touch-order-lines-empty" hidden>—</p>
+      </div>
+      <div id="order-lines-inputs"></div>
+
+      <div class="touch-order-pick-secondary touch-order-cart-secondary">
       {% if frequent_products or last_order %}
       <details class="touch-disclosure touch-order-quick-picks">
         <summary class="touch-disclosure-toggle">{% if frequent_products %}常購{% endif %}{% if frequent_products and last_order %} · {% endif %}{% if last_order %}上次訂單{% endif %}</summary>
@@ -150,12 +172,8 @@
       {% endif %}
 
       <details class="touch-disclosure touch-order-extras">
-        <summary class="touch-disclosure-toggle">其他：搜尋產品、訂單資料</summary>
+        <summary class="touch-disclosure-toggle">其他：訂單資料</summary>
         <div class="touch-disclosure-body touch-order-extras-body">
-          <div class="touch-product-search-section touch-product-search-section--inline">
-            <input type="search" id="product-search" class="touch-search-input touch-search-input--compact" placeholder="料號或品名" autocomplete="off" enterkeyhint="search">
-            <div id="product-search-results" class="touch-product-results" hidden></div>
-          </div>
           <div class="touch-order-more-fields touch-order-more-fields--inline">
             <div class="touch-order-dates">
               <div class="touch-form-field">
@@ -183,17 +201,7 @@
           </div>
         </div>
       </details>
-    </div>
-
-    <section class="touch-cart-section touch-cart-section--compact touch-order-cart-panel" aria-label="已選商品">
-      <div class="touch-section-head touch-section-head--calm">
-        <span class="touch-section-title">已選</span>
-        <span id="line-count" class="touch-line-count">0 項</span>
       </div>
-      <div id="order-lines" class="touch-order-lines">
-        <p id="order-lines-empty" class="touch-order-lines-empty" hidden>—</p>
-      </div>
-      <div id="order-lines-inputs"></div>
     </section>
 
     <div class="touch-order-footer touch-order-footer--fixed">
@@ -244,6 +252,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260725b"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260725f"></script>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,20 @@
+{
+  "name": "有信食品接單",
+  "short_name": "有信接單",
+  "description": "有信食品 ERP — 現場接單",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "/static/icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

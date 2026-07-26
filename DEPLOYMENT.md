@@ -1,31 +1,18 @@
 # 雲端 Staging 部署（Railway）
 
-固定網址（HTTPS）：
+固定網址（HTTPS，任何網路皆可開，含 iPad 4G／Wi‑Fi）：
 
 **https://web-production-dfc69.up.railway.app/**
 
-- 客戶搜尋：`/search/` 或首頁 `/?q=關鍵字`
-- 健康檢查：`/health/` → `200` 與文字 `ok`
-- 接單：`/sales/orders/new/?customer=<id>`
+| 用途 | 路徑 |
+|------|------|
+| 客戶搜尋 | 首頁 `/` 或 `/search/?q=關鍵字` |
+| 健康檢查 | `/health/` → `200` 與文字 `ok` |
+| 接單 | `/sales/orders/new/?customer=<id>` |
 
-本機開發仍用 **SQLite**（`db.sqlite3`），不要刪。Staging 使用 **Railway PostgreSQL**。
+**iPad 日常操作：** 不必連公司 Wi‑Fi。Safari 開上方網址即可；建議「加入主畫面」當接單 App（見下方）。
 
----
-
-## 日常流程
-
-1. 在本機改程式、用 SQLite 測試。
-2. `git push` 到 GitHub（連好 Railway 後每次 push 自動部署）。
-3. 用 iPad / Mac 開啟上方 **同一個 HTTPS 網址** 驗收。
-
-若尚未連 GitHub，可手動部署：
-
-```bash
-cd /path/to/food-ingredients-erp
-railway login
-railway link   # 選 yousin-food-erp → web
-railway up
-```
+本機開發仍用 **SQLite**（`.env` 設 `USE_POSTGRES=0`，`db.sqlite3` 勿刪）。Staging／Production 雲端用 **Railway PostgreSQL**。
 
 ---
 
@@ -33,100 +20,115 @@ railway up
 
 | 項目 | 值 |
 |------|-----|
+| 儀表板 | [Railway → yousin-food-erp](https://railway.com/project/140aaf06-65b8-4921-b1d7-3b425efb118c) |
 | 專案 | `yousin-food-erp` |
-| 服務 | `web`（Django + Gunicorn） |
+| 服務 | `web`（Django + Gunicorn + WhiteNoise） |
 | 資料庫 | `Postgres`（持久化） |
-| 網域 | `web-production-dfc69.up.railway.app` |
+| 公開網域 | `web-production-dfc69.up.railway.app` |
 
-### 必要環境變數（在 Railway → web → Variables）
+### 環境變數（Railway → web → Variables）
 
-已在雲端設定，**勿提交到 Git**：
+勿把密鑰提交到 Git。參考 `railway.env.example`。
 
-- `DEBUG` = `False`
-- `SECRET_KEY` =（Railway 內隨機產生）
-- `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`
-- `RAILWAY_PUBLIC_DOMAIN` = `web-production-dfc69.up.railway.app`
-- `SECURE_SSL_REDIRECT` = `False`（Railway 邊界已終止 HTTPS；也可依 `settings.py` 預設）
+| 變數 | 值 |
+|------|-----|
+| `DEBUG` | `False` |
+| `SECRET_KEY` | Railway 內隨機字串 |
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `RAILWAY_PUBLIC_DOMAIN` | `web-production-dfc69.up.railway.app` |
+| `SECURE_SSL_REDIRECT` | `False`（Railway 邊界已 HTTPS） |
+
+`config/settings.py` 會依 `RAILWAY_PUBLIC_DOMAIN` 設定 `ALLOWED_HOSTS`、`CSRF_TRUSTED_ORIGINS`、`SECURE_PROXY_SSL_HEADER`，以及 production 的 secure cookie。
+
+### 靜態與媒體
+
+- **CSS／JS：** build 時 `collectstatic`，執行時由 **WhiteNoise** 提供（`/static/...`）。
+- **上傳檔（媒體）：** 目前 ERP 接單流程幾乎不用上傳。若日後需要持久化，在 Railway **web** 掛 **Volume**（例如 `/data/media`），並設 `MEDIA_ROOT=/data/media`。未掛 volume 時容器內 `media/` 會在重部署後清空；大量檔案可改 S3／R2（另案設定）。
 
 ---
 
-## 部署時自動執行
+## 部署流程
 
-`railway.toml`：
+### 自動（推薦）：GitHub → Railway
 
-- **build：** `collectstatic`（WhiteNoise 提供 CSS/JS）
-- **start：** `migrate` → `seed_data`（示範資料，可重複執行）→ **Gunicorn**
-- **healthcheck：** `GET /health/`
+1. 將本 repo push 到 GitHub（見下一節）。
+2. Railway → **yousin-food-erp** → **web** → **Settings** → **Connect Repo** → 選 repo、分支 `main`。
+3. 之後每次 `git push origin main` 自動 build／deploy。
+
+### 手動（CLI）
+
+```bash
+export PATH="$HOME/.railway/bin:$PATH"
+cd /path/to/food-ingredients-erp
+railway login    # 帳號 yousinfood@gmail.com
+railway link     # 選 yousin-food-erp → web
+railway up
+```
+
+### Build／Deploy 步驟（`railway.toml`）
+
+- **build：** `pip install -r requirements.txt` → `collectstatic --noinput`
+- **release：** `migrate --noinput`
+- **start：** `migrate` → `seed_data`（可重複）→ **Gunicorn**
+- **healthcheck：** `GET /health/`（逾時 180s）
 
 ---
 
-## 回滾（保留上一版）
+## GitHub repo 與第一次 push
 
-1. Railway → 專案 → **web** → **Deployments**
-2. 選上一個 **SUCCESS** 的部署 → **Redeploy**
+本機若尚無 `origin`：
 
-資料庫不會因回滾程式而還原；若做過危險 migration，用 Postgres **備份還原**（Railway → Postgres → Backups）。
+```bash
+cd /path/to/food-ingredients-erp
+# GitHub 網站：New repository → 例如 food-ingredients-erp（Private 可）
+git remote add origin https://github.com/<帳號>/food-ingredients-erp.git
+git push -u origin main
+```
+
+若 `git push` 要求登入：瀏覽器用 GitHub 帳號授權，或設定 [Personal Access Token](https://github.com/settings/tokens)（HTTPS），或改用 SSH remote。
+
+連好 remote 並在 Railway **Connect Repo** 後，部署狀態可在 Railway → **web** → **Deployments** 查看。
+
+---
+
+## iPad：加入主畫面（像 App，免額外設定）
+
+1. iPad 用 **Safari** 開啟：**https://web-production-dfc69.up.railway.app/**
+2. 點網址列旁的 **分享**（方框＋箭頭）。
+3. 選 **加入主畫面**。
+4. 名稱可保留「有信接單」，按 **加入**。
+5. 之後從主畫面圖示開啟：全螢幕、大按鈕；斷線時會顯示「目前沒有網路…」，恢復連線後會自動重新整理。
+
+現場人員**不需要**改 Safari 設定、不需要 VPN、不需要記 IP。
+
+---
+
+## 回滾
+
+1. Railway → **web** → **Deployments**
+2. 選上一個 **SUCCESS** → **Redeploy**
+
+Postgres 資料不會因程式回滾而還原；危險 migration 請用 Postgres **Backups**。
 
 ---
 
 ## 資料
 
 - **尚未**從本機 SQLite 匯入 staging；確認網站正常後再另做匯入（不覆寫本機 `db.sqlite3`）。
-- Staging 目前靠 `seed_data` 建立示範客戶／商品；正式資料匯入前請先備份 Postgres。
+- Staging 目前靠 `seed_data` 建立示範客戶／商品。
 
 ---
 
 ## 驗收清單
 
-- [x] `https://web-production-dfc69.up.railway.app/health/` → 200
-- [ ] 首頁與搜尋可開
+- [ ] `https://web-production-dfc69.up.railway.app/health/` → 200、`ok`
+- [ ] 首頁搜尋可開
 - [ ] `/static/css/touch.css` → 200
-- [ ] 接單、儲存訂單後 redeploy，訂單仍在
+- [ ] 接單、儲存訂單；redeploy 後訂單仍在 Postgres
+- [ ] iPad 主畫面圖示可全螢幕開啟
 
 ---
 
-## 連接 GitHub（自動部署）
+## 本機 LAN
 
-**現況：** 雲端已由 CLI／手動部署上線；GitHub remote 需在本機建立並 push 後，才能連自動部署。
-
-### 1. 建立 GitHub repo 並 push（本機一次）
-
-```bash
-cd /path/to/food-ingredients-erp
-# 在 GitHub 網站 New repository（建議名稱 food-ingredients-erp，Private 亦可）
-git remote add origin https://github.com/<你的帳號>/food-ingredients-erp.git
-git push -u origin main
-```
-
-若未安裝 GitHub CLI，可用瀏覽器建立空 repo 後再 `git push`。需登入 GitHub（HTTPS token 或 SSH key）。
-
-### 2. Railway 連 repo
-
-**Dashboard：** **yousin-food-erp** → **web** → **Settings** → **Connect Repo** → 選 repo → 分支 `main`。
-
-**CLI（已 login）：**
-
-```bash
-export PATH="$HOME/.railway/bin:$PATH"
-cd /path/to/food-ingredients-erp
-railway link   # yousin-food-erp → web
-railway service source connect --repo <帳號>/food-ingredients-erp --branch main --service web
-```
-
-之後每次 `git push origin main` 會自動 build／deploy。
-
-### 環境變數名稱（Railway → web → Variables）
-
-勿把值寫進 Git；清單見 `railway.env.example`：
-
-- `DEBUG`
-- `SECRET_KEY`
-- `DATABASE_URL`
-- `RAILWAY_PUBLIC_DOMAIN`
-- `SECURE_SSL_REDIRECT`（選用）
-
----
-
-## 本機 LAN / 隧道
-
-Staging 驗收 **只用** 上方 HTTPS 網址，不要用 `127.0.0.1`、LAN IP 或 Quick Tunnel 當 staging。
+本機 iPad 同 Wi‑Fi 測試見 `docs/ipad-lan-dev.md`。**Staging 驗收請只用上方 HTTPS 網址**，不要用 LAN IP 當正式環境。

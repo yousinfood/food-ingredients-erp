@@ -3,12 +3,26 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="有信接單">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>{% block title %}有信食品 ERP{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260725b">
+  <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/app-icon.svg' %}">
+  <link rel="icon" href="{% static 'icons/app-icon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260726a">
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="touch-app">
+  <div id="touch-offline-banner" class="touch-offline-banner" hidden aria-hidden="true" role="alert">
+    <p class="touch-offline-banner__text">目前沒有網路，請檢查 Wi‑Fi 或行動網路</p>
+    <button type="button" class="touch-offline-banner__retry" id="touch-offline-retry">再試一次</button>
+  </div>
   {% block body %}{% endblock %}
+  <script src="{% static 'js/touch-connectivity.js' %}?v=20260726a" defer></script>
+  {% block extra_scripts %}{% endblock %}
 </body>
 </html>

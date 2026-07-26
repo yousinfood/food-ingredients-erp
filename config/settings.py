@@ -215,6 +215,14 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_URL = os.environ.get("MEDIA_URL", "media/").strip() or "media/"
+_media_root_env = os.environ.get("MEDIA_ROOT", "").strip()
+MEDIA_ROOT = Path(_media_root_env) if _media_root_env else BASE_DIR / "media"
+
+WHITENOISE_MIMETYPES = {
+    ".webmanifest": "application/manifest+json",
+}
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",

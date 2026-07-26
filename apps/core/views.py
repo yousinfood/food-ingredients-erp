@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
@@ -8,6 +9,14 @@ from .services.dashboard import get_dashboard_stats
 
 def health(request):
     return HttpResponse("ok", content_type="text/plain")
+
+
+def service_worker(request):
+    sw_path = settings.BASE_DIR / "static" / "pwa" / "service-worker.js"
+    response = HttpResponse(sw_path.read_text(encoding="utf-8"), content_type="application/javascript")
+    response["Service-Worker-Allowed"] = "/"
+    response["Cache-Control"] = "no-cache"
+    return response
 
 
 def dashboard(request):

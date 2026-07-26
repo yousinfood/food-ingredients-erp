@@ -43,6 +43,42 @@
     let draftSeries = null;
     let isSubmitting = false;
     let copyPartialMode = false;
+
+    const pickToolbar = document.getElementById("order-pick-toolbar");
+    const productsScroll = document.getElementById("order-products-scroll");
+    const productsZone = document.querySelector(".touch-order-products-zone");
+
+    function scrollProductsToTop() {
+      if (!productsScroll) return;
+      productsScroll.scrollTop = 0;
+      requestAnimationFrame(function () {
+        productsScroll.scrollTop = 0;
+      });
+    }
+
+    function useInListFlourHint() {
+      return window.matchMedia("(min-width: 1024px)").matches;
+    }
+
+    function flourSeriesPromptHtml() {
+      return (
+        '<p class="touch-category-hint touch-category-hint--in-list" role="status">' +
+        "選系列：低筋／中筋／高筋／油條</p>"
+      );
+    }
+
+    function syncPickToolbarGap() {
+      if (!pickToolbar) return;
+      const toolbarH = Math.ceil(pickToolbar.getBoundingClientRect().height);
+      const searchSection = pickToolbar.querySelector(".touch-product-search-section--toolbar");
+      const searchH = searchSection ? Math.ceil(searchSection.getBoundingClientRect().height) : 0;
+      if (productsZone) {
+        productsZone.style.setProperty("--touch-product-search-offset", searchH + "px");
+      }
+      if (productsScroll) {
+        productsScroll.style.scrollMarginTop = "0px";
+      }
+    }
     let pendingLeaveUrl = null;
     let leaveConfirmed = false;
 
@@ -681,15 +717,18 @@
     function showEmptyCategoryMessage() {
       if (!categoryProducts) return;
       categoryProducts.innerHTML = '<p class="touch-empty">此分類目前沒有產品</p>';
+      scrollProductsToTop();
     }
 
     function renderCategoryProducts(products) {
       if (!categoryProducts) return;
       if (!products.length) {
         showEmptyCategoryMessage();
+        scrollProductsToTop();
         return;
       }
       categoryProducts.innerHTML = products.map(productCardHtml).join("");
+      scrollProductsToTop();
     }
 
     function isFlourCategory(category) {
@@ -710,6 +749,7 @@
         seriesChips.innerHTML = "";
         if (seriesHint) seriesHint.hidden = true;
         activeSeries = null;
+        syncPickToolbarGap();
         return;
       }
       const seriesList = config.flourSeries || [];
@@ -718,7 +758,14 @@
         return '<button type="button" class="touch-series-chip' + active + '" data-series="' + escapeHtml(s) + '">' + escapeHtml(s) + "</button>";
       }).join("");
       seriesChips.hidden = false;
-      if (seriesHint) seriesHint.hidden = !!activeSeries;
+      if (seriesHint) {
+        if (useInListFlourHint()) {
+          seriesHint.hidden = true;
+        } else {
+          seriesHint.hidden = !!activeSeries;
+        }
+      }
+      syncPickToolbarGap();
     }
 
     function applyCategoryView() {
@@ -726,8 +773,11 @@
       renderSeriesChips();
       if (isFlourCategory(activeCategory)) {
         if (!activeSeries) {
-          if (categoryProducts) categoryProducts.innerHTML = "";
-          if (seriesHint) seriesHint.hidden = false;
+          if (categoryProducts) {
+            categoryProducts.innerHTML = useInListFlourHint() ? flourSeriesPromptHtml() : "";
+          }
+          if (seriesHint) seriesHint.hidden = useInListFlourHint();
+          scrollProductsToTop();
           return;
         }
         if (seriesHint) seriesHint.hidden = true;
@@ -750,12 +800,14 @@
       const cached = categoryCache.get(category);
       if (cached) {
         applyCategoryView();
+        scrollProductsToTop();
         return;
       }
 
       if (categoryProducts) {
         categoryProducts.innerHTML = '<p class="touch-empty touch-loading-hint">載入中…</p>';
       }
+      scrollProductsToTop();
 
       fetch(config.searchUrl + "?category=" + encodeURIComponent(category) + customerQuery(), {
         headers: { Accept: "application/json" },
@@ -921,6 +973,8 @@
         products.map(productCardHtml).join("") +
         "</div>";
       searchResults.hidden = false;
+      scrollProductsToTop();
+      syncPickToolbarGap();
     }
 
     function runSearch() {
@@ -942,6 +996,10 @@
       searchInput.addEventListener("input", function () {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(runSearch, 120);
+      });
+      searchInput.addEventListener("focus", syncPickToolbarGap);
+      searchInput.addEventListener("blur", function () {
+        window.setTimeout(syncPickToolbarGap, 80);
       });
       searchInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
@@ -1044,6 +1102,13 @@
     } else {
       selectCategory(defaultCategory);
     }
+
+    if (pickToolbar && typeof ResizeObserver !== "undefined") {
+      const toolbarObserver = new ResizeObserver(syncPickToolbarGap);
+      toolbarObserver.observe(pickToolbar);
+    }
+    window.addEventListener("resize", syncPickToolbarGap);
+    syncPickToolbarGap();
 
     window.__SALES_ORDER_TOUCH_READY = true;
   }

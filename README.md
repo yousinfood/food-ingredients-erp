@@ -45,7 +45,33 @@ python manage.py runserver
 
 預設帳號：`admin` / `admin123`
 
-## iPad 遠端測本機（ngrok，建議）
+## iPad 測本機（同一 Wi‑Fi，建議）
+
+Mac 與 iPad 連**同一個 Wi‑Fi** 時，不必用隧道。開發機 IP 建議固定為 **`192.168.0.165`**（路由器 DHCP 保留步驟見 [docs/ipad-lan-dev.md](docs/ipad-lan-dev.md)）。
+
+```bash
+source .venv/bin/activate
+./scripts/dev-lan.sh
+```
+
+終端以 `0.0.0.0:8000` 啟動 Django；iPad 開 **`http://192.168.0.165:8000/`**。  
+若 iPad 連不上，腳本會提示檢查 macOS 防火牆（允許 Python 傳入連線）。
+
+## iPad 遠端測本機（Cloudflare Quick Tunnel）
+
+**不需 Cloudflare 域名、不需 Dashboard。** 從 iPad / 4G 用 HTTPS 連到你 Mac 上的 Django；改程式後在 iPad **重新整理** 即可。
+
+```bash
+source .venv/bin/activate
+./scripts/dev-ipad.sh
+```
+
+終端會印出 **https://….trycloudflare.com**（每次重啟 cloudflared 網址會變，屬正常）。  
+客戶搜尋：`https://….trycloudflare.com/search/`
+
+本機仍用 **SQLite**（`.env` 預設 `USE_POSTGRES=0`）。
+
+## iPad 遠端測本機（ngrok，選用）
 
 從**任何網路**用 Safari 開本機 Django（HTTPS）。專案已允許 `*.ngrok-free.app` 的 Host / CSRF（僅 `DEBUG=True`）。
 
