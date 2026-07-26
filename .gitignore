@@ -8,3 +8,7 @@ venv/
 .DS_Store
 staticfiles/
 media/
+.cloudflared-quick.log
+.cloudflared/tunnel-id
+.cloudflared/hostname
+# config.yml 可提交（無密鑰）；憑證在 ~/.cloudflared/*.json

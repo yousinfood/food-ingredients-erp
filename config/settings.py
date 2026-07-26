@@ -43,30 +43,69 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in ("1", "true", "yes")
 
 
+def _detect_local_lan_ips() -> list[str]:
+    """本機區域網 IP（iPad 同 Wi‑Fi 測試用，僅 DEBUG 載入 settings 時呼叫）。"""
+    import socket
+    import subprocess
+
+    found: set[str] = set()
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        probe.connect(("8.8.8.8", 80))
+        found.add(probe.getsockname()[0])
+        probe.close()
+    except OSError:
+        pass
+    for iface in ("en0", "en1", "en2", "bridge0"):
+        try:
+            out = subprocess.check_output(
+                ["ipconfig", "getifaddr", iface],
+                stderr=subprocess.DEVNULL,
+                text=True,
+            ).strip()
+            if out:
+                found.add(out)
+        except (OSError, subprocess.CalledProcessError):
+            continue
+    return sorted(ip for ip in found if ip and not ip.startswith("127."))
+
+
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key-change-in-production")
 DEBUG = _env_bool("DEBUG", default=True)
 RAILWAY_PUBLIC_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+CLOUDFLARE_TUNNEL_HOSTNAME = os.environ.get("CLOUDFLARE_TUNNEL_HOSTNAME", "").strip()
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+DEV_LAN_IP = os.environ.get("DEV_LAN_IP", "192.168.0.165").strip()
 
-# 本機用 ngrok / Tailscale 在 iPad 測試時（僅 DEBUG）
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.0.165"]
+
+# 本機用 ngrok / Tailscale / 區域網 在 iPad 測試時（僅 DEBUG）
 if DEBUG:
-    ALLOWED_HOSTS += ["0.0.0.0"]
     ALLOWED_HOSTS += [
         ".ngrok-free.app",
         ".ngrok.io",
         ".ngrok.app",
+        ".trycloudflare.com",
     ]
+    if DEV_LAN_IP and DEV_LAN_IP not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(DEV_LAN_IP)
     _extra_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS_EXTRA", "").strip()
     if _extra_hosts:
         ALLOWED_HOSTS += [h.strip() for h in _extra_hosts.split(",") if h.strip()]
+    for ip in _detect_local_lan_ips():
+        if ip not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(ip)
 
 if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+if CLOUDFLARE_TUNNEL_HOSTNAME:
+    ALLOWED_HOSTS.append(CLOUDFLARE_TUNNEL_HOSTNAME)
 ALLOWED_HOSTS += [".up.railway.app"]
 _extra_allowed = os.environ.get("ALLOWED_HOSTS", "").strip()
 if _extra_allowed:
     ALLOWED_HOSTS += [h.strip() for h in _extra_allowed.split(",") if h.strip()]
+
+ALLOWED_HOSTS = list(dict.fromkeys(h for h in ALLOWED_HOSTS if h))
 
 CSRF_TRUSTED_ORIGINS: list[str] = []
 if DEBUG:
@@ -74,19 +113,32 @@ if DEBUG:
         "https://*.ngrok-free.app",
         "https://*.ngrok.io",
         "https://*.ngrok.app",
+        "https://*.trycloudflare.com",
     ]
     _extra_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS_EXTRA", "").strip()
     if _extra_csrf:
         CSRF_TRUSTED_ORIGINS += [o.strip() for o in _extra_csrf.split(",") if o.strip()]
+    _dev_port = os.environ.get("DJANGO_DEV_PORT", "8000").strip() or "8000"
+    _csrf_lan_ips = dict.fromkeys(
+        [DEV_LAN_IP, "192.168.0.165", "127.0.0.1", "localhost", *_detect_local_lan_ips()]
+    )
+    for ip in _csrf_lan_ips:
+        if ip:
+            CSRF_TRUSTED_ORIGINS.append(f"http://{ip}:{_dev_port}")
 
 if RAILWAY_PUBLIC_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RAILWAY_PUBLIC_DOMAIN}")
+if CLOUDFLARE_TUNNEL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{CLOUDFLARE_TUNNEL_HOSTNAME}")
 
-if RAILWAY_PUBLIC_DOMAIN or _env_bool("USE_NGROK"):
+if RAILWAY_PUBLIC_DOMAIN or _env_bool("USE_NGROK") or _env_bool("USE_CLOUDFLARE_TUNNEL"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if not DEBUG:
-    SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", default=True)
+    SECURE_SSL_REDIRECT = _env_bool(
+        "SECURE_SSL_REDIRECT",
+        default=not bool(RAILWAY_PUBLIC_DOMAIN),
+    )
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 

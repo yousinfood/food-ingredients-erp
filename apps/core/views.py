@@ -1,8 +1,13 @@
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
 from apps.sales.services.customer_search import search_customers
 
 from .services.dashboard import get_dashboard_stats
+
+
+def health(request):
+    return HttpResponse("ok", content_type="text/plain")
 
 
 def dashboard(request):
