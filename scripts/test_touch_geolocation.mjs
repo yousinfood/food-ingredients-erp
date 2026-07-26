@@ -50,6 +50,21 @@ assert(
   T.messageFromGeolocationError({ code: 2 }).kind === "unavailable",
   "POSITION_UNAVAILABLE without message → unavailable not disabled"
 );
+assert(
+  T.coerceMappedError({ code: 2, message: "Location services are turned off" }).message ===
+    T.MSG.disabled,
+  "raw browser error → 繁中 disabled"
+);
+assert(
+  T.coerceMappedError({ code: 2, message: "Location services are turned off" }).message.indexOf(
+    "Location"
+  ) === -1,
+  "never show English browser geolocation message in UI"
+);
+assert(
+  T.coerceMappedError({ code: 2 }).kind === "unavailable",
+  "iPad-like code 2 without message → unavailable"
+);
 
 if (failed) {
   process.exit(1);

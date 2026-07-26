@@ -63,6 +63,25 @@
     return { kind: "unknown", message: MSG.unknown, showBanner: false };
   }
 
+  /** Never surface browser GeolocationPositionError.message (often English) in UI. */
+  function coerceMappedError(err) {
+    if (err && typeof err.kind === "string" && typeof err.message === "string") {
+      return {
+        kind: err.kind,
+        message: err.message,
+        showBanner:
+          err.showBanner === true ||
+          err.kind === "denied" ||
+          err.kind === "disabled",
+      };
+    }
+    var raw = err && err.raw ? err.raw : err;
+    if (raw && typeof raw.code === "number") {
+      return messageFromGeolocationError(raw);
+    }
+    return messageFromGeolocationError(null);
+  }
+
   function queryGeolocationPermission() {
     if (!PERM || typeof PERM.query !== "function") {
       return Promise.resolve({ state: "unknown", supported: false });
@@ -101,12 +120,12 @@
       }
       return getCurrentPosition(options).catch(function (err) {
         var mapped = messageFromGeolocationError(err);
-        var rejection = {
+        return Promise.reject({
           kind: mapped.kind,
           message: mapped.message,
+          showBanner: mapped.showBanner,
           raw: err,
-        };
-        return Promise.reject(rejection);
+        });
       });
     });
   }
@@ -157,10 +176,7 @@
         global.location.href = href;
       })
       .catch(function (err) {
-        var mapped =
-          err && err.message
-            ? err
-            : messageFromGeolocationError(err && err.raw ? err.raw : err);
+        var mapped = coerceMappedError(err);
         if (mapped.showBanner) {
           showLocationBanner(mapped.message, bannerEl);
         } else if (mapped.message && mapped.kind !== "denied") {
@@ -168,8 +184,6 @@
           global.setTimeout(function () {
             hideLocationBanner(bannerEl);
           }, 3500);
-        } else if (mapped.kind === "denied") {
-          showLocationBanner(mapped.message, bannerEl);
         }
         global.location.href = destinationHref;
       });
@@ -193,13 +207,6 @@
   function initLocationBanner(bannerEl) {
     if (!bannerEl) return;
     hideLocationBanner(bannerEl);
-    queryGeolocationPermission().then(function (perm) {
-      if (perm.state === "denied") {
-        showLocationBanner(MSG.denied, bannerEl);
-        return;
-      }
-      hideLocationBanner(bannerEl);
-    });
   }
 
   function init() {
@@ -216,10 +223,7 @@
             hideLocationBanner(bannerEl);
           })
           .catch(function (err) {
-            var mapped =
-              err && err.message
-                ? err
-                : messageFromGeolocationError(err && err.raw ? err.raw : err);
+            var mapped = coerceMappedError(err);
             if (mapped.showBanner || mapped.kind === "denied") {
               showLocationBanner(mapped.message, bannerEl);
             }
@@ -232,6 +236,7 @@
     CODE: CODE,
     MSG: MSG,
     messageFromGeolocationError: messageFromGeolocationError,
+    coerceMappedError: coerceMappedError,
     isLocationServicesDisabledMessage: isLocationServicesDisabledMessage,
     queryGeolocationPermission: queryGeolocationPermission,
     requestCurrentPosition: requestCurrentPosition,
