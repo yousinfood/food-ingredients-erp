@@ -69,8 +69,9 @@ railway up
 
 - **build：** `pip install -r requirements.txt` → `collectstatic --noinput`
 - **release：** `migrate --noinput`
-- **start：** `migrate` → `seed_data`（可重複）→ **Gunicorn**
-- **healthcheck：** `GET /health/`（逾時 180s）
+- **start：** **Gunicorn**（勿在 start 跑 seed，否則 healthcheck 會在 port 尚未監聽時失敗）
+- **healthcheck：** `GET /health/`
+- **示範資料：** 新環境手動一次 `railway run python manage.py seed_data`
 
 ---
 
