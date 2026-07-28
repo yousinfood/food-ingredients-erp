@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260726f";
+  var ASSET_TAG = "20260728mic1";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -10,6 +10,9 @@
     form.dataset.touchLiveSearch = "bound";
     var input = form.querySelector('input[type="search"], input[type="text"][name="q"], input[name="q"]');
     if (!input) return;
+
+    var isHomeSearch = form.dataset.touchHomeSearch === "1";
+    var micBtn = isHomeSearch ? form.querySelector(".touch-search-mic-btn") : null;
 
     var mount = document.getElementById("touch-search-results-mount");
     if (!mount) {
@@ -23,6 +26,7 @@
     var fetchAbort = null;
     var fetchSeq = 0;
     var pendingHtml = null;
+    var speechRec = null;
 
     function isComposingNow() {
       return composing || input.isComposing;
@@ -146,6 +150,61 @@
           flushPendingHtml();
           runFetch(false);
         });
+      });
+    }
+
+    function setMicListening(on) {
+      if (!micBtn) return;
+      micBtn.classList.toggle("touch-search-mic-btn--listening", on);
+      micBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+
+    function startVoiceInput() {
+      input.focus();
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        return;
+      }
+      if (speechRec) {
+        try {
+          speechRec.abort();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      speechRec = new SpeechRecognition();
+      speechRec.lang = "zh-TW";
+      speechRec.interimResults = false;
+      speechRec.maxAlternatives = 1;
+      setMicListening(true);
+      speechRec.onresult = function (ev) {
+        var text = "";
+        if (ev.results && ev.results.length) {
+          text = (ev.results[0][0] && ev.results[0][0].transcript) || "";
+        }
+        text = text.trim();
+        if (text) {
+          input.value = text;
+          runFetch(false);
+        }
+      };
+      speechRec.onerror = function () {
+        setMicListening(false);
+      };
+      speechRec.onend = function () {
+        setMicListening(false);
+      };
+      try {
+        speechRec.start();
+      } catch (e) {
+        setMicListening(false);
+      }
+    }
+
+    if (micBtn) {
+      micBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        startVoiceInput();
       });
     }
 

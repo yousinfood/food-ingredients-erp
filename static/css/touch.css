@@ -81,6 +81,10 @@ a { color: var(--touch-primary); text-decoration: none; }
   margin-bottom: 1.75rem;
 }
 
+.touch-search-form--hero .touch-search-input-row {
+  align-items: center;
+}
+
 .touch-search-input {
   width: 100%;
   min-height: 56px;
