@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728ipadscroll1";
+  var ASSET_TAG = "20260728ipadscroll2";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -28,7 +28,6 @@
     var pendingHtml = null;
     var speechRec = null;
     var userScrolledResults = false;
-    var didInitialScrollIntoView = false;
     var lastScrollQuery = null;
     var activeIndex = -1;
     var lastKeyboardInset = 0;
@@ -63,12 +62,6 @@
       window.requestAnimationFrame(function () {
         updateKeyboardInset(true);
       });
-      window.setTimeout(function () {
-        updateKeyboardInset(true);
-      }, 120);
-      window.setTimeout(function () {
-        updateKeyboardInset(true);
-      }, 360);
     }
 
     function dismissSearchKeyboard() {
@@ -86,15 +79,10 @@
       return false;
     }
 
-    function mayAutoRepositionResults() {
-      return !userScrolledResults;
-    }
-
     function resetScrollBehaviorForQuery(q) {
       if (q === lastScrollQuery) return;
       lastScrollQuery = q;
       userScrolledResults = false;
-      didInitialScrollIntoView = false;
       activeIndex = -1;
     }
 
@@ -103,6 +91,13 @@
       userScrolledResults = true;
       activeIndex = -1;
       clearResultHighlight();
+    }
+
+    function onResultsScrollStart() {
+      markUserScrolledResults();
+      if (isHomeSearch && document.activeElement === input) {
+        input.blur();
+      }
     }
 
     function resultsScrollEl() {
@@ -116,38 +111,11 @@
       });
     }
 
-    function highlightFirstResult() {
-      if (!mayAutoRepositionResults() || didInitialScrollIntoView || !mount) return;
-      var first = mount.querySelector(".touch-home-result-btn, .touch-search-result-row a");
-      if (!first) return;
-      clearResultHighlight();
-      first.classList.add("touch-home-result-btn--active");
-      activeIndex = 0;
-      if (first.scrollIntoView) {
-        first.scrollIntoView({ block: "nearest", behavior: "auto" });
-      }
-      didInitialScrollIntoView = true;
-    }
-
-    function scrollSearchChromeIntoViewOnce() {
-      if (!mayAutoRepositionResults() || didInitialScrollIntoView) return;
-      var sticky = form.closest(".touch-home-app__search-sticky");
-      if (sticky && sticky.scrollIntoView) {
-        sticky.scrollIntoView({ block: "start", behavior: "auto" });
-      } else if (input.scrollIntoView) {
-        input.scrollIntoView({ block: "nearest", behavior: "auto" });
-      }
-      didInitialScrollIntoView = true;
-    }
-
     function bindResultsScrollGuards() {
       if (!mount || mount.dataset.touchResultsScrollBound === "1") return;
       mount.dataset.touchResultsScrollBound = "1";
-      var onResultsInteraction = function () {
-        markUserScrolledResults();
-      };
-      mount.addEventListener("scroll", onResultsInteraction, { passive: true });
-      mount.addEventListener("touchmove", onResultsInteraction, { passive: true });
+      mount.addEventListener("scroll", onResultsScrollStart, { passive: true });
+      mount.addEventListener("touchmove", onResultsScrollStart, { passive: true });
     }
 
     bindResultsScrollGuards();
@@ -159,23 +127,9 @@
         vv.addEventListener("resize", function () {
           updateKeyboardInset(true);
         });
-        vv.addEventListener("scroll", function () {
-          if (document.activeElement !== input) return;
-          updateKeyboardInset();
-        });
       }
       input.addEventListener("focus", function () {
         updateKeyboardInset(true);
-        if (!mayAutoRepositionResults()) return;
-        window.requestAnimationFrame(function () {
-          if (!mayAutoRepositionResults() || didInitialScrollIntoView) return;
-          var hasResults =
-            mount &&
-            mount.querySelector(".touch-home-result-btn, .touch-search-result-row a");
-          if (hasResults) return;
-          scrollSearchChromeIntoViewOnce();
-          updateKeyboardInset(true);
-        });
       });
       input.addEventListener("blur", function () {
         syncKeyboardViewportAfterDismiss();
@@ -253,14 +207,6 @@
         scrollEl.scrollTop = savedScrollTop;
       } else if (scrollEl && q === lastScrollQuery && savedScrollTop > 0) {
         scrollEl.scrollTop = savedScrollTop;
-      } else if (
-        isHomeSearch &&
-        q.length >= MIN_CHARS &&
-        mayAutoRepositionResults() &&
-        inputWasFocused &&
-        document.activeElement === input
-      ) {
-        highlightFirstResult();
       }
 
       if (inputWasFocused && document.activeElement === input) {

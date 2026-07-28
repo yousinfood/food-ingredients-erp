@@ -3274,6 +3274,13 @@ a.touch-dashboard-back {
 }
 
 /* Homepage: search-only app shell (production dashboard) */
+html:has(.touch-home-app),
+body.touch-app:has(.touch-home-app) {
+  height: var(--touch-vvh, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+
 .touch-app:has(.touch-home-app) {
   background: #fff;
   color: #000;
@@ -3284,13 +3291,16 @@ a.touch-dashboard-back {
 }
 
 .touch-main.touch-home-app {
+  box-sizing: border-box;
   max-width: 640px;
+  width: 100%;
+  height: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: auto;
-  padding: calc(1.75rem + env(safe-area-inset-top)) 1.35rem 2rem;
-  padding-bottom: calc(var(--touch-keyboard-pad, 0px) + 2rem + env(safe-area-inset-bottom));
+  overflow: hidden;
+  padding: calc(1.75rem + env(safe-area-inset-top)) 1.35rem 0;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .touch-home-app__title {
@@ -3448,11 +3458,9 @@ a.touch-dashboard-back {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Homepage: iPad Safari virtual keyboard (visualViewport) */
+/* Homepage: iPad Safari — body locked; only results list scrolls */
 .touch-home-app__search-sticky {
-  flex-shrink: 0;
-  position: sticky;
-  top: calc(env(safe-area-inset-top));
+  flex: 0 0 auto;
   z-index: 100;
   background: #fff;
   padding-bottom: 0.35rem;
@@ -3462,10 +3470,9 @@ a.touch-dashboard-back {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  height: auto;
-  /* --touch-vvh is visualViewport height (already excludes keyboard); do not subtract pad again */
-  max-height: calc(var(--touch-vvh, 100vh) - var(--touch-home-chrome, 160px));
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 24px;
 }
 
 body.touch-app.touch-keyboard-open .touch-home-app__title {
