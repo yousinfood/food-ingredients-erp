@@ -1397,11 +1397,11 @@ button.touch-stat--btn .touch-stat-label {
   }
 
   #series-chips.series-grid .series-card {
-    height: 190px;
+    height: 180px;
   }
 
   #series-chips .series-card .title {
-    font-size: 58px;
+    font-size: 56px;
   }
 
   #series-chips .series-card .subtitle {
@@ -2874,20 +2874,20 @@ html.touch-is-location-warning body.touch-app {
 #series-chips.series-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
   margin: 0 0 0.25rem;
   box-sizing: border-box;
 }
 
 #series-chips .series-card {
-  height: 190px;
+  height: 180px;
   width: 100%;
   min-width: 0;
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: 22px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -2902,7 +2902,7 @@ html.touch-is-location-warning body.touch-app {
 }
 
 #series-chips .series-card .title {
-  font-size: 58px;
+  font-size: 56px;
   font-weight: 700;
   line-height: 1.05;
 }
