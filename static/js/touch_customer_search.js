@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728ipadkbd1";
+  var ASSET_TAG = "20260728ipadscroll1";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -81,7 +81,9 @@
 
     function isHomeSearchChromeTarget(el) {
       if (!el || !el.closest) return false;
-      return !!el.closest(".touch-search-input-row");
+      if (el.closest(".touch-search-input-row")) return true;
+      if (el.closest("#touch-search-results-mount")) return true;
+      return false;
     }
 
     function mayAutoRepositionResults() {
@@ -97,15 +99,10 @@
     }
 
     function markUserScrolledResults() {
-      var wasNew = !userScrolledResults;
-      if (wasNew) {
-        userScrolledResults = true;
-        activeIndex = -1;
-        clearResultHighlight();
-      }
-      if (isHomeSearch && document.activeElement === input) {
-        input.blur();
-      }
+      if (userScrolledResults) return;
+      userScrolledResults = true;
+      activeIndex = -1;
+      clearResultHighlight();
     }
 
     function resultsScrollEl() {
@@ -150,9 +147,7 @@
         markUserScrolledResults();
       };
       mount.addEventListener("scroll", onResultsInteraction, { passive: true });
-      mount.addEventListener("touchstart", onResultsInteraction, { passive: true });
       mount.addEventListener("touchmove", onResultsInteraction, { passive: true });
-      mount.addEventListener("pointerdown", onResultsInteraction, { passive: true });
     }
 
     bindResultsScrollGuards();
@@ -165,6 +160,7 @@
           updateKeyboardInset(true);
         });
         vv.addEventListener("scroll", function () {
+          if (document.activeElement !== input) return;
           updateKeyboardInset();
         });
       }
