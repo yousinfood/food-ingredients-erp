@@ -39,8 +39,10 @@
     let lastTouchPickAt = 0;
     let activeCategory = null;
     let activeSeries = null;
+    let activeBrandSeries = null;
     let draftCategory = null;
     let draftSeries = null;
+    let draftBrandSeries = null;
     let isSubmitting = false;
     let copyPartialMode = false;
 
@@ -265,6 +267,7 @@
         special_instructions: document.getElementById("special_instructions")?.value || "",
         activeCategory: activeCategory,
         activeSeries: activeSeries,
+        activeBrandSeries: activeBrandSeries,
         saved_at: Date.now(),
       };
     }
@@ -298,6 +301,7 @@
         if (data.special_instructions != null) document.getElementById("special_instructions").value = data.special_instructions;
         draftCategory = data.activeCategory || null;
         draftSeries = data.activeSeries || null;
+        draftBrandSeries = data.activeBrandSeries || null;
         data.items.forEach(function (item) {
           const product = {
             id: item.id,
@@ -687,25 +691,12 @@
     function productCardHtml(p) {
       productCatalog.set(productKey(p.id), p);
       const price = defaultPrice(p);
-      const sku = escapeHtml(p.sku || "");
-      const pack = escapeHtml(p.unit_label || "") + (p.spec ? " · " + escapeHtml(p.spec) : "");
-      const seriesMeta = p.series
-        ? '<span class="touch-product-card-series">' + escapeHtml(p.series) + "</span>"
-        : "";
-      const priceHtml = price && price !== "0"
-        ? '<span class="touch-product-card-price">$' + escapeHtml(price) + "</span>"
-        : "";
+      const safeName = escapeHtml(p.name);
       return (
         '<div class="touch-product-card" data-product="' + p.id + '" data-price="' + price + '" ' +
-        'data-product-name="' + escapeHtml(p.name) + '" data-product-sku="' + escapeHtml(p.sku || "") + '" ' +
+        'data-product-name="' + safeName + '" data-product-sku="' + escapeHtml(p.sku || "") + '" ' +
         'data-product-unit="' + escapeHtml(p.unit_label || "") + '" data-product-spec="' + escapeHtml(p.spec || "") + '">' +
-        '<button type="button" class="touch-product-card-main touch-product-pick-main">' +
-        '<span class="touch-frequent-name">' + escapeHtml(p.name) + "</span>" +
-        '<span class="touch-product-card-sku">' + sku + "</span>" +
-        '<span class="touch-product-card-pack">' + pack + "</span>" +
-        seriesMeta +
-        priceHtml +
-        "</button>" +
+        '<p class="touch-frequent-name">' + safeName + "</p>" +
         '<div class="touch-product-card-actions">' +
         '<button type="button" class="touch-product-quick-add" data-add="1">+1</button>' +
         '<button type="button" class="touch-product-quick-add" data-add="5">+5</button>' +
@@ -731,6 +722,75 @@
       scrollProductsToTop();
     }
 
+    function isBrandFlourCategory(category) {
+      const key = config.brandFlourCategory || "有信品牌粉";
+      return category === key;
+    }
+
+    function brandFlourSeriesDef(seriesKey) {
+      return (config.brandFlourSeries || []).find(function (s) {
+        return s.key === seriesKey;
+      });
+    }
+
+    function filterBrandFlourProducts(products, seriesKey) {
+      const def = brandFlourSeriesDef(seriesKey);
+      if (!def || !def.productNames) return [];
+      const list = products || [];
+      const picked = [];
+      def.productNames.forEach(function (target) {
+        let found = list.find(function (p) {
+          const n = (p.name || "").trim();
+          return n === target;
+        });
+        if (!found) {
+          found = list.find(function (p) {
+            const n = (p.name || "").trim();
+            return n.indexOf(target) === 0;
+          });
+        }
+        if (found && !picked.some(function (p) { return p.id === found.id; })) {
+          picked.push(found);
+        }
+      });
+      return picked;
+    }
+
+    function renderBrandFlourPickerHtml() {
+      const series = config.brandFlourSeries || [];
+      return (
+        '<div class="touch-brand-flour-picker" role="group" aria-label="有信品牌粉系列">' +
+        series
+          .map(function (s) {
+            const tone =
+              s.key === "red"
+                ? "touch-brand-flour-series-btn--red"
+                : "touch-brand-flour-series-btn--blue";
+            return (
+              '<button type="button" class="touch-brand-flour-series-btn ' +
+              tone +
+              '" data-brand-series="' +
+              escapeHtml(s.key) +
+              '"' +
+              (s.ariaLabel ? ' aria-label="' + escapeHtml(s.ariaLabel) + '"' : "") +
+              ">" +
+              '<span class="touch-brand-flour-series-title">' +
+              escapeHtml(s.label) +
+              "</span></button>"
+            );
+          })
+          .join("") +
+        "</div>"
+      );
+    }
+
+    function renderBrandFlourBackBarHtml() {
+      return (
+        '<button type="button" class="touch-brand-flour-back" data-brand-flour-back="1">' +
+        "← 返回有信品牌粉</button>"
+      );
+    }
+
     function isFlourCategory(category) {
       return category === config.flourCategory;
     }
@@ -744,18 +804,20 @@
 
     function renderSeriesChips() {
       if (!seriesChips) return;
-      if (!isFlourCategory(activeCategory)) {
+      if (!isFlourCategory(activeCategory) || isBrandFlourCategory(activeCategory)) {
         seriesChips.hidden = true;
         seriesChips.innerHTML = "";
         if (seriesHint) seriesHint.hidden = true;
-        activeSeries = null;
+        if (!isFlourCategory(activeCategory)) {
+          activeSeries = null;
+        }
         syncPickToolbarGap();
         return;
       }
       const seriesList = config.flourSeries || [];
       seriesChips.innerHTML = seriesList.map(function (s) {
-        const active = activeSeries === s ? " touch-series-chip--active" : "";
-        return '<button type="button" class="touch-series-chip' + active + '" data-series="' + escapeHtml(s) + '">' + escapeHtml(s) + "</button>";
+        const active = activeSeries === s ? " touch-category-btn--active" : "";
+        return '<button type="button" class="touch-category-btn' + active + '" data-series="' + escapeHtml(s) + '">' + escapeHtml(s) + "</button>";
       }).join("");
       seriesChips.hidden = false;
       if (seriesHint) {
@@ -771,6 +833,29 @@
     function applyCategoryView() {
       if (!activeCategory) return;
       renderSeriesChips();
+      if (isBrandFlourCategory(activeCategory)) {
+        if (seriesHint) seriesHint.hidden = true;
+        if (!activeBrandSeries) {
+          if (categoryProducts) {
+            categoryProducts.innerHTML = renderBrandFlourPickerHtml();
+          }
+          scrollProductsToTop();
+          return;
+        }
+        const cached = categoryCache.get(activeCategory) || [];
+        const filtered = filterBrandFlourProducts(cached, activeBrandSeries);
+        if (!categoryProducts) return;
+        if (!filtered.length) {
+          categoryProducts.innerHTML =
+            renderBrandFlourBackBarHtml() + '<p class="touch-empty">此系列目前沒有產品</p>';
+          scrollProductsToTop();
+          return;
+        }
+        categoryProducts.innerHTML =
+          renderBrandFlourBackBarHtml() + filtered.map(productCardHtml).join("");
+        scrollProductsToTop();
+        return;
+      }
       if (isFlourCategory(activeCategory)) {
         if (!activeSeries) {
           if (categoryProducts) {
@@ -794,6 +879,7 @@
       if (!category) return;
       activeCategory = category;
       if (!options.keepSeries) activeSeries = null;
+      if (!options.keepBrandSeries) activeBrandSeries = null;
       setActiveCategoryButton(category);
       renderSeriesChips();
 
@@ -833,6 +919,12 @@
       if (!isFlourCategory(activeCategory)) return;
       activeSeries = series;
       renderSeriesChips();
+      applyCategoryView();
+    }
+
+    function selectBrandSeries(seriesKey) {
+      if (!isBrandFlourCategory(activeCategory)) return;
+      activeBrandSeries = seriesKey || null;
       applyCategoryView();
     }
 
@@ -910,10 +1002,24 @@
         return;
       }
 
-      const seriesChip = e.target.closest(".touch-series-chip");
-      if (seriesChip && seriesChips && seriesChips.contains(seriesChip)) {
+      const seriesBtn = e.target.closest("#series-chips .touch-category-btn");
+      if (seriesBtn && seriesBtn.dataset.series) {
         e.preventDefault();
-        selectSeries(seriesChip.dataset.series);
+        selectSeries(seriesBtn.dataset.series);
+        return;
+      }
+
+      const brandSeriesBtn = e.target.closest("[data-brand-series]");
+      if (brandSeriesBtn && form.contains(brandSeriesBtn)) {
+        e.preventDefault();
+        selectBrandSeries(brandSeriesBtn.dataset.brandSeries);
+        return;
+      }
+
+      const brandBackBtn = e.target.closest("[data-brand-flour-back]");
+      if (brandBackBtn && form.contains(brandBackBtn)) {
+        e.preventDefault();
+        selectBrandSeries(null);
       }
     });
 
@@ -1095,7 +1201,8 @@
 
     if (draftRestored && draftCategory) {
       activeSeries = draftSeries;
-      selectCategory(draftCategory, { keepSeries: true });
+      activeBrandSeries = draftBrandSeries;
+      selectCategory(draftCategory, { keepSeries: true, keepBrandSeries: true });
       if (draftSeries && isFlourCategory(draftCategory)) {
         selectSeries(draftSeries);
       }

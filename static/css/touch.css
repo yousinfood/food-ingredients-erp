@@ -10,6 +10,11 @@
   --touch-muted: #64748b;
   --touch-min-tap: 52px;
   --touch-radius: 12px;
+  /* 有信品牌粉系列按鈕（Pantone 2925 C / 213 C） */
+  --yousin-pack-blue: #4ba3d9;
+  --yousin-pack-blue-active: #4396c8;
+  --yousin-pack-red: #e31c79;
+  --yousin-pack-red-active: #cc196d;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1104,7 +1109,7 @@ button.touch-stat--btn .touch-stat-label {
 .touch-category-grid.touch-category-grid--toolbar .touch-category-btn {
   min-height: 52px;
   padding: 0.4rem 0.25rem;
-  font-size: 0.88rem;
+  font-size: 32px;
   background: #fff;
   border-color: #e2e8f0;
   color: var(--touch-text);
@@ -1121,9 +1126,15 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-series-chips--toolbar .touch-series-chip {
-  min-height: 40px;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.88rem;
+  min-height: 60px;
+  padding: 0.45rem 1.35rem;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1e293b;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: var(--touch-radius);
 }
 
 .touch-category-hint--compact {
@@ -1382,7 +1393,12 @@ button.touch-stat--btn .touch-stat-label {
 
   .touch-category-grid--toolbar .touch-category-btn {
     min-height: 48px;
-    font-size: 0.92rem;
+    font-size: 32px;
+  }
+
+  #series-chips.touch-category-grid--toolbar .touch-category-btn {
+    min-height: 110px;
+    font-size: 34px;
   }
 
   .touch-product-grid--main {
@@ -2817,4 +2833,492 @@ html.touch-is-offline body.touch-app {
 
 html.touch-is-location-warning body.touch-app {
   padding-top: calc(3.25rem + env(safe-area-inset-top));
+}
+
+/* 接單主區商品卡：只顯示品名與 +1/+5/+10 */
+#category-products .touch-frequent-name {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.25;
+  width: 100%;
+  white-space: normal;
+  word-break: break-word;
+}
+
+#category-products .touch-product-quick-add {
+  min-height: 56px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+#category-products .touch-product-card-main {
+  display: none !important;
+}
+
+#category-products .touch-product-card-sku,
+#category-products .touch-product-card-pack,
+#category-products .touch-product-card-series,
+#category-products .touch-product-card-price {
+  display: none !important;
+}
+
+/* 麵粉第二層（低筋／中筋／高筋／油條） */
+#series-chips.touch-category-grid.touch-category-grid--toolbar {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+}
+
+#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn {
+  min-height: 110px;
+  padding: 0.45rem 0.35rem;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.15;
+  border-radius: 16px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  color: #000;
+}
+
+#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn--active {
+  background: var(--touch-primary);
+  border-color: var(--touch-primary);
+  color: #fff;
+}
+
+#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn--active:active {
+  background: var(--touch-primary-dark);
+  border-color: var(--touch-primary-dark);
+  color: #fff;
+}
+
+#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn:active:not(.touch-category-btn--active) {
+  background: #fff;
+  border-color: #e2e8f0;
+  color: #000;
+}
+
+/* 有信品牌粉：兩顆系列大按鈕（極簡 App） */
+.touch-brand-flour-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+}
+
+.touch-brand-flour-series-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 150px;
+  height: 150px;
+  padding: 0 0.75rem;
+  margin: 0;
+  border: none;
+  border-radius: 18px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-shadow: none;
+  background-image: none;
+}
+
+.touch-brand-flour-series-btn--blue {
+  background-color: #4ba3d9;
+}
+
+.touch-brand-flour-series-btn--blue:active {
+  background-color: var(--yousin-pack-blue-active);
+}
+
+.touch-brand-flour-series-btn--red {
+  background-color: #e31c79;
+}
+
+.touch-brand-flour-series-btn--red:active {
+  background-color: var(--yousin-pack-red-active);
+}
+
+.touch-brand-flour-series-title {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+.touch-brand-flour-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-family: inherit;
+  color: #0f766e;
+  background: #fff;
+  border: 3px solid #0f766e;
+  border-radius: 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-brand-flour-back:active {
+  background: #ecfdf5;
+}
+
+#category-products:has(.touch-brand-flour-picker) {
+  display: block;
+}
+
+.touch-search-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.touch-search-input-row .touch-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.touch-search-mic-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  min-height: 72px;
+  padding: 0 1rem;
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1;
+  background: #fff;
+  border: 3px solid #e2e8f0;
+  border-radius: 16px;
+  color: #1e293b;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-search-mic-btn:active,
+.touch-search-mic-btn.touch-search-mic-btn--listening {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  box-shadow: 0 0 0 5px rgba(15, 118, 110, 0.18);
+}
+
+.touch-recent-customers {
+  margin-top: 0.25rem;
+}
+
+.touch-recent-customers__title {
+  margin: 0 0 0.85rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.touch-recent-customers__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.touch-recent-customer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 72px;
+  padding: 0.85rem 1.15rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #1e293b;
+  text-decoration: none;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-recent-customer-btn:active {
+  border-color: #0f766e;
+  background: #ecfdf5;
+}
+
+.touch-home-fixed {
+  position: fixed;
+  top: calc(0.5rem + env(safe-area-inset-top));
+  right: calc(0.5rem + env(safe-area-inset-right));
+  z-index: 2000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  min-width: 56px;
+  padding: 0.65rem 1.15rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1e293b;
+  text-decoration: none;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-home-fixed:active {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+a.touch-dashboard-back {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.touch-search-form--hero .touch-search-input--home {
+  min-height: 80px;
+  padding: 1.25rem 1.35rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.touch-search-form--hero .touch-search-mic-btn {
+  min-width: 80px;
+  min-height: 80px;
+  font-size: 2.25rem;
+}
+
+.touch-home-result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.touch-home-result-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 72px;
+  padding: 1rem 1.15rem;
+  text-decoration: none;
+  color: #1e293b;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-home-result-btn:active {
+  border-color: #0f766e;
+  background: #ecfdf5;
+}
+
+.touch-home-result-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.25;
+  width: 100%;
+  word-break: break-word;
+}
+
+.touch-home-result-phone {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.touch-home-result-address {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.touch-search-empty-home {
+  margin: 0.75rem 0 0;
+  padding: 1rem 1.1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #1e293b;
+  text-align: center;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+/* Homepage: search-only app shell (production dashboard) */
+.touch-app:has(.touch-home-app) {
+  background: #fff;
+  color: #000;
+}
+
+.touch-app:has(.touch-home-app) .touch-home-fixed {
+  display: none;
+}
+
+.touch-main.touch-home-app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(1.75rem + env(safe-area-inset-top)) 1.35rem 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+}
+
+.touch-home-app__title {
+  margin: 0 0 1.35rem;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #000;
+  letter-spacing: 0.02em;
+}
+
+.touch-search-form--home-app {
+  margin-bottom: 0.75rem;
+}
+
+.touch-home-app .touch-search-input-row .touch-search-input--home {
+  min-height: 72px;
+  padding: 0.85rem 0.5rem 0.85rem 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #000;
+  background: #fff;
+  border: none;
+  border-bottom: 3px solid #000;
+  border-radius: 0;
+}
+
+.touch-home-app .touch-search-input-row .touch-search-input--home::placeholder {
+  color: #737373;
+  opacity: 1;
+}
+
+.touch-home-app .touch-search-input-row .touch-search-input--home:focus {
+  outline: none;
+  border-bottom-color: #16a34a;
+  box-shadow: none;
+}
+
+.touch-home-app .touch-search-mic-btn {
+  min-width: 72px;
+  min-height: 72px;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  font-size: 2rem;
+  color: #000;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 14px;
+}
+
+.touch-home-app .touch-search-mic-btn:active,
+.touch-home-app .touch-search-mic-btn.touch-search-mic-btn--listening {
+  border-color: #16a34a;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+}
+
+.touch-home-app__results .touch-search-results-panel--home {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.touch-home-app .touch-home-result-list {
+  gap: 0;
+  margin-top: 0.5rem;
+}
+
+.touch-home-app .touch-home-result-btn {
+  min-height: 72px;
+  padding: 1rem 0;
+  color: #000;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.touch-home-app .touch-home-result-btn:active {
+  background: #f0fdf4;
+  border-bottom-color: #e5e5e5;
+}
+
+.touch-home-app .touch-home-result-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: #000;
+}
+
+.touch-home-app .touch-home-result-phone,
+.touch-home-app .touch-home-result-address {
+  font-size: 22px;
+  font-weight: 500;
+  color: #000;
+}
+
+.touch-home-app .touch-home-result-address--empty {
+  color: #737373;
+}
+
+.touch-home-app .touch-search-empty-home {
+  margin: 1rem 0 0;
+  padding: 0.75rem 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #000;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.touch-home-app .touch-search-more {
+  margin-top: 1rem;
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+.touch-home-app a {
+  color: inherit;
+}
+
+.touch-home-app mark,
+.touch-home-app .touch-search-highlight {
+  background: rgba(22, 163, 74, 0.22);
+  color: #000;
 }

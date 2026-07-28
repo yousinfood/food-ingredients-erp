@@ -21,7 +21,7 @@
     </p>
     <p class="touch-order-complete-customer">{{ customer.name }}</p>
     <div class="touch-order-complete-actions">
-      <a href="{% url 'customer_search' %}" class="touch-btn touch-btn-primary touch-btn-complete-primary" id="quick-next-customer">下一位客戶</a>
+      <a href="{% url 'dashboard' %}" class="touch-btn touch-btn-primary touch-btn-complete-primary" id="quick-next-customer">下一位客戶</a>
       <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-btn touch-btn-secondary touch-btn-complete-secondary">繼續幫同客戶下單</a>
       <a href="{% url 'sales:sales_order_detail' saved_order.pk %}" class="touch-btn touch-btn-secondary touch-btn-complete-secondary">查看訂單</a>
     </div>
@@ -47,7 +47,7 @@
 
     <div class="touch-order-layout-head">
       <div class="touch-order-top-bar">
-        <a href="{% url 'customer_search' %}" class="touch-back touch-back--inline" id="order-back-link">← 返回</a>
+        <a href="{% url 'dashboard' %}" class="touch-back touch-back--inline" id="order-back-link">← 返回儀表板</a>
         <header class="touch-order-header-compact">
           <h1 class="touch-order-header-name">{{ customer.name }}</h1>
           <p class="touch-order-header-meta" aria-label="客戶代號與區域">
@@ -74,7 +74,7 @@
           <button type="button" class="touch-category-btn{% if cat == default_category %} touch-category-btn--active{% endif %}" data-category="{{ cat }}">{{ cat }}</button>
           {% endfor %}
         </div>
-        <div id="series-chips" class="touch-series-chips touch-series-chips--toolbar" hidden aria-label="麵粉系列"></div>
+        <div id="series-chips" class="touch-category-grid touch-category-grid--toolbar" hidden aria-label="麵粉系列"></div>
         <p id="category-series-hint" class="touch-category-hint touch-category-hint--compact" hidden>選系列：低筋／中筋／高筋／油條</p>
       </section>
       {% endif %}
@@ -241,6 +241,21 @@
     customerId: {{ customer.pk }},
     flourCategory: "麵粉",
     flourSeries: ["低筋", "中筋", "高筋", "油條"],
+    brandFlourCategory: "有信品牌粉",
+    brandFlourSeries: [
+      {
+        key: "blue",
+        label: "有信",
+        ariaLabel: "有信",
+        productNames: ["有信1號", "有信2號", "有信3號", "有信5號", "水晶餃皮", "肉圓"],
+      },
+      {
+        key: "red",
+        label: "有信",
+        ariaLabel: "有信",
+        productNames: ["紅有信1號", "紅有信S", "紅有信2號", "紅有信2", "紅有信太白"],
+      },
+    ],
     defaultCategory: "{{ default_category|escapejs }}",
     savedOrder: null,
     customerPriceMap: JSON.parse(document.getElementById("customer-price-map-data").textContent),
@@ -252,6 +267,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260725f"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260728yousinprod"></script>
 {% endif %}
 {% endblock %}
