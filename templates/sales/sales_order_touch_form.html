@@ -74,7 +74,7 @@
           <button type="button" class="touch-category-btn{% if cat == default_category %} touch-category-btn--active{% endif %}" data-category="{{ cat }}">{{ cat }}</button>
           {% endfor %}
         </div>
-        <div id="series-chips" class="touch-category-grid touch-category-grid--toolbar" hidden aria-label="麵粉系列"></div>
+        <div id="series-chips" class="series-grid" hidden aria-label="麵粉系列"></div>
         <p id="category-series-hint" class="touch-category-hint touch-category-hint--compact" hidden>選系列：低筋／中筋／高筋／油條</p>
       </section>
       {% endif %}
@@ -267,6 +267,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260728prod2"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260728seriescard"></script>
 {% endif %}
 {% endblock %}

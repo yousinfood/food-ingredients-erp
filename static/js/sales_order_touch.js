@@ -804,10 +804,10 @@
 
     function flourSeriesToneClass(seriesName) {
       const map = {
-        低筋: "touch-flour-series-btn--low",
-        中筋: "touch-flour-series-btn--medium",
-        高筋: "touch-flour-series-btn--high",
-        油條: "touch-flour-series-btn--youtiao",
+        低筋: "series-card--low",
+        中筋: "series-card--medium",
+        高筋: "series-card--high",
+        油條: "series-card--youtiao",
       };
       return map[seriesName] || "";
     }
@@ -827,19 +827,19 @@
       const seriesList = config.flourSeries || [];
       seriesChips.innerHTML = seriesList
         .map(function (s) {
-          const selected = activeSeries === s ? " touch-flour-series-btn--selected" : "";
+          const selected = activeSeries === s ? " series-card--selected" : "";
           const tone = flourSeriesToneClass(s);
           return (
-            '<button type="button" class="touch-flour-series-btn ' +
+            '<button type="button" class="series-card ' +
             tone +
             selected +
             '" data-series="' +
             escapeHtml(s) +
             '">' +
-            '<span class="touch-flour-series-btn__name">' +
+            '<span class="title">' +
             escapeHtml(s) +
             "</span>" +
-            '<span class="touch-flour-series-btn__suffix">系列</span></button>'
+            '<span class="subtitle">系列</span></button>'
           );
         })
         .join("");
@@ -1026,7 +1026,7 @@
         return;
       }
 
-      const seriesBtn = e.target.closest("#series-chips .touch-flour-series-btn");
+      const seriesBtn = e.target.closest("#series-chips .series-card");
       if (seriesBtn && seriesBtn.dataset.series) {
         e.preventDefault();
         selectSeries(seriesBtn.dataset.series);
