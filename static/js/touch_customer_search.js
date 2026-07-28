@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728voice1";
+  var ASSET_TAG = "20260728ipadkbd1";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -39,14 +39,49 @@
       );
     }
 
-    function updateKeyboardInset() {
+    function updateKeyboardInset(force) {
       var vv = window.visualViewport;
-      if (!vv) return;
+      if (!vv) {
+        if (force) {
+          lastKeyboardInset = 0;
+          document.documentElement.style.setProperty("--touch-keyboard-pad", "0px");
+          document.documentElement.style.removeProperty("--touch-vvh");
+          document.body.classList.remove("touch-keyboard-open");
+        }
+        return;
+      }
       var inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      if (Math.abs(inset - lastKeyboardInset) < 2) return;
+      if (!force && Math.abs(inset - lastKeyboardInset) < 2) return;
       lastKeyboardInset = inset;
       document.documentElement.style.setProperty("--touch-keyboard-pad", inset + "px");
+      document.documentElement.style.setProperty("--touch-vvh", Math.round(vv.height) + "px");
       document.body.classList.toggle("touch-keyboard-open", inset > 48);
+    }
+
+    function syncKeyboardViewportAfterDismiss() {
+      updateKeyboardInset(true);
+      window.requestAnimationFrame(function () {
+        updateKeyboardInset(true);
+      });
+      window.setTimeout(function () {
+        updateKeyboardInset(true);
+      }, 120);
+      window.setTimeout(function () {
+        updateKeyboardInset(true);
+      }, 360);
+    }
+
+    function dismissSearchKeyboard() {
+      if (document.activeElement === input) {
+        input.blur();
+      } else {
+        syncKeyboardViewportAfterDismiss();
+      }
+    }
+
+    function isHomeSearchChromeTarget(el) {
+      if (!el || !el.closest) return false;
+      return !!el.closest(".touch-search-input-row");
     }
 
     function mayAutoRepositionResults() {
@@ -62,10 +97,12 @@
     }
 
     function markUserScrolledResults() {
-      if (userScrolledResults) return;
-      userScrolledResults = true;
-      activeIndex = -1;
-      clearResultHighlight();
+      var wasNew = !userScrolledResults;
+      if (wasNew) {
+        userScrolledResults = true;
+        activeIndex = -1;
+        clearResultHighlight();
+      }
       if (isHomeSearch && document.activeElement === input) {
         input.blur();
       }
@@ -109,20 +146,13 @@
     function bindResultsScrollGuards() {
       if (!mount || mount.dataset.touchResultsScrollBound === "1") return;
       mount.dataset.touchResultsScrollBound = "1";
-      mount.addEventListener(
-        "scroll",
-        function () {
-          markUserScrolledResults();
-        },
-        { passive: true }
-      );
-      mount.addEventListener(
-        "touchmove",
-        function () {
-          markUserScrolledResults();
-        },
-        { passive: true }
-      );
+      var onResultsInteraction = function () {
+        markUserScrolledResults();
+      };
+      mount.addEventListener("scroll", onResultsInteraction, { passive: true });
+      mount.addEventListener("touchstart", onResultsInteraction, { passive: true });
+      mount.addEventListener("touchmove", onResultsInteraction, { passive: true });
+      mount.addEventListener("pointerdown", onResultsInteraction, { passive: true });
     }
 
     bindResultsScrollGuards();
@@ -130,12 +160,16 @@
     function bindHomeKeyboardViewport() {
       if (!isHomeSearch) return;
       var vv = window.visualViewport;
-      if (!vv) return;
-      vv.addEventListener("resize", function () {
-        updateKeyboardInset();
-      });
+      if (vv) {
+        vv.addEventListener("resize", function () {
+          updateKeyboardInset(true);
+        });
+        vv.addEventListener("scroll", function () {
+          updateKeyboardInset();
+        });
+      }
       input.addEventListener("focus", function () {
-        updateKeyboardInset();
+        updateKeyboardInset(true);
         if (!mayAutoRepositionResults()) return;
         window.requestAnimationFrame(function () {
           if (!mayAutoRepositionResults() || didInitialScrollIntoView) return;
@@ -144,18 +178,33 @@
             mount.querySelector(".touch-home-result-btn, .touch-search-result-row a");
           if (hasResults) return;
           scrollSearchChromeIntoViewOnce();
-          updateKeyboardInset();
+          updateKeyboardInset(true);
         });
       });
       input.addEventListener("blur", function () {
-        window.setTimeout(function () {
-          updateKeyboardInset();
-        }, 120);
+        syncKeyboardViewportAfterDismiss();
       });
-      updateKeyboardInset();
+      updateKeyboardInset(true);
     }
 
     bindHomeKeyboardViewport();
+
+    function bindHomeDismissKeyboard() {
+      if (!isHomeSearch) return;
+      var homeMain = form.closest(".touch-home-app");
+      if (!homeMain || homeMain.dataset.touchDismissKbBound === "1") return;
+      homeMain.dataset.touchDismissKbBound = "1";
+      homeMain.addEventListener(
+        "pointerdown",
+        function (e) {
+          if (isHomeSearchChromeTarget(e.target)) return;
+          dismissSearchKeyboard();
+        },
+        { passive: true }
+      );
+    }
+
+    bindHomeDismissKeyboard();
 
     function focusInputWithoutScroll() {
       try {
@@ -184,7 +233,8 @@
 
     function applyResultsHtml(html) {
       if (!mount || typeof html !== "string") return;
-      var caret = saveCaret();
+      var inputWasFocused = document.activeElement === input;
+      var caret = inputWasFocused ? saveCaret() : null;
       var scrollEl = resultsScrollEl();
       var savedScrollTop = scrollEl ? scrollEl.scrollTop : 0;
       var q = input.value.trim();
@@ -207,11 +257,19 @@
         scrollEl.scrollTop = savedScrollTop;
       } else if (scrollEl && q === lastScrollQuery && savedScrollTop > 0) {
         scrollEl.scrollTop = savedScrollTop;
-      } else if (isHomeSearch && q.length >= MIN_CHARS && mayAutoRepositionResults()) {
+      } else if (
+        isHomeSearch &&
+        q.length >= MIN_CHARS &&
+        mayAutoRepositionResults() &&
+        inputWasFocused &&
+        document.activeElement === input
+      ) {
         highlightFirstResult();
       }
 
-      restoreCaret(caret);
+      if (inputWasFocused && document.activeElement === input) {
+        restoreCaret(caret);
+      }
     }
 
     function flushPendingHtml() {

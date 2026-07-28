@@ -3463,7 +3463,9 @@ a.touch-dashboard-back {
   min-height: 0;
   overflow-y: auto;
   height: auto;
-  max-height: calc(100vh - var(--touch-keyboard-pad, 0px) - 160px);
+  max-height: calc(
+    var(--touch-vvh, 100vh) - var(--touch-keyboard-pad, 0px) - var(--touch-home-chrome, 160px)
+  );
   -webkit-overflow-scrolling: touch;
 }
 
