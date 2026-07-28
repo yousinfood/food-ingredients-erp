@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728scroll1";
+  var ASSET_TAG = "20260728voice1";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -230,7 +230,8 @@
       applyResultsHtml(html);
     }
 
-    function runFetch(showAll) {
+    function runFetch(showAll, opts) {
+      opts = opts || {};
       if (isComposingNow()) return;
 
       var q = input.value.trim();
@@ -251,7 +252,8 @@
         "?q=" +
         encodeURIComponent(q) +
         (showAll ? "&more=1" : "") +
-        (isHomeSearch ? "&home=1" : "");
+        (isHomeSearch ? "&home=1" : "") +
+        (opts.voice ? "&voice=1" : "");
 
       if (fetchAbort) fetchAbort.abort();
       fetchAbort = new AbortController();
@@ -273,6 +275,13 @@
             return;
           }
           if (!data || !data.ok) return;
+          if (opts.voice && data.normalized_q && typeof data.normalized_q === "string") {
+            var normalized = data.normalized_q.trim();
+            if (normalized && normalized !== input.value.trim()) {
+              input.value = normalized;
+              resetScrollBehaviorForQuery(normalized);
+            }
+          }
           if (!isHomeSearch && data.redirect) {
             window.location.href = data.redirect;
             return;
@@ -339,7 +348,7 @@
         if (text) {
           input.value = text;
           resetScrollBehaviorForQuery(text);
-          runFetch(false);
+          runFetch(false, { voice: true });
         }
       };
       speechRec.onerror = function () {

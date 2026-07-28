@@ -8,6 +8,11 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 from apps.sales.models import Customer
+from apps.sales.services.voice_search_normalize import (
+    VOICE_SIMILARITY_THRESHOLD,
+    normalize_voice_query,
+    similarity_score,
+)
 
 # 從第一個字元即搜尋；資料庫明顯變大前不提高到 2 字。
 MIN_SEARCH_QUERY_LENGTH = 1
@@ -95,22 +100,73 @@ def _sort_key(customer: Customer, query: str) -> tuple:
     return (tier, name.casefold(), name)
 
 
+def _voice_fuzzy_matches(queryset, raw_q: str, norm_q: str) -> list[tuple[float, Customer]]:
+    scored: list[tuple[float, Customer]] = []
+    for customer in queryset.iterator(chunk_size=500):
+        name = customer.name or ""
+        if not name:
+            continue
+        score = max(
+            similarity_score(norm_q, name),
+            similarity_score(raw_q, name),
+        )
+        if score >= VOICE_SIMILARITY_THRESHOLD:
+            scored.append((score, customer))
+    scored.sort(key=lambda pair: (-pair[0], (pair[1].name or "").casefold()))
+    return scored
+
+
 def search_customers_ranked(
     query: str,
     *,
     limit: int = TOUCH_SEARCH_LIMIT,
     show_all: bool = False,
     active_only: bool = True,
+    voice: bool = False,
 ) -> RankedCustomerSearch:
-    q = query.strip()
+    raw_q = query.strip()
+    q = normalize_voice_query(raw_q) if voice else raw_q
     queryset = Customer.objects.all()
     if active_only:
         queryset = queryset.filter(is_active=True)
-    if len(q) < MIN_SEARCH_QUERY_LENGTH:
+    if len(raw_q) < MIN_SEARCH_QUERY_LENGTH:
         return RankedCustomerSearch([], 0, limit, show_all)
 
-    matches = list(queryset.filter(_query_filter(q)))
-    matches.sort(key=lambda c: _sort_key(c, q))
+    if voice:
+        search_q = q or raw_q
+        exact_ids: set[int] = set()
+        matches: list[Customer] = []
+        for candidate_q in (search_q, raw_q):
+            if len(candidate_q) < MIN_SEARCH_QUERY_LENGTH:
+                continue
+            for customer in queryset.filter(_query_filter(candidate_q)):
+                if customer.pk not in exact_ids:
+                    exact_ids.add(customer.pk)
+                    matches.append(customer)
+
+        fuzzy_scored = _voice_fuzzy_matches(queryset, raw_q, search_q)
+        fuzzy_by_id = {c.pk: (score, c) for score, c in fuzzy_scored}
+
+        combined: dict[int, tuple[float, Customer]] = {}
+        for customer in matches:
+            score = fuzzy_by_id.get(customer.pk, (0.0, customer))[0]
+            if score < VOICE_SIMILARITY_THRESHOLD:
+                score = max(
+                    similarity_score(search_q, customer.name or ""),
+                    similarity_score(raw_q, customer.name or ""),
+                    0.85,
+                )
+            combined[customer.pk] = (score, customer)
+        for score, customer in fuzzy_scored:
+            if customer.pk not in combined:
+                combined[customer.pk] = (score, customer)
+
+        ranked = sorted(combined.values(), key=lambda pair: (-pair[0], _sort_key(pair[1], search_q)))
+        matches = [c for _, c in ranked]
+    else:
+        matches = list(queryset.filter(_query_filter(q)))
+        matches.sort(key=lambda c: _sort_key(c, q))
+
     total = len(matches)
     if show_all:
         shown = matches

@@ -6,6 +6,7 @@ from django.views.decorators.http import require_GET
 from urllib.parse import quote
 
 from apps.sales.services.customer_search import search_customers_ranked
+from apps.sales.services.voice_search_normalize import normalize_voice_query
 
 from .services.dashboard import get_dashboard_stats
 from .services.dashboard_order_filters import (
@@ -26,10 +27,10 @@ def service_worker(request):
     return response
 
 
-def _customer_search_context(query: str, show_all: bool):
+def _customer_search_context(query: str, show_all: bool, *, voice: bool = False):
     searched = bool(query)
     search = (
-        search_customers_ranked(query, show_all=show_all)
+        search_customers_ranked(query, show_all=show_all, voice=voice)
         if searched
         else None
     )
@@ -51,7 +52,8 @@ def customer_search_api(request):
     query = request.GET.get("q", "").strip()
     show_all = request.GET.get("more") == "1"
     home = request.GET.get("home") == "1"
-    ctx = _customer_search_context(query, show_all)
+    voice = request.GET.get("voice") == "1"
+    ctx = _customer_search_context(query, show_all, voice=voice)
     search = ctx.get("search")
     if (
         not home
@@ -82,6 +84,7 @@ def customer_search_api(request):
             "ok": True,
             "total": ctx["search_total"],
             "html": html,
+            "normalized_q": normalize_voice_query(query) if voice else "",
         }
     )
 
