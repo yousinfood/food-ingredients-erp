@@ -1,98 +1,43 @@
 {% extends "touch_base.html" %}
-{% load static touch_search %}
+{% load touch_search %}
 
-{% block title %}儀表板 - 有信食品 ERP{% endblock %}
+{% block title %}搜尋客戶{% endblock %}
 
-{% block body %}
-<main class="touch-main">
-  <header class="touch-header">
-    <h1>有信食品 ERP</h1>
-    <p>儀表板 · 搜尋客戶</p>
-  </header>
-
-  <form action="{% url 'dashboard' %}" method="get" class="touch-search-form touch-search-form--hero" data-touch-home-search="1">
-    <div class="touch-search-input-row">
-      <input
-        type="text"
-        name="q"
-        id="touch-home-search-input"
-        value="{{ query }}"
-        class="touch-search-input touch-search-input--hero"
-        placeholder="搜尋店名、電話、地址、客戶編號"
-        autofocus
-        enterkeyhint="search"
-        inputmode="search"
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck="false"
-      >
-      <button type="button" class="touch-search-mic-btn" id="touch-home-search-mic" aria-label="語音輸入店名" aria-pressed="false">
-        <span aria-hidden="true">🎤</span>
-      </button>
-    </div>
-    <button type="submit" class="touch-btn touch-btn-primary touch-btn-search">🔍 搜尋客戶</button>
-  </form>
-
-  <div id="touch-search-results-mount">
-  {% include "core/_customer_search_results.html" %}
-  </div>
-
-  <section class="touch-stats-row" id="touch-dashboard-stats" aria-label="今日概況">
-    <button type="button" class="touch-stat touch-stat--btn" data-dashboard-filter="{{ stat_filter_keys.deliveries_today }}" aria-pressed="false">
-      <div class="touch-stat-value">{{ deliveries_today }}</div>
-      <div class="touch-stat-label">今日配送</div>
-    </button>
-    <button type="button" class="touch-stat touch-stat--btn" data-dashboard-filter="{{ stat_filter_keys.undelivered_today }}" aria-pressed="false">
-      <div class="touch-stat-value">{{ undelivered_today }}</div>
-      <div class="touch-stat-label">今日未送</div>
-    </button>
-    <button type="button" class="touch-stat touch-stat--btn touch-stat--muted" data-dashboard-filter="{{ stat_filter_keys.pending_collection_today }}" aria-pressed="false">
-      <div class="touch-stat-value touch-stat-value--muted">{{ pending_collection_today }}</div>
-      <div class="touch-stat-label">今日待收款</div>
-    </button>
-    <button type="button" class="touch-stat touch-stat--btn touch-stat--muted" data-dashboard-filter="{{ stat_filter_keys.overdue_today }}" aria-pressed="false">
-      <div class="touch-stat-value touch-stat-value--muted">{{ overdue_today }}</div>
-      <div class="touch-stat-label">今日欠款</div>
-    </button>
-  </section>
-
-  <section id="touch-dashboard-panel" class="touch-dashboard-panel" hidden aria-hidden="true">
-    <button type="button" id="touch-dashboard-back" class="touch-primary-cta touch-dashboard-back">← 返回首頁</button>
-    <h2 class="touch-section-title" id="touch-dashboard-panel-title"></h2>
-    <div id="touch-dashboard-panel-body" class="touch-dashboard-panel-body" aria-live="polite"></div>
-  </section>
-
-  {% if not searched and recent_orders %}
-  <section class="touch-section touch-recent-orders" id="touch-recent-orders" style="margin-top:1.5rem;">
-    <h2 class="touch-section-title">最近訂單</h2>
-    <div class="touch-table-wrap">
-      <table class="touch-table">
-        <thead>
-          <tr>
-            <th>訂單號</th>
-            <th>客戶</th>
-            <th>日期</th>
-            <th>狀態</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for order in recent_orders %}
-          <tr>
-            <td><a href="{% url 'sales:sales_order_detail' order.pk %}">{{ order.order_no }}</a></td>
-            <td><a href="{% url 'sales:customer_center' order.customer_id %}">{{ order.customer.name }}</a></td>
-            <td>{{ order.order_date }}</td>
-            <td>{{ order.get_status_display }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
-  {% endif %}
-</main>
+{% block extra_head %}
+  <meta name="theme-color" content="#ffffff">
 {% endblock %}
 
-{% block extra_scripts %}
-  <script src="{% static 'js/touch_dashboard.js' %}?v=20260726a" defer></script>
+{% block body %}
+<main class="touch-main touch-home-app">
+  <div class="touch-home-app__search-sticky">
+    <h1 class="touch-home-app__title">搜尋客戶</h1>
+
+    <form action="{% url 'dashboard' %}" method="get" class="touch-search-form touch-search-form--hero touch-search-form--home-app" data-touch-home-search="1">
+      <div class="touch-search-input-row">
+        <input
+          type="search"
+          name="q"
+          id="touch-home-search-input"
+          value="{{ query }}"
+          class="touch-search-input touch-search-input--hero touch-search-input--home"
+          placeholder="搜尋客戶"
+          autofocus
+          enterkeyhint="search"
+          inputmode="search"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        >
+        <button type="button" class="touch-search-mic-btn" id="touch-home-search-mic" aria-label="語音搜尋客戶" aria-pressed="false">
+          <span aria-hidden="true">🎤</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div id="touch-search-results-mount" class="touch-home-app__results">
+  {% include "core/_customer_search_results_home.html" %}
+  </div>
+</main>
 {% endblock %}

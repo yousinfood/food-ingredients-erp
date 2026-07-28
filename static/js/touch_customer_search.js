@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728mic1";
+  var ASSET_TAG = "20260728kbd1";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -27,6 +27,51 @@
     var fetchSeq = 0;
     var pendingHtml = null;
     var speechRec = null;
+
+    function emptyHomePanelHtml() {
+      return (
+        '<div id="touch-search-results-panel" class="touch-search-results-panel touch-search-results-panel--home" data-query=""></div>'
+      );
+    }
+
+    function updateKeyboardInset() {
+      var vv = window.visualViewport;
+      if (!vv) return;
+      var inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      document.documentElement.style.setProperty("--touch-keyboard-pad", inset + "px");
+      document.body.classList.toggle("touch-keyboard-open", inset > 48);
+    }
+
+    function bindHomeKeyboardViewport() {
+      if (!isHomeSearch) return;
+      var vv = window.visualViewport;
+      if (!vv) return;
+      var onVv = function () {
+        updateKeyboardInset();
+      };
+      vv.addEventListener("resize", onVv);
+      vv.addEventListener("scroll", onVv);
+      input.addEventListener("focus", function () {
+        updateKeyboardInset();
+        window.requestAnimationFrame(function () {
+          var sticky = form.closest(".touch-home-app__search-sticky");
+          if (sticky && sticky.scrollIntoView) {
+            sticky.scrollIntoView({ block: "start", behavior: "auto" });
+          } else if (input.scrollIntoView) {
+            input.scrollIntoView({ block: "center", behavior: "auto" });
+          }
+          updateKeyboardInset();
+        });
+      });
+      input.addEventListener("blur", function () {
+        window.setTimeout(function () {
+          updateKeyboardInset();
+        }, 120);
+      });
+      updateKeyboardInset();
+    }
+
+    bindHomeKeyboardViewport();
 
     function isComposingNow() {
       return composing || input.isComposing;
@@ -85,7 +130,9 @@
 
       var q = input.value.trim();
       if (q.length < MIN_CHARS) {
-        if (!q.length) {
+        if (!q.length && isHomeSearch) {
+          updateResultsHtml(emptyHomePanelHtml());
+        } else if (!q.length) {
           updateResultsHtml(
             '<div id="touch-search-results-panel" class="touch-search-results-panel">' +
               '<p class="touch-hint touch-search-empty">輸入店名、電話、地址或客戶編號，點選結果進入客戶中心。</p></div>'
@@ -98,7 +145,8 @@
         API_PATH +
         "?q=" +
         encodeURIComponent(q) +
-        (showAll ? "&more=1" : "");
+        (showAll ? "&more=1" : "") +
+        (isHomeSearch ? "&home=1" : "");
 
       if (fetchAbort) fetchAbort.abort();
       fetchAbort = new AbortController();
@@ -120,7 +168,7 @@
             return;
           }
           if (!data || !data.ok) return;
-          if (data.redirect) {
+          if (!isHomeSearch && data.redirect) {
             window.location.href = data.redirect;
             return;
           }

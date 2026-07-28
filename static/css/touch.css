@@ -3286,8 +3286,11 @@ a.touch-dashboard-back {
 .touch-main.touch-home-app {
   max-width: 640px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
   padding: calc(1.75rem + env(safe-area-inset-top)) 1.35rem 2rem;
-  padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--touch-keyboard-pad, 0px) + 2rem + env(safe-area-inset-bottom));
 }
 
 .touch-home-app__title {
@@ -3417,4 +3420,64 @@ a.touch-dashboard-back {
 .touch-home-app .touch-search-highlight {
   background: rgba(22, 163, 74, 0.22);
   color: #000;
+}
+
+/* Customer center: back link clears fixed「回首頁」and stays tappable */
+.touch-main--customer-center {
+  padding-top: calc(0.35rem + env(safe-area-inset-top));
+}
+
+.touch-main--customer-center .touch-back-bar {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-min-tap);
+  margin: 0 0 0.75rem;
+  padding-right: calc(5.75rem + env(safe-area-inset-right));
+}
+
+.touch-main--customer-center .touch-back-bar .touch-back {
+  margin-bottom: 0;
+  min-height: var(--touch-min-tap);
+  padding: 0.45rem 0.85rem;
+  background: var(--touch-surface);
+  border: 2px solid var(--touch-border);
+  border-radius: var(--touch-radius);
+  position: relative;
+  z-index: 1501;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Homepage: iPad Safari virtual keyboard (visualViewport) */
+.touch-home-app__search-sticky {
+  flex-shrink: 0;
+  position: sticky;
+  top: calc(env(safe-area-inset-top));
+  z-index: 100;
+  background: #fff;
+  padding-bottom: 0.35rem;
+}
+
+.touch-home-app__results {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.touch-app.touch-keyboard-open .touch-home-app__title {
+  font-size: 1.65rem;
+  margin-bottom: 0.85rem;
+}
+
+body.touch-app.touch-keyboard-open .touch-home-app .touch-search-input-row .touch-search-input--home {
+  min-height: 64px;
+  font-size: 24px;
+}
+
+body.touch-app.touch-keyboard-open .touch-home-app .touch-search-mic-btn {
+  min-width: 64px;
+  min-height: 64px;
+  width: 64px;
+  height: 64px;
 }

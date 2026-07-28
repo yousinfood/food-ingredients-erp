@@ -3,8 +3,10 @@
 {% block title %}{{ center.name }} - 客戶中心{% endblock %}
 
 {% block body %}
-<main class="touch-main">
-  <a href="{% url 'dashboard' %}{% if back_query %}?q={{ back_query|urlencode }}{% endif %}" class="touch-back">← 返回儀表板</a>
+<main class="touch-main touch-main--customer-center">
+  <div class="touch-back-bar" aria-label="返回">
+    <a href="{% url 'dashboard' %}" class="touch-back">← 返回儀表板</a>
+  </div>
 
   <header class="touch-center-hero">
     <div class="touch-center-hero-row">

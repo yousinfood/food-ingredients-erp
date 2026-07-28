@@ -50,9 +50,15 @@ def _customer_search_context(query: str, show_all: bool):
 def customer_search_api(request):
     query = request.GET.get("q", "").strip()
     show_all = request.GET.get("more") == "1"
+    home = request.GET.get("home") == "1"
     ctx = _customer_search_context(query, show_all)
     search = ctx.get("search")
-    if ctx["searched"] and search and search.total_count == 1:
+    if (
+        not home
+        and ctx["searched"]
+        and search
+        and search.total_count == 1
+    ):
         customer = ctx["results"][0]
         return JsonResponse(
             {
@@ -61,8 +67,13 @@ def customer_search_api(request):
                 "redirect": f"/sales/customers/{customer.pk}/?q={quote(query)}",
             }
         )
+    template_name = (
+        "core/_customer_search_results_home.html"
+        if home
+        else "core/_customer_search_results.html"
+    )
     html = render_to_string(
-        "core/_customer_search_results.html",
+        template_name,
         ctx,
         request=request,
     )
