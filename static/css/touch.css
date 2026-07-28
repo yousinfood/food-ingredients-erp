@@ -1396,9 +1396,14 @@ button.touch-stat--btn .touch-stat-label {
     font-size: 32px;
   }
 
-  #series-chips.touch-category-grid--toolbar .touch-category-btn {
-    min-height: 110px;
-    font-size: 34px;
+  #series-chips.touch-category-grid--toolbar .touch-flour-series-btn {
+    min-height: 120px;
+    height: 120px;
+  }
+
+  #series-chips .touch-flour-series-btn__name,
+  #series-chips .touch-flour-series-btn__suffix {
+    font-size: 42px;
   }
 
   .touch-product-grid--main {
@@ -2863,42 +2868,69 @@ html.touch-is-location-warning body.touch-app {
   display: none !important;
 }
 
-/* 麵粉第二層（低筋／中筋／高筋／油條） */
+/* 麵粉第二層（低筋／中筋／高筋／油條）— 柔和品牌色 */
 #series-chips.touch-category-grid.touch-category-grid--toolbar {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.3rem;
   margin-bottom: 0.25rem;
 }
 
-#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn {
-  min-height: 110px;
-  padding: 0.45rem 0.35rem;
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1.15;
-  border-radius: 16px;
+#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-flour-series-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: 100%;
+  min-height: 120px;
+  height: 120px;
+  padding: 0.35rem 0.25rem;
+  margin: 0;
+  border: none;
+  border-radius: 18px;
   box-sizing: border-box;
-  background: #fff;
-  border: 2px solid #e2e8f0;
-  color: #000;
+  box-shadow: none;
+  background-image: none;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn--active {
-  background: var(--touch-primary);
-  border-color: var(--touch-primary);
-  color: #fff;
+#series-chips .touch-flour-series-btn__name,
+#series-chips .touch-flour-series-btn__suffix {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
 }
 
-#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn--active:active {
-  background: var(--touch-primary-dark);
-  border-color: var(--touch-primary-dark);
-  color: #fff;
+#series-chips .touch-flour-series-btn--low {
+  background-color: #d6f2e4;
+  color: #21543d;
 }
 
-#series-chips.touch-category-grid.touch-category-grid--toolbar .touch-category-btn:active:not(.touch-category-btn--active) {
-  background: #fff;
-  border-color: #e2e8f0;
-  color: #000;
+#series-chips .touch-flour-series-btn--medium {
+  background-color: #e7ddf8;
+  color: #4a356a;
+}
+
+#series-chips .touch-flour-series-btn--high {
+  background-color: #f8e7a8;
+  color: #6b4f00;
+}
+
+#series-chips .touch-flour-series-btn--youtiao {
+  background-color: #d9c1a4;
+  color: #5a3a1a;
+}
+
+#series-chips .touch-flour-series-btn--selected {
+  filter: brightness(0.94);
+}
+
+#series-chips .touch-flour-series-btn:active {
+  filter: brightness(0.9);
 }
 
 /* 有信品牌粉：兩顆系列大按鈕（極簡 App） */

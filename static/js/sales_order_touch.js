@@ -802,6 +802,16 @@
       });
     }
 
+    function flourSeriesToneClass(seriesName) {
+      const map = {
+        低筋: "touch-flour-series-btn--low",
+        中筋: "touch-flour-series-btn--medium",
+        高筋: "touch-flour-series-btn--high",
+        油條: "touch-flour-series-btn--youtiao",
+      };
+      return map[seriesName] || "";
+    }
+
     function renderSeriesChips() {
       if (!seriesChips) return;
       if (!isFlourCategory(activeCategory) || isBrandFlourCategory(activeCategory)) {
@@ -815,10 +825,24 @@
         return;
       }
       const seriesList = config.flourSeries || [];
-      seriesChips.innerHTML = seriesList.map(function (s) {
-        const active = activeSeries === s ? " touch-category-btn--active" : "";
-        return '<button type="button" class="touch-category-btn' + active + '" data-series="' + escapeHtml(s) + '">' + escapeHtml(s) + "</button>";
-      }).join("");
+      seriesChips.innerHTML = seriesList
+        .map(function (s) {
+          const selected = activeSeries === s ? " touch-flour-series-btn--selected" : "";
+          const tone = flourSeriesToneClass(s);
+          return (
+            '<button type="button" class="touch-flour-series-btn ' +
+            tone +
+            selected +
+            '" data-series="' +
+            escapeHtml(s) +
+            '">' +
+            '<span class="touch-flour-series-btn__name">' +
+            escapeHtml(s) +
+            "</span>" +
+            '<span class="touch-flour-series-btn__suffix">系列</span></button>'
+          );
+        })
+        .join("");
       seriesChips.hidden = false;
       if (seriesHint) {
         if (useInListFlourHint()) {
@@ -1002,7 +1026,7 @@
         return;
       }
 
-      const seriesBtn = e.target.closest("#series-chips .touch-category-btn");
+      const seriesBtn = e.target.closest("#series-chips .touch-flour-series-btn");
       if (seriesBtn && seriesBtn.dataset.series) {
         e.preventDefault();
         selectSeries(seriesBtn.dataset.series);
