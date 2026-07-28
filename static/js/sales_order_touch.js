@@ -21,6 +21,7 @@
     const lastOrderGrid = document.getElementById("last-order-products");
     const categoryGrid = document.getElementById("category-grid");
     const seriesChips = document.getElementById("series-chips");
+    const naturalStarchChips = document.getElementById("natural-starch-chips");
     const seriesHint = document.getElementById("category-series-hint");
     const categoryProducts = document.getElementById("category-products");
     const backLink = document.getElementById("order-back-link");
@@ -40,9 +41,11 @@
     let activeCategory = null;
     let activeSeries = null;
     let activeBrandSeries = null;
+    let activeNaturalStarchItem = null;
     let draftCategory = null;
     let draftSeries = null;
     let draftBrandSeries = null;
+    let draftNaturalStarchItem = null;
     let isSubmitting = false;
     let copyPartialMode = false;
 
@@ -268,6 +271,7 @@
         activeCategory: activeCategory,
         activeSeries: activeSeries,
         activeBrandSeries: activeBrandSeries,
+        activeNaturalStarchItem: activeNaturalStarchItem,
         saved_at: Date.now(),
       };
     }
@@ -302,6 +306,7 @@
         draftCategory = data.activeCategory || null;
         draftSeries = data.activeSeries || null;
         draftBrandSeries = data.activeBrandSeries || null;
+        draftNaturalStarchItem = data.activeNaturalStarchItem || null;
         data.items.forEach(function (item) {
           const product = {
             id: item.id,
@@ -733,12 +738,11 @@
       });
     }
 
-    function filterBrandFlourProducts(products, seriesKey) {
-      const def = brandFlourSeriesDef(seriesKey);
-      if (!def || !def.productNames) return [];
+    function filterProductsByNameList(products, productNames) {
+      if (!productNames || !productNames.length) return [];
       const list = products || [];
       const picked = [];
-      def.productNames.forEach(function (target) {
+      productNames.forEach(function (target) {
         let found = list.find(function (p) {
           const n = (p.name || "").trim();
           return n === target;
@@ -754,6 +758,12 @@
         }
       });
       return picked;
+    }
+
+    function filterBrandFlourProducts(products, seriesKey) {
+      const def = brandFlourSeriesDef(seriesKey);
+      if (!def || !def.productNames) return [];
+      return filterProductsByNameList(products, def.productNames);
     }
 
     function renderBrandFlourPickerHtml() {
@@ -789,6 +799,63 @@
         '<button type="button" class="touch-brand-flour-back" data-brand-flour-back="1">' +
         "← 返回有信品牌粉</button>"
       );
+    }
+
+    function isNaturalStarchCategory(category) {
+      const key = config.naturalStarchCategory || "天然澱粉";
+      return category === key;
+    }
+
+    function naturalStarchItemDef(itemKey) {
+      return (config.naturalStarchItems || []).find(function (item) {
+        return item.key === itemKey;
+      });
+    }
+
+    function filterNaturalStarchProducts(products, itemKey) {
+      const def = naturalStarchItemDef(itemKey);
+      if (!def || !def.productNames) return [];
+      return filterProductsByNameList(products, def.productNames);
+    }
+
+    function renderNaturalStarchBackBarHtml() {
+      return (
+        '<button type="button" class="touch-brand-flour-back" data-natural-starch-back="1">' +
+        "← 返回天然澱粉</button>"
+      );
+    }
+
+    function renderNaturalStarchChips() {
+      if (!naturalStarchChips) return;
+      if (!isNaturalStarchCategory(activeCategory) || activeNaturalStarchItem) {
+        naturalStarchChips.hidden = true;
+        naturalStarchChips.innerHTML = "";
+        if (!isNaturalStarchCategory(activeCategory)) {
+          activeNaturalStarchItem = null;
+        }
+        syncPickToolbarGap();
+        return;
+      }
+      const items = config.naturalStarchItems || [];
+      naturalStarchChips.innerHTML = items
+        .map(function (item) {
+          return (
+            '<button type="button" class="natural-starch-card" data-natural-starch-item="' +
+            escapeHtml(item.key) +
+            '"' +
+            ' style="background-color:' +
+            escapeHtml(item.bg) +
+            ";color:" +
+            escapeHtml(item.color) +
+            '">' +
+            '<span class="natural-starch-card__label">' +
+            escapeHtml(item.label) +
+            "</span></button>"
+          );
+        })
+        .join("");
+      naturalStarchChips.hidden = false;
+      syncPickToolbarGap();
     }
 
     function isFlourCategory(category) {
@@ -857,6 +924,7 @@
     function applyCategoryView() {
       if (!activeCategory) return;
       renderSeriesChips();
+      renderNaturalStarchChips();
       if (isBrandFlourCategory(activeCategory)) {
         if (seriesHint) seriesHint.hidden = true;
         if (!activeBrandSeries) {
@@ -877,6 +945,29 @@
         }
         categoryProducts.innerHTML =
           renderBrandFlourBackBarHtml() + filtered.map(productCardHtml).join("");
+        scrollProductsToTop();
+        return;
+      }
+      if (isNaturalStarchCategory(activeCategory)) {
+        if (seriesHint) seriesHint.hidden = true;
+        if (!activeNaturalStarchItem) {
+          if (categoryProducts) {
+            categoryProducts.innerHTML = "";
+          }
+          scrollProductsToTop();
+          return;
+        }
+        const cachedStarch = categoryCache.get(activeCategory) || [];
+        const starchFiltered = filterNaturalStarchProducts(cachedStarch, activeNaturalStarchItem);
+        if (!categoryProducts) return;
+        if (!starchFiltered.length) {
+          categoryProducts.innerHTML =
+            renderNaturalStarchBackBarHtml() + '<p class="touch-empty">此品項目前沒有產品</p>';
+          scrollProductsToTop();
+          return;
+        }
+        categoryProducts.innerHTML =
+          renderNaturalStarchBackBarHtml() + starchFiltered.map(productCardHtml).join("");
         scrollProductsToTop();
         return;
       }
@@ -904,8 +995,10 @@
       activeCategory = category;
       if (!options.keepSeries) activeSeries = null;
       if (!options.keepBrandSeries) activeBrandSeries = null;
+      if (!options.keepNaturalStarch) activeNaturalStarchItem = null;
       setActiveCategoryButton(category);
       renderSeriesChips();
+      renderNaturalStarchChips();
 
       const cached = categoryCache.get(category);
       if (cached) {
@@ -949,6 +1042,13 @@
     function selectBrandSeries(seriesKey) {
       if (!isBrandFlourCategory(activeCategory)) return;
       activeBrandSeries = seriesKey || null;
+      applyCategoryView();
+    }
+
+    function selectNaturalStarchItem(itemKey) {
+      if (!isNaturalStarchCategory(activeCategory)) return;
+      activeNaturalStarchItem = itemKey || null;
+      renderNaturalStarchChips();
       applyCategoryView();
     }
 
@@ -1044,6 +1144,19 @@
       if (brandBackBtn && form.contains(brandBackBtn)) {
         e.preventDefault();
         selectBrandSeries(null);
+      }
+
+      const naturalStarchBtn = e.target.closest("[data-natural-starch-item]");
+      if (naturalStarchBtn && naturalStarchChips && naturalStarchChips.contains(naturalStarchBtn)) {
+        e.preventDefault();
+        selectNaturalStarchItem(naturalStarchBtn.dataset.naturalStarchItem);
+        return;
+      }
+
+      const naturalStarchBackBtn = e.target.closest("[data-natural-starch-back]");
+      if (naturalStarchBackBtn && form.contains(naturalStarchBackBtn)) {
+        e.preventDefault();
+        selectNaturalStarchItem(null);
       }
     });
 
@@ -1226,9 +1339,17 @@
     if (draftRestored && draftCategory) {
       activeSeries = draftSeries;
       activeBrandSeries = draftBrandSeries;
-      selectCategory(draftCategory, { keepSeries: true, keepBrandSeries: true });
+      activeNaturalStarchItem = draftNaturalStarchItem;
+      selectCategory(draftCategory, {
+        keepSeries: true,
+        keepBrandSeries: true,
+        keepNaturalStarch: true,
+      });
       if (draftSeries && isFlourCategory(draftCategory)) {
         selectSeries(draftSeries);
+      }
+      if (draftNaturalStarchItem && isNaturalStarchCategory(draftCategory)) {
+        selectNaturalStarchItem(draftNaturalStarchItem);
       }
     } else {
       selectCategory(defaultCategory);

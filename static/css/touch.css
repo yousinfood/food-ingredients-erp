@@ -1408,6 +1408,14 @@ button.touch-stat--btn .touch-stat-label {
     font-size: 30px;
   }
 
+  #natural-starch-chips.natural-starch-grid .natural-starch-card {
+    height: 180px;
+  }
+
+  #natural-starch-chips .natural-starch-card__label {
+    font-size: 48px;
+  }
+
   .touch-product-grid--main {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -2940,6 +2948,49 @@ html.touch-is-location-warning body.touch-app {
 
 #series-chips .series-card:active {
   filter: brightness(0.9);
+}
+
+/* 天然澱粉 2×3 大卡片（#natural-starch-chips.natural-starch-grid） */
+#natural-starch-chips.natural-starch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  margin: 0 0 0.25rem;
+  box-sizing: border-box;
+}
+
+#natural-starch-chips .natural-starch-card {
+  height: 180px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-sizing: border-box;
+  box-shadow: none;
+  background-image: none;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#natural-starch-chips .natural-starch-card__label {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.05;
+  white-space: nowrap;
+  text-align: center;
+}
+
+#natural-starch-chips .natural-starch-card:active {
+  filter: brightness(0.92);
 }
 
 /* 有信品牌粉：兩顆系列大按鈕（極簡 App） */

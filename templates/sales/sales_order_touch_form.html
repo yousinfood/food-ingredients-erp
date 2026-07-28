@@ -75,6 +75,7 @@
           {% endfor %}
         </div>
         <div id="series-chips" class="series-grid" hidden aria-label="麵粉系列"></div>
+        <div id="natural-starch-chips" class="natural-starch-grid" hidden aria-label="天然澱粉"></div>
         <p id="category-series-hint" class="touch-category-hint touch-category-hint--compact" hidden>選系列：低筋／中筋／高筋／油條</p>
       </section>
       {% endif %}
@@ -256,6 +257,44 @@
         productNames: ["紅有信1號", "紅有信S", "紅有信2號", "紅有信2", "紅有信太白"],
       },
     ],
+    naturalStarchCategory: "天然澱粉",
+    naturalStarchItems: [
+      {
+        key: "potato",
+        label: "馬鈴薯澱粉",
+        productNames: ["馬鈴薯澱粉"],
+        bg: "#E7F3D8",
+        color: "#36522B",
+      },
+      {
+        key: "tapioca",
+        label: "太白粉",
+        productNames: ["太白粉"],
+        bg: "#DCEBFA",
+        color: "#294A73",
+      },
+      {
+        key: "granule",
+        label: "粒粉",
+        productNames: ["樹薯粒粉", "粒粉"],
+        bg: "#F6E6BF",
+        color: "#6A5312",
+      },
+      {
+        key: "corn",
+        label: "玉米澱粉",
+        productNames: ["玉米澱粉"],
+        bg: "#FFE7B8",
+        color: "#7A4E00",
+      },
+      {
+        key: "glutinous",
+        label: "糯米粉",
+        productNames: ["糯米粉"],
+        bg: "#F3DDE9",
+        color: "#6B3552",
+      },
+    ],
     defaultCategory: "{{ default_category|escapejs }}",
     savedOrder: null,
     customerPriceMap: JSON.parse(document.getElementById("customer-price-map-data").textContent),
@@ -267,6 +306,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260728flour2x2"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260728naturalstarch"></script>
 {% endif %}
 {% endblock %}
