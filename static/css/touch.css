@@ -3276,9 +3276,10 @@ a.touch-dashboard-back {
 /* Homepage: search-only app shell (production dashboard) */
 html:has(.touch-home-app),
 body.touch-app:has(.touch-home-app) {
-  height: var(--touch-vvh, 100dvh);
+  height: var(--touch-vvh, 100%);
   min-height: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .touch-app:has(.touch-home-app) {
@@ -3292,14 +3293,17 @@ body.touch-app:has(.touch-home-app) {
 
 .touch-main.touch-home-app {
   box-sizing: border-box;
-  max-width: 640px;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  max-width: none;
   width: 100%;
   height: 100%;
-  margin: 0 auto;
+  margin: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: calc(1.75rem + env(safe-area-inset-top)) 1.35rem 0;
+  padding: calc(1.75rem + env(safe-area-inset-top)) 0 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -3360,8 +3364,11 @@ body.touch-app:has(.touch-home-app) {
 }
 
 .touch-home-app__results .touch-search-results-panel--home {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 100%;
   margin: 0;
-  padding: 0;
+  padding: 0 1.35rem;
   background: transparent;
   border: none;
 }
@@ -3463,16 +3470,21 @@ body.touch-app:has(.touch-home-app) {
   flex: 0 0 auto;
   z-index: 100;
   background: #fff;
-  padding-bottom: 0.35rem;
+  padding: 0 1.35rem 0.35rem;
 }
 
 .touch-home-app__results {
+  width: 100%;
   flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 24px;
+  touch-action: pan-y;
+  padding-bottom: calc(24px + var(--touch-keyboard-pad, 0px));
 }
 
 body.touch-app.touch-keyboard-open .touch-home-app__title {

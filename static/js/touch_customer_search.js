@@ -2,7 +2,7 @@
   "use strict";
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728ipadscroll2";
+  var ASSET_TAG = "20260728ipadscroll3";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
