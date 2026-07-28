@@ -814,8 +814,23 @@
 
     function filterNaturalStarchProducts(products, itemKey) {
       const def = naturalStarchItemDef(itemKey);
-      if (!def || !def.productNames) return [];
-      return filterProductsByNameList(products, def.productNames);
+      if (!def || !def.productNames || !def.productNames.length) return [];
+      const list = products || [];
+      const picked = [];
+      def.productNames.forEach(function (target) {
+        const needle = (target || "").trim();
+        if (!needle) return;
+        list.forEach(function (p) {
+          const n = (p.name || "").trim();
+          if (!n || n.indexOf(needle) < 0) return;
+          if (!picked.some(function (x) {
+            return x.id === p.id;
+          })) {
+            picked.push(p);
+          }
+        });
+      });
+      return picked;
     }
 
     function renderNaturalStarchBackBarHtml() {
