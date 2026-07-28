@@ -840,6 +840,13 @@
       );
     }
 
+    function renderFlourBackBarHtml() {
+      return (
+        '<button type="button" class="touch-brand-flour-back" data-flour-series-back="1">' +
+        "← 返回麵粉</button>"
+      );
+    }
+
     function renderNaturalStarchChips() {
       if (!naturalStarchChips) return;
       if (!isNaturalStarchCategory(activeCategory) || activeNaturalStarchItem) {
@@ -896,7 +903,11 @@
 
     function renderSeriesChips() {
       if (!seriesChips) return;
-      if (!isFlourCategory(activeCategory) || isBrandFlourCategory(activeCategory)) {
+      if (
+        !isFlourCategory(activeCategory) ||
+        isBrandFlourCategory(activeCategory) ||
+        activeSeries
+      ) {
         seriesChips.hidden = true;
         seriesChips.innerHTML = "";
         if (seriesHint) seriesHint.hidden = true;
@@ -987,17 +998,28 @@
         return;
       }
       if (isFlourCategory(activeCategory)) {
+        if (seriesHint) seriesHint.hidden = true;
         if (!activeSeries) {
           if (categoryProducts) {
-            categoryProducts.innerHTML = useInListFlourHint() ? flourSeriesPromptHtml() : "";
+            categoryProducts.innerHTML = "";
           }
-          if (seriesHint) seriesHint.hidden = useInListFlourHint();
           scrollProductsToTop();
           return;
         }
-        if (seriesHint) seriesHint.hidden = true;
         const cached = categoryCache.get(activeCategory) || [];
-        renderCategoryProducts(cached.filter(function (p) { return p.series === activeSeries; }));
+        const flourFiltered = cached.filter(function (p) {
+          return p.series === activeSeries;
+        });
+        if (!categoryProducts) return;
+        if (!flourFiltered.length) {
+          categoryProducts.innerHTML =
+            renderFlourBackBarHtml() + '<p class="touch-empty">此系列目前沒有產品</p>';
+          scrollProductsToTop();
+          return;
+        }
+        categoryProducts.innerHTML =
+          renderFlourBackBarHtml() + flourFiltered.map(productCardHtml).join("");
+        scrollProductsToTop();
         return;
       }
       if (seriesHint) seriesHint.hidden = true;
@@ -1049,7 +1071,7 @@
 
     function selectSeries(series) {
       if (!isFlourCategory(activeCategory)) return;
-      activeSeries = series;
+      activeSeries = series || null;
       renderSeriesChips();
       applyCategoryView();
     }
@@ -1172,6 +1194,13 @@
       if (naturalStarchBackBtn && form.contains(naturalStarchBackBtn)) {
         e.preventDefault();
         selectNaturalStarchItem(null);
+        return;
+      }
+
+      const flourSeriesBackBtn = e.target.closest("[data-flour-series-back]");
+      if (flourSeriesBackBtn && form.contains(flourSeriesBackBtn)) {
+        e.preventDefault();
+        selectSeries(null);
       }
     });
 
