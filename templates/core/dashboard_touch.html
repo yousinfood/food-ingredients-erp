@@ -45,39 +45,116 @@
 
     .touch-home-app--senior #voice-search-button {
       box-sizing: border-box;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
       width: 100%;
-      height: 100px;
+      min-height: 100px;
+      height: auto;
       margin: 0;
-      padding: 0 1rem;
+      padding: 0.85rem 1rem;
       border: 2px solid #79aeb5;
       border-radius: 18px;
       font-family: inherit;
       font-size: 32px;
       font-weight: 700;
-      line-height: 1.2;
+      line-height: 1.25;
       color: #245c63;
       background: #dceff2;
       box-shadow: 0 4px 12px rgba(36, 92, 99, 0.15);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
-      transition: background 0.15s ease, transform 0.12s ease;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
     }
 
-    .touch-home-app--senior #voice-search-button:active {
-      background: #c7e3e7;
-      transform: scale(0.98);
+    .touch-home-app--senior .voice-search-button__line1,
+    .touch-home-app--senior .voice-search-button__line2 {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .touch-home-app--senior .voice-search-button__line1 {
+      font-size: 32px;
+    }
+
+    .touch-home-app--senior .voice-search-button__line2 {
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--idle .voice-search-button__line2 {
+      display: block;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--starting,
+    .touch-home-app--senior #voice-search-button.voice-search-button--listening {
+      color: #a33a3a;
+      background: #ffe7e7;
+      border-color: #e8a8a8;
+      animation: voice-search-senior-pulse 1.3s ease-in-out infinite;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--starting .voice-search-button__line2,
+    .touch-home-app--senior #voice-search-button.voice-search-button--success .voice-search-button__line2 {
+      display: none;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line2 {
+      display: block;
+      font-size: 28px;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--success {
+      color: #166534;
+      background: #dcfce7;
+      border-color: #86efac;
+      animation: none;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--error {
+      color: #a33a3a;
+      background: #ffe7e7;
+      border-color: #e8a8a8;
+      animation: none;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--blocked {
+      opacity: 0.85;
+      cursor: not-allowed;
+    }
+
+    .touch-home-app--senior #voice-search-button:disabled {
+      cursor: wait;
+    }
+
+    @keyframes voice-search-senior-pulse {
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(163, 58, 58, 0.35), 0 4px 12px rgba(36, 92, 99, 0.12);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(163, 58, 58, 0), 0 4px 12px rgba(36, 92, 99, 0.12);
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .touch-home-app--senior #voice-search-button {
-        transition: background 0.15s ease;
+      .touch-home-app--senior #voice-search-button.voice-search-button--listening,
+      .touch-home-app--senior #voice-search-button.voice-search-button--starting {
+        animation: none;
       }
 
       .touch-home-app--senior #voice-search-button:active {
         transform: none;
       }
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--idle:active {
+      background: #c7e3e7;
+      transform: scale(0.98);
     }
 
     .touch-home-app--senior .touch-home-senior__hint {
@@ -117,7 +194,16 @@
 
       <p class="touch-home-senior__or" aria-hidden="true">或</p>
 
-      <button type="button" id="voice-search-button">🎤 語音找客戶</button>
+      <button
+        type="button"
+        id="voice-search-button"
+        class="voice-search-button voice-search-button--idle"
+        aria-label="按這裡說話找客戶"
+        aria-pressed="false"
+      >
+        <span class="voice-search-button__line1">🎤 按這裡說話找客戶</span>
+        <span class="voice-search-button__line2">點一下，再說客戶名稱</span>
+      </button>
 
       <p class="touch-home-senior__hint">可以說店名、老闆名字、電話或地區</p>
     </form>

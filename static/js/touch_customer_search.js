@@ -6,7 +6,7 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260729fix-vvh";
+  var ASSET_TAG = "20260729voice-senior";
   var VOICE_LS_COMPLETED = "voice_permission_completed";
   var VOICE_LS_DENIED = "voice_permission_denied";
   var API_PATH = "/api/customers/search/";
@@ -18,7 +18,7 @@
     if (!input) return;
 
     var isHomeSearch = form.dataset.touchHomeSearch === "1";
-    var voicePrimaryBtn = isHomeSearch ? document.getElementById("touch-home-voice-primary") : null;
+    var voiceSearchBtn = isHomeSearch ? document.getElementById("voice-search-button") : null;
 
     var mount = document.getElementById("touch-search-results-mount");
     if (!mount) {
@@ -33,9 +33,7 @@
     var fetchSeq = 0;
     var pendingHtml = null;
     var speechRec = null;
-    var voiceStatusEl = isHomeSearch ? form.querySelector("#touch-home-voice-status") : null;
-    var voiceState = "idle";
-    var voiceSessionActive = false;
+    var isListening = false;
     var voiceGotTranscript = false;
     var voiceSuccessTimer = null;
     var userScrolledResults = false;
@@ -293,12 +291,7 @@
             if (data && typeof data.html === "string") pendingHtml = data.html;
             return;
           }
-          if (!data || !data.ok) {
-            if (opts.voice && isHomeSearch) {
-              setVoicePrimaryState("fail");
-            }
-            return;
-          }
+          if (!data || !data.ok) return;
           if (opts.voice && data.normalized_q && typeof data.normalized_q === "string") {
             var normalized = data.normalized_q.trim();
             if (normalized && normalized !== input.value.trim()) {
@@ -310,33 +303,12 @@
             window.location.href = data.redirect;
             return;
           }
-          if (opts.voice && isHomeSearch) {
-            if (typeof data.html === "string") {
-              updateResultsHtml(data.html);
-            }
-            if (data.redirect && data.total >= 1) {
-              var cname = (data.customer_name || "").trim() || "客戶";
-              setVoicePrimaryState("success", cname);
-              clearVoiceSuccessTimer();
-              voiceSuccessTimer = setTimeout(function () {
-                window.location.href = data.redirect;
-              }, 1000);
-              return;
-            }
-            if (!data.total) {
-              setVoicePrimaryState("fail");
-            }
-            return;
-          }
           if (typeof data.html === "string") {
             updateResultsHtml(data.html);
           }
         })
         .catch(function (err) {
           if (err && err.name === "AbortError") return;
-          if (opts.voice && isHomeSearch) {
-            setVoicePrimaryState("fail");
-          }
         });
     }
 
@@ -360,79 +332,71 @@
       });
     }
 
-    function voicePrimaryLines() {
-      if (!voicePrimaryBtn) return { line1: null, line2: null };
+    function voiceSearchLines() {
+      if (!voiceSearchBtn) return { line1: null, line2: null };
       return {
-        line1: voicePrimaryBtn.querySelector(".touch-home-voice-primary__line1"),
-        line2: voicePrimaryBtn.querySelector(".touch-home-voice-primary__line2"),
+        line1: voiceSearchBtn.querySelector(".voice-search-button__line1"),
+        line2: voiceSearchBtn.querySelector(".voice-search-button__line2"),
       };
     }
 
-    function setVoicePrimaryState(mode, detail) {
-      if (!voicePrimaryBtn) return;
-      voiceState = mode;
-      var lines = voicePrimaryLines();
-      voicePrimaryBtn.classList.remove(
-        "touch-home-voice-primary--idle",
-        "touch-home-voice-primary--listening",
-        "touch-home-voice-primary--success",
-        "touch-home-voice-primary--fail"
+    function setVoiceSearchState(mode, detail) {
+      if (!voiceSearchBtn) return;
+      var lines = voiceSearchLines();
+      voiceSearchBtn.classList.remove(
+        "voice-search-button--idle",
+        "voice-search-button--starting",
+        "voice-search-button--listening",
+        "voice-search-button--success",
+        "voice-search-button--error",
+        "voice-search-button--blocked"
       );
-      voicePrimaryBtn.disabled = false;
-      voicePrimaryBtn.removeAttribute("aria-disabled");
+      voiceSearchBtn.disabled = false;
+      voiceSearchBtn.removeAttribute("aria-disabled");
 
+      if (mode === "starting") {
+        voiceSearchBtn.classList.add("voice-search-button--starting");
+        voiceSearchBtn.disabled = true;
+        voiceSearchBtn.setAttribute("aria-pressed", "true");
+        if (lines.line1) lines.line1.textContent = "🔴 正在啟動麥克風…";
+        if (lines.line2) lines.line2.textContent = "";
+        return;
+      }
       if (mode === "listening") {
-        voicePrimaryBtn.classList.add("touch-home-voice-primary--listening");
-        voicePrimaryBtn.setAttribute("aria-pressed", "true");
-        voicePrimaryBtn.setAttribute("aria-label", "正在錄音，點擊停止");
-        if (lines.line1) lines.line1.textContent = "🔴 正在聽...";
-        if (lines.line2) {
-          lines.line2.textContent = "請說客戶名稱";
-          lines.line2.hidden = false;
-        }
-        setVoiceStatusMessage("");
+        voiceSearchBtn.classList.add("voice-search-button--listening");
+        voiceSearchBtn.disabled = true;
+        voiceSearchBtn.setAttribute("aria-pressed", "true");
+        if (lines.line1) lines.line1.textContent = "🔴 正在聽";
+        if (lines.line2) lines.line2.textContent = "請說客戶名稱";
         return;
       }
       if (mode === "success") {
-        voicePrimaryBtn.classList.add("touch-home-voice-primary--success");
-        voicePrimaryBtn.setAttribute("aria-pressed", "false");
-        voicePrimaryBtn.setAttribute("aria-label", "語音找客戶");
-        if (lines.line1) lines.line1.textContent = "🟢 已找到：";
-        if (lines.line2) {
-          lines.line2.textContent = detail || "客戶";
-          lines.line2.hidden = false;
-        }
-        setVoiceStatusMessage("");
+        voiceSearchBtn.classList.add("voice-search-button--success");
+        voiceSearchBtn.setAttribute("aria-pressed", "false");
+        if (lines.line1) lines.line1.textContent = "✓ 已聽到：" + (detail || "");
         return;
       }
-      if (mode === "fail") {
-        voicePrimaryBtn.classList.add("touch-home-voice-primary--fail");
-        voicePrimaryBtn.setAttribute("aria-pressed", "false");
-        voicePrimaryBtn.setAttribute("aria-label", "語音找客戶，點一下再試");
-        if (lines.line1) lines.line1.textContent = "沒有聽清楚，";
-        if (lines.line2) {
-          lines.line2.textContent = "請再按一次。";
-          lines.line2.hidden = false;
-        }
-        setVoiceStatusMessage("");
+      if (mode === "error") {
+        voiceSearchBtn.classList.add("voice-search-button--error");
+        voiceSearchBtn.setAttribute("aria-pressed", "false");
+        if (lines.line1) lines.line1.textContent = detail || "沒有聽清楚，請再按一次";
+        if (lines.line2) lines.line2.textContent = "";
         return;
       }
       if (mode === "blocked") {
-        voicePrimaryBtn.classList.add("touch-home-voice-primary--idle");
-        voicePrimaryBtn.disabled = true;
-        voicePrimaryBtn.setAttribute("aria-disabled", "true");
-        voicePrimaryBtn.setAttribute("aria-pressed", "false");
-        if (lines.line1) lines.line1.textContent = "🎤 語音找客戶";
-        if (lines.line2) lines.line2.hidden = true;
-        setVoiceStatusMessage("語音搜尋尚未啟用，請聯絡管理員協助設定。", "error");
+        voiceSearchBtn.classList.add("voice-search-button--blocked", "voice-search-button--error");
+        voiceSearchBtn.disabled = true;
+        voiceSearchBtn.setAttribute("aria-disabled", "true");
+        voiceSearchBtn.setAttribute("aria-pressed", "false");
+        if (lines.line1) lines.line1.textContent = "語音搜尋尚未開啟，請家人協助設定";
+        if (lines.line2) lines.line2.textContent = "";
         return;
       }
-      voicePrimaryBtn.classList.add("touch-home-voice-primary--idle");
-      voicePrimaryBtn.setAttribute("aria-pressed", "false");
-      voicePrimaryBtn.setAttribute("aria-label", "語音找客戶");
-      if (lines.line1) lines.line1.textContent = "🎤 語音找客戶";
-      if (lines.line2) lines.line2.hidden = true;
-      setVoiceStatusMessage("");
+      voiceSearchBtn.classList.add("voice-search-button--idle");
+      voiceSearchBtn.setAttribute("aria-pressed", "false");
+      voiceSearchBtn.setAttribute("aria-label", "按這裡說話找客戶");
+      if (lines.line1) lines.line1.textContent = "🎤 按這裡說話找客戶";
+      if (lines.line2) lines.line2.textContent = "點一下，再說客戶名稱";
     }
 
     function hapticVoiceTap() {
@@ -443,13 +407,6 @@
       }
     }
 
-    function setVoiceStatusMessage(text, tone) {
-      if (!voiceStatusEl) return;
-      voiceStatusEl.textContent = text || "";
-      voiceStatusEl.classList.toggle("touch-home-voice-status--error", tone === "error");
-      voiceStatusEl.classList.toggle("touch-home-voice-status--success", tone === "success");
-    }
-
     function clearVoiceSuccessTimer() {
       if (voiceSuccessTimer) {
         clearTimeout(voiceSuccessTimer);
@@ -457,26 +414,13 @@
       }
     }
 
-    function finishVoiceIdle() {
-      voiceSessionActive = false;
-      voiceGotTranscript = false;
+    function scheduleVoiceIdleReset(ms) {
       clearVoiceSuccessTimer();
-      setVoicePrimaryState("idle");
-    }
-
-    function stopVoiceInput() {
-      if (speechRec) {
-        try {
-          speechRec.stop();
-        } catch (e) {
-          try {
-            speechRec.abort();
-          } catch (e2) {
-            /* ignore */
-          }
-        }
-      }
-      finishVoiceIdle();
+      voiceSuccessTimer = setTimeout(function () {
+        isListening = false;
+        voiceGotTranscript = false;
+        setVoiceSearchState("idle");
+      }, ms || 1000);
     }
 
     function readVoiceFlag(key) {
@@ -495,203 +439,160 @@
       }
     }
 
-    function isVoicePermissionCompleted() {
-      return readVoiceFlag(VOICE_LS_COMPLETED);
-    }
-
     function isVoicePermissionDenied() {
       return readVoiceFlag(VOICE_LS_DENIED);
-    }
-
-    function markVoicePermissionCompleted() {
-      writeVoiceFlag(VOICE_LS_COMPLETED, true);
-      writeVoiceFlag(VOICE_LS_DENIED, false);
     }
 
     function markVoicePermissionDenied() {
       writeVoiceFlag(VOICE_LS_DENIED, true);
     }
 
-    function showVoiceBlockedMessage() {
-      setVoicePrimaryState("blocked");
+    function destroySpeechRecognition() {
+      if (!speechRec) return;
+      speechRec.onstart = null;
+      speechRec.onresult = null;
+      speechRec.onerror = null;
+      speechRec.onend = null;
+      try {
+        speechRec.abort();
+      } catch (e) {
+        /* ignore */
+      }
+      speechRec = null;
     }
 
-    function showVoicePermissionIntro(onConfirm) {
-      var overlay = document.getElementById("touch-voice-permission-intro");
-      var okBtn = document.getElementById("touch-voice-permission-intro-ok");
-      if (!overlay || !okBtn) {
-        onConfirm();
-        return;
+    function bestVoiceTranscript(ev) {
+      if (!ev.results || !ev.results.length) return "";
+      var best = "";
+      var bestConf = -1;
+      for (var i = 0; i < ev.results.length; i++) {
+        var alts = ev.results[i];
+        for (var j = 0; j < alts.length; j++) {
+          var alt = alts[j];
+          var t = (alt.transcript || "").trim();
+          var c = typeof alt.confidence === "number" ? alt.confidence : 0;
+          if (t && c >= bestConf) {
+            bestConf = c;
+            best = t;
+          }
+        }
       }
-      overlay.hidden = false;
-      document.body.classList.add("touch-voice-intro-open");
-      function cleanup() {
-        overlay.hidden = true;
-        document.body.classList.remove("touch-voice-intro-open");
-        okBtn.removeEventListener("click", onOk);
-      }
-      function onOk(e) {
-        e.preventDefault();
-        cleanup();
-        onConfirm();
-      }
-      okBtn.addEventListener("click", onOk);
+      if (best) return best;
+      return ((ev.results[0][0] && ev.results[0][0].transcript) || "").trim();
     }
 
-    function requestMicrophoneAccess(thenStart) {
-      if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function") {
-        navigator.mediaDevices
-          .getUserMedia({ audio: true })
-          .then(function (stream) {
-            if (stream && stream.getTracks) {
-              stream.getTracks().forEach(function (track) {
-                track.stop();
-              });
-            }
-            markVoicePermissionCompleted();
-            thenStart();
-          })
-          .catch(function () {
-            markVoicePermissionDenied();
-            showVoiceBlockedMessage();
-          });
+    function voiceErrorMessage(code) {
+      if (code === "no-speech") return "沒有聽到聲音，請再按一次";
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        return "語音搜尋尚未開啟，請家人協助設定";
+      }
+      if (code === "audio-capture") return "目前無法使用麥克風，請改用文字搜尋";
+      return "沒有聽清楚，請再按一次";
+    }
+
+    function handleVoiceRecognitionError(code) {
+      isListening = false;
+      voiceGotTranscript = false;
+      if (code === "aborted") {
+        setVoiceSearchState("idle");
         return;
       }
-      thenStart();
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        markVoicePermissionDenied();
+        setVoiceSearchState("blocked");
+        return;
+      }
+      setVoiceSearchState("error", voiceErrorMessage(code));
     }
 
     function beginSpeechRecognition() {
-      if (!voicePrimaryBtn || voiceSessionActive) return;
+      if (!voiceSearchBtn || isListening) return;
 
       var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        voicePrimaryBtn.hidden = true;
-        setVoiceStatusMessage("此裝置暫不支援語音搜尋，請使用文字搜尋", "error");
+        voiceSearchBtn.hidden = true;
         return;
       }
 
       hapticVoiceTap();
-      voiceSessionActive = true;
+      isListening = true;
       voiceGotTranscript = false;
       clearVoiceSuccessTimer();
-      setVoicePrimaryState("listening");
+      setVoiceSearchState("starting");
 
-      if (speechRec) {
-        try {
-          speechRec.abort();
-        } catch (e) {
-          /* ignore */
-        }
-      }
-
+      destroySpeechRecognition();
       speechRec = new SpeechRecognition();
       speechRec.lang = "zh-TW";
       speechRec.continuous = false;
       speechRec.interimResults = false;
-      speechRec.maxAlternatives = 1;
+      speechRec.maxAlternatives = 3;
+
+      speechRec.onstart = function () {
+        setVoiceSearchState("listening");
+      };
 
       speechRec.onresult = function (ev) {
-        var text = "";
-        if (ev.results && ev.results.length) {
-          text = (ev.results[0][0] && ev.results[0][0].transcript) || "";
-        }
-        text = text.trim();
+        var text = bestVoiceTranscript(ev);
         voiceGotTranscript = true;
-        if (!isVoicePermissionCompleted()) {
-          markVoicePermissionCompleted();
+        if (!text) {
+          handleVoiceRecognitionError("no-speech");
+          return;
         }
-        if (text) {
-          input.value = text;
-          resetScrollBehaviorForQuery(text);
-          runFetch(false, { voice: true });
-        } else {
-          voiceSessionActive = false;
-          setVoicePrimaryState("fail");
-        }
+        setVoiceSearchState("success", text);
+        input.value = text;
+        resetScrollBehaviorForQuery(text);
+        runFetch(false);
+        scheduleVoiceIdleReset(1000);
       };
 
       speechRec.onerror = function (ev) {
         var code = ev && ev.error ? ev.error : "";
-        voiceSessionActive = false;
-        voiceGotTranscript = false;
-        clearVoiceSuccessTimer();
-        if (code === "not-allowed" || code === "service-not-allowed") {
-          markVoicePermissionDenied();
-          showVoiceBlockedMessage();
-          return;
-        }
-        if (code === "aborted") {
-          finishVoiceIdle();
-          return;
-        }
-        setVoicePrimaryState("fail");
+        handleVoiceRecognitionError(code);
       };
 
       speechRec.onend = function () {
-        if (voiceGotTranscript) {
-          voiceSessionActive = false;
-          return;
-        }
-        if (voiceState === "listening") {
-          voiceSessionActive = false;
-          setVoicePrimaryState("fail");
+        isListening = false;
+        voiceSearchBtn.disabled = false;
+        if (voiceGotTranscript) return;
+        if (
+          voiceSearchBtn.classList.contains("voice-search-button--listening") ||
+          voiceSearchBtn.classList.contains("voice-search-button--starting")
+        ) {
+          handleVoiceRecognitionError("no-speech");
         }
       };
 
       try {
         speechRec.start();
       } catch (e) {
-        voiceSessionActive = false;
-        setVoicePrimaryState("fail");
+        isListening = false;
+        setVoiceSearchState("error", "沒有聽清楚，請再按一次");
       }
     }
 
-    function onVoicePrimaryClick(e) {
+    function onVoiceSearchClick(e) {
       e.preventDefault();
+      if (!voiceSearchBtn || isListening) return;
       if (isVoicePermissionDenied()) {
-        showVoiceBlockedMessage();
-        return;
-      }
-      if (voiceState === "success") return;
-      if (voiceSessionActive && voiceState === "listening") {
-        stopVoiceInput();
-        return;
-      }
-      if (voiceSessionActive) return;
-
-      if (!isVoicePermissionCompleted()) {
-        showVoicePermissionIntro(startVoiceInputAfterConsent);
+        setVoiceSearchState("blocked");
         return;
       }
       beginSpeechRecognition();
     }
 
-    function startVoiceInputAfterConsent() {
-      if (isVoicePermissionDenied()) {
-        showVoiceBlockedMessage();
-        return;
-      }
-      if (isVoicePermissionCompleted()) {
-        beginSpeechRecognition();
-        return;
-      }
-      requestMicrophoneAccess(beginSpeechRecognition);
-    }
-
     function initHomeVoiceSearch() {
-      if (!isHomeSearch || !voicePrimaryBtn) return;
+      if (!isHomeSearch || !voiceSearchBtn) return;
       var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        voicePrimaryBtn.hidden = true;
-        setVoiceStatusMessage("此裝置暫不支援語音搜尋，請使用文字搜尋", "error");
+        voiceSearchBtn.hidden = true;
         return;
       }
       if (isVoicePermissionDenied()) {
-        showVoiceBlockedMessage();
+        setVoiceSearchState("blocked");
         return;
       }
-      setVoicePrimaryState("idle");
-      voicePrimaryBtn.addEventListener("click", onVoicePrimaryClick);
+      setVoiceSearchState("idle");
+      voiceSearchBtn.addEventListener("click", onVoiceSearchClick);
     }
 
     initHomeVoiceSearch();
