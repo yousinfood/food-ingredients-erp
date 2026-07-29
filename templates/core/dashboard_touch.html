@@ -165,6 +165,81 @@
       text-align: center;
       color: #536b6e;
     }
+
+    .touch-home-app--senior .voice-search-failure {
+      margin: 1rem 0 0;
+      padding: 0.5rem 0.25rem;
+      text-align: center;
+    }
+
+    .touch-home-app--senior .voice-search-failure[hidden] {
+      display: none;
+    }
+
+    .touch-home-app--senior .voice-search-failure__title {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #a33a3a;
+    }
+
+    .touch-home-app--senior .voice-search-failure__sub {
+      margin: 0.45rem 0 0;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #536b6e;
+    }
+
+    .touch-home-app--senior #voice-search-retry {
+      box-sizing: border-box;
+      display: block;
+      width: 100%;
+      min-height: 88px;
+      margin: 0.85rem 0 0;
+      padding: 0.75rem 1rem;
+      border: 2px solid #79aeb5;
+      border-radius: 18px;
+      font-family: inherit;
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #245c63;
+      background: #dceff2;
+      box-shadow: 0 4px 12px rgba(36, 92, 99, 0.15);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-home-app--senior #voice-search-retry[hidden] {
+      display: none;
+    }
+
+    .touch-home-app--senior #customer-search-clear {
+      box-sizing: border-box;
+      display: block;
+      width: 100%;
+      min-height: 64px;
+      margin: 0.65rem 0 0;
+      padding: 0.5rem 1rem;
+      border: 2px solid #afc8cc;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #536b6e;
+      background: #f8fbfb;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-home-app--senior #customer-search-clear[hidden] {
+      display: none;
+    }
   </style>
 {% endblock %}
 
@@ -178,7 +253,7 @@
         <input
           type="search"
           name="q"
-          id="touch-home-search-input"
+          id="customer-search-input"
           value="{{ query }}"
           class="touch-search-input touch-search-input--hero touch-search-input--home touch-home-senior__input"
           placeholder="輸入客戶名稱"
@@ -192,6 +267,8 @@
         >
       </div>
 
+      <button type="button" id="customer-search-clear" hidden>清除重來</button>
+
       <p class="touch-home-senior__or" aria-hidden="true">或</p>
 
       <button
@@ -204,6 +281,13 @@
         <span class="voice-search-button__line1">🎤 按這裡說話找客戶</span>
         <span class="voice-search-button__line2">點一下，再說客戶名稱</span>
       </button>
+
+      <div id="voice-search-failure" class="voice-search-failure" hidden aria-live="polite">
+        <p class="voice-search-failure__title">沒有找到這位客戶</p>
+        <p class="voice-search-failure__sub">請再說一次</p>
+      </div>
+
+      <button type="button" id="voice-search-retry" hidden>🎤 重新說一次</button>
 
       <p class="touch-home-senior__hint">可以說店名、老闆名字、電話或地區</p>
     </form>

@@ -6,7 +6,7 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260729voice-senior";
+  var ASSET_TAG = "20260729voice-rescue";
   var VOICE_LS_COMPLETED = "voice_permission_completed";
   var VOICE_LS_DENIED = "voice_permission_denied";
   var API_PATH = "/api/customers/search/";
@@ -16,9 +16,14 @@
     form.dataset.touchLiveSearch = "bound";
     var input = form.querySelector('input[type="search"], input[type="text"][name="q"], input[name="q"]');
     if (!input) return;
+    var customerSearchInput = document.getElementById("customer-search-input") || input;
 
     var isHomeSearch = form.dataset.touchHomeSearch === "1";
     var voiceSearchBtn = isHomeSearch ? document.getElementById("voice-search-button") : null;
+    var voiceFailureEl = isHomeSearch ? document.getElementById("voice-search-failure") : null;
+    var voiceRetryBtn = isHomeSearch ? document.getElementById("voice-search-retry") : null;
+    var customerSearchClearBtn = isHomeSearch ? document.getElementById("customer-search-clear") : null;
+    var voiceMissTimer = null;
 
     var mount = document.getElementById("touch-search-results-mount");
     if (!mount) {
@@ -43,8 +48,44 @@
 
     function emptyHomePanelHtml() {
       return (
-        '<div id="touch-search-results-panel" class="touch-search-results-panel touch-search-results-panel--home" data-query=""></div>'
+        '<div id="touch-search-results-panel" class="customer-search-results-panel" data-query=""></div>'
       );
+    }
+
+    function clearSearchResults() {
+      updateResultsHtml(emptyHomePanelHtml());
+    }
+
+    function clearVoiceFailureUI() {
+      if (voiceMissTimer) {
+        clearTimeout(voiceMissTimer);
+        voiceMissTimer = null;
+      }
+      if (voiceFailureEl) voiceFailureEl.hidden = true;
+      if (voiceRetryBtn) voiceRetryBtn.hidden = true;
+    }
+
+    function showVoiceFailure(title, sub) {
+      if (!voiceFailureEl) return;
+      var t = voiceFailureEl.querySelector(".voice-search-failure__title");
+      var s = voiceFailureEl.querySelector(".voice-search-failure__sub");
+      if (t) t.textContent = title || "沒有找到這位客戶";
+      if (s) s.textContent = sub || "請再說一次";
+      voiceFailureEl.hidden = false;
+    }
+
+    function syncCustomerClearButton() {
+      if (!customerSearchClearBtn) return;
+      var hasText = customerSearchInput.value.trim().length > 0;
+      customerSearchClearBtn.hidden = !hasText;
+    }
+
+    function clearCustomerSearchInput() {
+      customerSearchInput.value = "";
+      resetScrollBehaviorForQuery("");
+      customerSearchInput.blur();
+      dismissSearchKeyboard();
+      syncCustomerClearButton();
     }
 
     function updateKeyboardInset(force) {
@@ -204,7 +245,7 @@
       var caret = inputWasFocused ? saveCaret() : null;
       var scrollEl = resultsScrollEl();
       var savedScrollTop = scrollEl ? scrollEl.scrollTop : 0;
-      var q = input.value.trim();
+      var q = customerSearchInput.value.trim();
 
       var panel = mount.querySelector("#touch-search-results-panel");
       if (panel) {
@@ -251,7 +292,7 @@
       opts = opts || {};
       if (isComposingNow()) return;
 
-      var q = input.value.trim();
+      var q = customerSearchInput.value.trim();
       if (q.length < MIN_CHARS) {
         if (!q.length && isHomeSearch) {
           updateResultsHtml(emptyHomePanelHtml());
@@ -301,6 +342,17 @@
           }
           if (!isHomeSearch && data.redirect) {
             window.location.href = data.redirect;
+            return;
+          }
+          if (opts.fromVoice) {
+            if (!data.total || data.total === 0) {
+              handleVoiceNoCustomerFound();
+              return;
+            }
+            if (typeof data.html === "string") {
+              updateResultsHtml(data.html);
+            }
+            scheduleVoiceIdleReset(1000);
             return;
           }
           if (typeof data.html === "string") {
@@ -505,6 +557,30 @@
       setVoiceSearchState("error", voiceErrorMessage(code));
     }
 
+    function handleVoiceNoCustomerFound() {
+      clearSearchResults();
+      showVoiceFailure("沒有找到這位客戶", "請再說一次");
+      if (voiceRetryBtn) voiceRetryBtn.hidden = true;
+      clearVoiceSuccessTimer();
+      if (voiceMissTimer) clearTimeout(voiceMissTimer);
+      voiceMissTimer = setTimeout(function () {
+        customerSearchInput.value = "";
+        syncCustomerClearButton();
+        clearSearchResults();
+        showVoiceFailure("沒有找到這位客戶", "請按下面，再說一次");
+        if (voiceRetryBtn) voiceRetryBtn.hidden = false;
+        setVoiceSearchState("idle");
+        voiceMissTimer = null;
+      }, 1000);
+    }
+
+    function prepareForNewVoiceSession() {
+      customerSearchInput.value = "";
+      clearSearchResults();
+      clearVoiceFailureUI();
+      syncCustomerClearButton();
+    }
+
     function beginSpeechRecognition() {
       if (!voiceSearchBtn || isListening) return;
 
@@ -513,6 +589,8 @@
         voiceSearchBtn.hidden = true;
         return;
       }
+
+      prepareForNewVoiceSession();
 
       hapticVoiceTap();
       isListening = true;
@@ -539,10 +617,12 @@
           return;
         }
         setVoiceSearchState("success", text);
-        input.value = text;
+        customerSearchInput.value = text;
         resetScrollBehaviorForQuery(text);
-        runFetch(false);
-        scheduleVoiceIdleReset(1000);
+        customerSearchInput.blur();
+        dismissSearchKeyboard();
+        syncCustomerClearButton();
+        runFetch(false, { fromVoice: true });
       };
 
       speechRec.onerror = function (ev) {
@@ -593,6 +673,26 @@
       }
       setVoiceSearchState("idle");
       voiceSearchBtn.addEventListener("click", onVoiceSearchClick);
+      if (voiceRetryBtn) {
+        voiceRetryBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (isListening) return;
+          if (isVoicePermissionDenied()) {
+            setVoiceSearchState("blocked");
+            return;
+          }
+          beginSpeechRecognition();
+        });
+      }
+      if (customerSearchClearBtn) {
+        customerSearchClearBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          clearCustomerSearchInput();
+          clearSearchResults();
+          clearVoiceFailureUI();
+        });
+      }
+      syncCustomerClearButton();
     }
 
     initHomeVoiceSearch();
@@ -630,8 +730,9 @@
         clearTimeout(timer);
         return;
       }
-      resetScrollBehaviorForQuery(input.value.trim());
+      resetScrollBehaviorForQuery(customerSearchInput.value.trim());
       scheduleLatinFetch();
+      syncCustomerClearButton();
     });
 
     input.addEventListener("keydown", function (e) {
