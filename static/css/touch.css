@@ -1235,65 +1235,78 @@ button.touch-stat--btn .touch-stat-label {
   display: none;
 }
 
-.touch-order-cart-panel .touch-order-lines {
+.touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-lines {
   max-height: min(28vh, 200px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-.touch-order-cart-panel .touch-order-line {
+.touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-line {
   padding: 0.45rem 0.5rem;
 }
 
-.touch-order-cart-panel .touch-order-line-name {
+.touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-line-name {
   font-size: 0.95rem;
 }
 
-/* Sales order — right「已選」防錯型大型確認 panel (scoped) */
+/* Sales order — right「已選」防錯型大型確認 panel (scoped to .touch-order-cart-panel--confirm) */
 .touch-order-cart-panel--confirm.touch-cart-section--compact {
-  padding: 22px;
-  background: #ffffff;
-  border: 3px solid #b89b5e;
-  border-radius: 20px;
+  padding: 18px;
+  background: #fffdf7;
+  border: none;
+  border-left: 3px solid #c8b783;
+  border-radius: 0;
   box-sizing: border-box;
   position: relative;
   z-index: 35;
+  width: 100%;
+  max-width: none;
+  min-width: 430px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
+.touch-order-cart-panel--confirm .touch-section-head--calm .touch-section-title,
 .touch-order-cart-panel--confirm .touch-order-cart-title {
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 900;
   color: var(--touch-text);
   margin: 0;
 }
 
 .touch-order-cart-panel--confirm .touch-order-cart-count {
-  font-size: 30px;
-  font-weight: 900;
+  font-size: 28px;
+  font-weight: 800;
   color: var(--touch-primary);
 }
 
 .touch-order-cart-panel--confirm .touch-section-head--calm {
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
 }
 
 .touch-order-cart-panel--confirm .touch-order-lines {
   gap: 0;
+  max-height: none;
+  overflow: visible;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
   grid-template-columns: unset;
   grid-template-areas: unset;
-  min-height: 240px;
-  padding: 22px;
-  margin-bottom: 18px;
-  border: 3px solid #d1d1d1;
+  min-height: 230px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 3px solid #d3c8a8;
   border-radius: 18px;
   background: #ffffff;
-  gap: 0.7rem;
+  gap: 0.65rem;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line:last-child {
@@ -1301,23 +1314,25 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-name {
+  display: block;
   width: 100%;
-  font-size: 38px;
+  font-size: 36px;
   font-weight: 900;
   line-height: 1.25;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-pack {
   display: block;
   width: 100%;
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 27px;
+  font-weight: 700;
   color: #222222;
-  line-height: 1.4;
+  line-height: 1.35;
+  margin-top: 8px;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-qty {
@@ -1331,11 +1346,12 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-cart-panel--confirm .touch-qty-btn {
-  width: 72px;
-  height: 72px;
-  min-width: 72px;
-  min-height: 72px;
-  font-size: 40px;
+  width: 68px;
+  height: 68px;
+  min-width: 68px;
+  min-height: 68px;
+  font-size: 38px;
+  font-weight: 800;
   border: 2px solid #999999;
   border-radius: 14px;
   flex-shrink: 0;
@@ -1343,8 +1359,8 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-cart-panel--confirm .touch-qty-display {
-  min-width: 100px;
-  font-size: 50px;
+  min-width: 110px;
+  font-size: 52px;
   font-weight: 900;
   text-align: center;
   flex-shrink: 0;
@@ -1368,13 +1384,14 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-cart-panel--confirm .touch-qty-quick-btn {
-  flex: 1 1 90px;
-  min-width: 90px;
-  min-height: 60px;
-  padding: 0.45rem 0.6rem;
-  font-size: 28px;
-  font-weight: 900;
-  border: 2px solid #d1d1d1;
+  flex: 1 1 88px;
+  min-width: 88px;
+  min-height: 58px;
+  height: 58px;
+  padding: 0.4rem 0.55rem;
+  font-size: 27px;
+  font-weight: 800;
+  border: 2px solid #d3c8a8;
   border-radius: 12px;
   background: #fff;
 }
@@ -1385,7 +1402,7 @@ button.touch-stat--btn .touch-stat-label {
   justify-content: space-between;
   gap: 0.85rem;
   width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-subtotal-wrap {
@@ -1397,23 +1414,24 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-subtotal-label {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #555;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-subtotal {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--touch-primary);
   text-align: right;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-remove {
-  min-height: 56px;
+  min-height: 52px;
+  height: 52px;
   min-width: 7.5rem;
-  padding: 0.45rem 1rem;
-  font-size: 24px;
+  padding: 0.4rem 1rem;
+  font-size: 23px;
   font-weight: 700;
   color: #b91c1c;
   border: 2px solid #fecaca;
@@ -1590,7 +1608,7 @@ button.touch-stat--btn .touch-stat-label {
 
   .touch-order-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(460px, 42%);
+    grid-template-columns: minmax(0, 3fr) minmax(430px, 2fr);
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       "top top"
@@ -1668,6 +1686,16 @@ button.touch-stat--btn .touch-stat-label {
     padding-top: 0.25rem;
   }
 
+  .touch-order-cart-panel--confirm {
+    grid-area: cart;
+    width: 100%;
+    max-width: none;
+    min-width: 430px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .touch-order-cart-panel {
     grid-area: cart;
     display: flex;
@@ -1677,16 +1705,20 @@ button.touch-stat--btn .touch-stat-label {
     overflow: hidden;
   }
 
-  .touch-order-cart-panel--confirm .touch-order-lines {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+  .touch-order-cart-panel.touch-order-cart-panel--confirm {
+    overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 
-  .touch-order-cart-panel .touch-order-lines {
+  .touch-order-cart-panel--confirm .touch-order-lines {
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-lines {
     flex: 1;
     max-height: none;
     min-height: 0;
@@ -2625,6 +2657,13 @@ button.touch-stat--btn .touch-stat-label {
       "info info"
       "qty subtotal"
       "remove remove";
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: unset;
+    grid-template-areas: unset;
   }
 
   .touch-order-line-info { grid-area: info; }
