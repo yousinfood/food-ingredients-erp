@@ -3490,6 +3490,7 @@ body.touch-app:has(.touch-home-app) {
 
 .touch-main--customer-center .touch-center-code {
   font-size: 26px;
+  font-weight: 600;
 }
 
 .touch-main--customer-center .touch-center-snippet {
@@ -3499,15 +3500,25 @@ body.touch-app:has(.touch-home-app) {
 
 .touch-main--customer-center .touch-primary-cta {
   min-height: 72px;
+  height: 72px;
   font-size: 30px;
   font-weight: 700;
 }
 
 /* 收款 / 訂單 / 價格 */
 .touch-main--customer-center .touch-secondary-action {
-  font-size: 24px;
   font-weight: 700;
   min-height: 64px;
+}
+
+.touch-main--customer-center .touch-secondary-action-label {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.touch-main--customer-center .touch-secondary-action-text {
+  font-size: 30px;
+  line-height: 1.2;
 }
 
 .touch-main--customer-center .touch-finance-strip-label {
@@ -3548,7 +3559,6 @@ body.touch-app:has(.touch-home-app) {
 .touch-main--customer-center .touch-disclosure-body,
 .touch-main--customer-center .touch-disclosure-line,
 .touch-main--customer-center .touch-notes,
-.touch-main--customer-center .touch-info-item dt,
 .touch-main--customer-center .touch-info-item dd,
 .touch-main--customer-center .touch-info-item dd .touch-link,
 .touch-main--customer-center .touch-price-row strong,
@@ -3563,7 +3573,13 @@ body.touch-app:has(.touch-home-app) {
   font-weight: 800;
 }
 
+.touch-main--customer-center .touch-info-item dt {
+  font-size: 28px;
+  font-weight: 700;
+}
+
 .touch-main--customer-center .touch-info-item dd {
+  font-size: 26px;
   font-weight: 600;
 }
 

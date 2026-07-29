@@ -47,9 +47,18 @@
   </a>
 
   <nav class="touch-secondary-actions" aria-label="其他操作">
-    <a href="{% url 'sales:receive_payment' customer.pk %}" class="touch-secondary-action">💰 收款</a>
-    <a href="{% url 'sales:order_history' customer.pk %}" class="touch-secondary-action">📜 訂單</a>
-    <a href="{% url 'sales:price_history' customer.pk %}" class="touch-secondary-action">💲 價格</a>
+    <a href="{% url 'sales:receive_payment' customer.pk %}" class="touch-secondary-action">
+      <span class="touch-secondary-action-label" aria-hidden="true">💰</span>
+      <span class="touch-secondary-action-text">收款</span>
+    </a>
+    <a href="{% url 'sales:order_history' customer.pk %}" class="touch-secondary-action">
+      <span class="touch-secondary-action-label" aria-hidden="true">📜</span>
+      <span class="touch-secondary-action-text">訂單</span>
+    </a>
+    <a href="{% url 'sales:price_history' customer.pk %}" class="touch-secondary-action">
+      <span class="touch-secondary-action-label" aria-hidden="true">💲</span>
+      <span class="touch-secondary-action-text">價格</span>
+    </a>
   </nav>
 
   <section class="touch-finance-strip" aria-label="帳務概況">
