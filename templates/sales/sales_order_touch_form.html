@@ -99,7 +99,7 @@
 
     <section class="touch-cart-section touch-cart-section--compact touch-order-cart-panel touch-order-cart-panel--confirm" aria-label="已選商品">
       <div class="touch-section-head touch-section-head--calm touch-order-cart-head">
-        <span class="touch-section-title touch-order-cart-title">已選</span>
+        <span class="touch-section-title touch-order-cart-title">已選商品</span>
         <span class="touch-line-count touch-order-cart-count">共 <span id="line-count">0</span> 項</span>
       </div>
       <div id="order-lines" class="touch-order-lines">
@@ -229,6 +229,30 @@
   </div>
 </div>
 
+<div id="order-remove-confirm-modal" class="touch-order-confirm-modal" hidden role="dialog" aria-modal="true" aria-labelledby="order-remove-confirm-title">
+  <div class="touch-order-confirm-modal-card">
+    <h2 id="order-remove-confirm-title">移除這項商品？</h2>
+    <p id="order-remove-confirm-text" class="touch-order-confirm-modal-text"></p>
+    <div class="touch-order-confirm-modal-actions">
+      <button type="button" class="touch-btn touch-btn-primary touch-btn--large" id="order-remove-cancel">保留商品</button>
+      <button type="button" class="touch-btn touch-btn-danger touch-btn--large" id="order-remove-yes">移除商品</button>
+    </div>
+  </div>
+</div>
+
+<div id="order-save-confirm-modal" class="touch-order-save-confirm-modal" hidden role="dialog" aria-modal="true" aria-labelledby="order-save-confirm-title">
+  <div class="touch-order-save-confirm-card">
+    <h2 id="order-save-confirm-title">出貨前最後確認</h2>
+    <p class="touch-order-save-confirm-lead">請逐項確認品名、包裝與數量</p>
+    <ul id="order-save-confirm-list" class="touch-order-save-confirm-list"></ul>
+    <p class="touch-order-save-confirm-total">合計 <strong id="order-save-confirm-total">$0</strong></p>
+    <div class="touch-order-save-confirm-actions">
+      <button type="button" class="touch-btn touch-btn-secondary touch-btn--large" id="order-save-confirm-cancel">返回修改</button>
+      <button type="button" class="touch-btn touch-btn-primary touch-btn--large" id="order-save-confirm-submit">確認儲存訂單</button>
+    </div>
+  </div>
+</div>
+
 <script id="frequent-products-data" type="application/json">{{ frequent_products_json|safe }}</script>
 <script id="initial-lines-data" type="application/json">{{ initial_lines_json|safe }}</script>
 <script id="default-category-products-data" type="application/json">{{ default_category_products_json|safe }}</script>
@@ -306,6 +330,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260729orderCartConfirm"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260729orderCartConfirmV3"></script>
 {% endif %}
 {% endblock %}

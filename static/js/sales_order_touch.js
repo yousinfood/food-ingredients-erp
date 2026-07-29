@@ -29,6 +29,15 @@
     const leaveContinueBtn = document.getElementById("leave-continue-btn");
     const leaveDraftBtn = document.getElementById("leave-draft-btn");
     const leaveDiscardBtn = document.getElementById("leave-discard-btn");
+    const removeConfirmModal = document.getElementById("order-remove-confirm-modal");
+    const removeConfirmText = document.getElementById("order-remove-confirm-text");
+    const removeCancelBtn = document.getElementById("order-remove-cancel");
+    const removeYesBtn = document.getElementById("order-remove-yes");
+    const saveConfirmModal = document.getElementById("order-save-confirm-modal");
+    const saveConfirmList = document.getElementById("order-save-confirm-list");
+    const saveConfirmTotal = document.getElementById("order-save-confirm-total");
+    const saveConfirmCancelBtn = document.getElementById("order-save-confirm-cancel");
+    const saveConfirmSubmitBtn = document.getElementById("order-save-confirm-submit");
 
     const lines = new Map();
     const productCatalog = new Map();
@@ -47,6 +56,8 @@
     let draftBrandSeries = null;
     let draftNaturalStarchItem = null;
     let isSubmitting = false;
+    let saveConfirmPending = false;
+    let pendingRemoveConfirm = null;
     let copyPartialMode = false;
 
     const pickToolbar = document.getElementById("order-pick-toolbar");
@@ -158,9 +169,73 @@
 
     function setLineQty(line, qty) {
       const safe = Math.max(0, qty);
+      const prev = getLineQty(line);
       line.qtyHidden.value = safe > 0 ? String(safe) : "0";
       line.qtyDisplay.textContent = safe > 0 ? String(safe) : "0";
       line.minusBtn.disabled = safe <= 0;
+      if (safe !== prev) flashQtyDisplay(line);
+    }
+
+    function flashQtyDisplay(line) {
+      if (!line || !line.qtyDisplay) return;
+      line.qtyDisplay.classList.remove("touch-qty-display--flash");
+      void line.qtyDisplay.offsetWidth;
+      line.qtyDisplay.classList.add("touch-qty-display--flash");
+      setTimeout(function () {
+        line.qtyDisplay.classList.remove("touch-qty-display--flash");
+      }, 550);
+    }
+
+    function packLabelFromProduct(product) {
+      const specRaw = product.spec ? String(product.spec) : "";
+      const unitRaw = product.unit_label ? String(product.unit_label) : "";
+      if (specRaw && unitRaw) return specRaw + "／" + unitRaw;
+      if (specRaw) return specRaw;
+      if (unitRaw) return unitRaw;
+      return "—";
+    }
+
+    function hideRemoveConfirmModal() {
+      if (!removeConfirmModal) return;
+      removeConfirmModal.hidden = true;
+      pendingRemoveConfirm = null;
+    }
+
+    function showRemoveConfirmModal(productName, onConfirm) {
+      if (!removeConfirmModal || !removeConfirmText) {
+        if (onConfirm) onConfirm();
+        return;
+      }
+      pendingRemoveConfirm = onConfirm;
+      removeConfirmText.textContent = productName;
+      removeConfirmModal.hidden = false;
+    }
+
+    function hideSaveConfirmModal() {
+      if (!saveConfirmModal) return;
+      saveConfirmModal.hidden = true;
+    }
+
+    function showSaveConfirmModal() {
+      if (!saveConfirmModal || !saveConfirmList) return;
+      saveConfirmList.innerHTML = "";
+      lines.forEach(function (line) {
+        const qty = getLineQty(line);
+        if (qty <= 0) return;
+        const packEl = line.row.querySelector(".touch-order-line-pack");
+        const pack = packEl ? packEl.textContent : packLabelFromProduct(line.product);
+        const item = document.createElement("li");
+        item.className = "touch-order-save-confirm-item";
+        item.innerHTML =
+          '<span class="touch-order-save-confirm-item-name">' + escapeHtml(line.product.name) + "</span>" +
+          '<span class="touch-order-save-confirm-item-pack">' + escapeHtml(pack) + "</span>" +
+          '<span class="touch-order-save-confirm-item-qty">數量 ' + escapeHtml(String(qty)) + "</span>";
+        saveConfirmList.appendChild(item);
+      });
+      if (saveConfirmTotal && orderTotalEl) {
+        saveConfirmTotal.textContent = orderTotalEl.textContent;
+      }
+      saveConfirmModal.hidden = false;
     }
 
     function defaultPrice(product) {
@@ -445,7 +520,9 @@
       });
       line.row.querySelector(".touch-order-line-remove").addEventListener("click", function (e) {
         e.preventDefault();
-        removeLineWithUndo(key);
+        showRemoveConfirmModal(product.name, function () {
+          removeLineWithUndo(key);
+        });
       });
     }
 
@@ -514,8 +591,11 @@
           '<button type="button" class="touch-qty-quick-btn" data-add="20">+20</button>' +
         "</div>" +
         '<div class="touch-order-line-footer">' +
-          '<span class="touch-order-line-subtotal">$0</span>' +
-          '<button type="button" class="touch-order-line-remove" aria-label="移除">移除</button>' +
+          '<div class="touch-order-line-subtotal-wrap">' +
+            '<span class="touch-order-line-subtotal-label">小計</span>' +
+            '<span class="touch-order-line-subtotal">$0</span>' +
+          "</div>" +
+          '<button type="button" class="touch-order-line-remove" aria-label="移除商品">移除商品</button>' +
         "</div>" +
         '<input type="hidden" class="touch-qty-hidden" value="' + escapeHtml(String(qtyDefault)) + '">' +
         '<input type="hidden" class="touch-price-hidden" value="' + escapeHtml(priceDefault) + '">';
@@ -1315,12 +1395,54 @@
         showToast("請至少加入一項產品");
         return;
       }
+      if (!saveConfirmPending) {
+        e.preventDefault();
+        showSaveConfirmModal();
+        return;
+      }
       isSubmitting = true;
       setSaveEnabled(false);
       saveBtn.textContent = "儲存中…";
       saveBtn.setAttribute("aria-disabled", "true");
       clearDraft();
     });
+
+    if (removeCancelBtn) {
+      removeCancelBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        hideRemoveConfirmModal();
+      });
+    }
+
+    if (removeYesBtn) {
+      removeYesBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const fn = pendingRemoveConfirm;
+        hideRemoveConfirmModal();
+        if (fn) fn();
+      });
+    }
+
+    if (saveConfirmCancelBtn) {
+      saveConfirmCancelBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        hideSaveConfirmModal();
+      });
+    }
+
+    if (saveConfirmSubmitBtn) {
+      saveConfirmSubmitBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        hideSaveConfirmModal();
+        saveConfirmPending = true;
+        syncHiddenInputs();
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+        } else {
+          form.submit();
+        }
+      });
+    }
 
     if (saveBtn) {
       saveBtn.addEventListener("click", function () {

@@ -1249,30 +1249,32 @@ button.touch-stat--btn .touch-stat-label {
   font-size: 0.95rem;
 }
 
-/* Sales order — right「已選」elder confirmation panel (scoped) */
+/* Sales order — right「已選」防錯型大型確認 panel (scoped) */
 .touch-order-cart-panel--confirm.touch-cart-section--compact {
-  padding: 20px;
-  background: #fffdf7;
-  border: 2px solid #d7c9a8;
-  border-radius: 18px;
+  padding: 22px;
+  background: #ffffff;
+  border: 3px solid #b89b5e;
+  border-radius: 20px;
   box-sizing: border-box;
+  position: relative;
+  z-index: 35;
 }
 
 .touch-order-cart-panel--confirm .touch-order-cart-title {
-  font-size: 30px;
-  font-weight: 800;
+  font-size: 34px;
+  font-weight: 900;
   color: var(--touch-text);
   margin: 0;
 }
 
 .touch-order-cart-panel--confirm .touch-order-cart-count {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 900;
   color: var(--touch-primary);
 }
 
 .touch-order-cart-panel--confirm .touch-section-head--calm {
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.85rem;
 }
 
 .touch-order-cart-panel--confirm .touch-order-lines {
@@ -1285,13 +1287,13 @@ button.touch-stat--btn .touch-stat-label {
   align-items: stretch;
   grid-template-columns: unset;
   grid-template-areas: unset;
-  min-height: 170px;
-  padding: 18px;
-  margin-bottom: 14px;
-  border: 2px solid #d8d8d8;
-  border-radius: 16px;
-  background: #fff;
-  gap: 0.55rem;
+  min-height: 240px;
+  padding: 22px;
+  margin-bottom: 18px;
+  border: 3px solid #d1d1d1;
+  border-radius: 18px;
+  background: #ffffff;
+  gap: 0.7rem;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line:last-child {
@@ -1300,18 +1302,22 @@ button.touch-stat--btn .touch-stat-label {
 
 .touch-order-cart-panel--confirm .touch-order-line-name {
   width: 100%;
-  font-size: 30px;
-  font-weight: 800;
+  font-size: 38px;
+  font-weight: 900;
   line-height: 1.25;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-pack {
   display: block;
   width: 100%;
-  font-size: 24px;
-  font-weight: 600;
-  color: #333333;
-  line-height: 1.35;
+  font-size: 28px;
+  font-weight: 800;
+  color: #222222;
+  line-height: 1.4;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-qty {
@@ -1320,43 +1326,55 @@ button.touch-stat--btn .touch-stat-label {
 
 .touch-order-cart-panel--confirm .touch-qty-stepper {
   justify-content: center;
-  gap: 0.75rem;
+  gap: 14px;
   width: 100%;
 }
 
 .touch-order-cart-panel--confirm .touch-qty-btn {
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  min-height: 56px;
-  font-size: 32px;
-  border-radius: 12px;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  min-height: 72px;
+  font-size: 40px;
+  border: 2px solid #999999;
+  border-radius: 14px;
   flex-shrink: 0;
+  background: #fff;
 }
 
 .touch-order-cart-panel--confirm .touch-qty-display {
-  min-width: 70px;
-  font-size: 38px;
-  font-weight: 800;
+  min-width: 100px;
+  font-size: 50px;
+  font-weight: 900;
   text-align: center;
   flex-shrink: 0;
+  color: var(--touch-text);
+  transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.touch-order-cart-panel--confirm .touch-qty-display--flash {
+  color: #047857;
+  background: #ecfdf5;
+  border-radius: 12px;
+  transform: scale(1.12);
 }
 
 .touch-order-cart-panel--confirm .touch-qty-quick {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   margin-top: 0;
   width: 100%;
 }
 
 .touch-order-cart-panel--confirm .touch-qty-quick-btn {
-  flex: 1 1 calc(33.333% - 10px);
-  min-height: 50px;
-  padding: 0.35rem 0.5rem;
-  font-size: 24px;
-  font-weight: 700;
-  border: 2px solid #d8d8d8;
+  flex: 1 1 90px;
+  min-width: 90px;
+  min-height: 60px;
+  padding: 0.45rem 0.6rem;
+  font-size: 28px;
+  font-weight: 900;
+  border: 2px solid #d1d1d1;
   border-radius: 12px;
   background: #fff;
 }
@@ -1364,10 +1382,24 @@ button.touch-stat--btn .touch-stat-label {
 .touch-order-cart-panel--confirm .touch-order-line-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 0.85rem;
   width: 100%;
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
+}
+
+.touch-order-cart-panel--confirm .touch-order-line-subtotal-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+.touch-order-cart-panel--confirm .touch-order-line-subtotal-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: #555;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-subtotal {
@@ -1375,20 +1407,135 @@ button.touch-stat--btn .touch-stat-label {
   font-weight: 800;
   color: var(--touch-primary);
   text-align: right;
-  flex: 0 0 auto;
 }
 
 .touch-order-cart-panel--confirm .touch-order-line-remove {
-  min-height: 48px;
-  min-width: 5.5rem;
-  padding: 0.35rem 1rem;
-  font-size: 22px;
+  min-height: 56px;
+  min-width: 7.5rem;
+  padding: 0.45rem 1rem;
+  font-size: 24px;
   font-weight: 700;
   color: #b91c1c;
   border: 2px solid #fecaca;
   border-radius: 12px;
   background: #fff;
   flex-shrink: 0;
+}
+
+.touch-order-confirm-modal,
+.touch-order-save-confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.touch-order-confirm-modal[hidden],
+.touch-order-save-confirm-modal[hidden] {
+  display: none;
+}
+
+.touch-order-confirm-modal-card,
+.touch-order-save-confirm-card {
+  width: min(640px, 100%);
+  max-height: min(90vh, 900px);
+  overflow-y: auto;
+  padding: 1.35rem 1.25rem;
+  background: #fff;
+  border: 3px solid #b89b5e;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.touch-order-confirm-modal-card h2,
+.touch-order-save-confirm-card h2 {
+  margin: 0 0 0.65rem;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.touch-order-confirm-modal-text {
+  margin: 0 0 1.1rem;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #222;
+}
+
+.touch-order-confirm-modal-actions,
+.touch-order-save-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.touch-btn--large {
+  min-height: 60px;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.touch-order-save-confirm-lead {
+  margin: 0 0 0.85rem;
+  font-size: 24px;
+  font-weight: 700;
+  color: #444;
+}
+
+.touch-order-save-confirm-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.touch-order-save-confirm-item {
+  padding: 1rem 1.1rem;
+  border: 3px solid #d1d1d1;
+  border-radius: 16px;
+  background: #fafafa;
+}
+
+.touch-order-save-confirm-item-name {
+  display: block;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.25;
+  margin-bottom: 0.35rem;
+}
+
+.touch-order-save-confirm-item-pack {
+  display: block;
+  font-size: 26px;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 0.35rem;
+}
+
+.touch-order-save-confirm-item-qty {
+  display: block;
+  font-size: 44px;
+  font-weight: 900;
+  color: #047857;
+}
+
+.touch-order-save-confirm-total {
+  margin: 0 0 1rem;
+  font-size: 28px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.touch-order-save-confirm-total strong {
+  font-size: 36px;
+  color: var(--touch-primary);
 }
 
 .touch-order-layout-head {
@@ -1443,7 +1590,7 @@ button.touch-stat--btn .touch-stat-label {
 
   .touch-order-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(360px, 34vw, 36vw);
+    grid-template-columns: minmax(0, 1fr) minmax(460px, 42%);
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       "top top"
