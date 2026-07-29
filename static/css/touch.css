@@ -3465,66 +3465,106 @@ body.touch-app:has(.touch-home-app) {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Customer center: 70+ typography (scoped — do not change global .touch-main) */
+/* Customer center: iPad 12.9" / 70+ elder mode (scoped — do not change global .touch-main) */
+.touch-main--customer-center .touch-center-hero,
+.touch-main--customer-center .touch-finance-strip,
+.touch-main--customer-center .touch-section,
+.touch-main--customer-center .touch-order-card {
+  padding: 24px;
+}
+
+.touch-main--customer-center .touch-disclosure-toggle {
+  padding: 24px;
+  font-size: 28px;
+  min-height: 64px;
+}
+
+.touch-main--customer-center .touch-disclosure-body {
+  padding: 24px;
+}
+
 .touch-main--customer-center .touch-center-name {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
 }
 
 .touch-main--customer-center .touch-center-code {
-  font-size: 22px;
+  font-size: 26px;
 }
 
 .touch-main--customer-center .touch-center-snippet {
-  font-size: 22px;
-  line-height: 1.5;
+  font-size: 26px;
+  line-height: 1.6;
+}
+
+.touch-main--customer-center .touch-primary-cta {
+  min-height: 72px;
+  font-size: 30px;
+  font-weight: 700;
 }
 
 /* 收款 / 訂單 / 價格 */
 .touch-main--customer-center .touch-secondary-action {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   min-height: 64px;
 }
 
 .touch-main--customer-center .touch-finance-strip-label {
-  font-size: 22px;
+  font-size: 24px;
 }
 
 .touch-main--customer-center .touch-finance-strip-value {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
 }
 
 .touch-main--customer-center .touch-finance-strip-value--date {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
 }
 
+.touch-main--customer-center .touch-section-title {
+  font-size: 28px;
+}
+
 .touch-main--customer-center .touch-order-card-top strong {
-  font-size: 22px;
+  font-size: 26px;
 }
 
 .touch-main--customer-center .touch-order-status {
-  font-size: 20px;
+  font-size: 24px;
 }
 
-.touch-main--customer-center .touch-order-card-meta {
-  font-size: 20px;
+.touch-main--customer-center .touch-order-card-meta span:not(.touch-order-amount) {
+  font-size: 24px;
 }
 
 .touch-main--customer-center .touch-order-amount {
-  font-size: 22px;
+  font-size: 26px;
+  font-weight: 800;
 }
 
-.touch-main--customer-center .touch-primary-cta {
+.touch-main--customer-center .touch-disclosure-body,
+.touch-main--customer-center .touch-disclosure-line,
+.touch-main--customer-center .touch-notes,
+.touch-main--customer-center .touch-info-item dt,
+.touch-main--customer-center .touch-info-item dd,
+.touch-main--customer-center .touch-info-item dd .touch-link,
+.touch-main--customer-center .touch-price-row strong,
+.touch-main--customer-center .touch-price-sku,
+.touch-main--customer-center .touch-price-amount,
+.touch-main--customer-center .touch-price-date,
+.touch-main--customer-center .touch-empty {
   font-size: 26px;
-  min-height: 64px;
 }
 
-.touch-main--customer-center .touch-disclosure-toggle {
-  font-size: 26px;
-  min-height: 64px;
+.touch-main--customer-center .touch-price-amount {
+  font-weight: 800;
+}
+
+.touch-main--customer-center .touch-info-item dd {
+  font-weight: 600;
 }
 
 .touch-main--customer-center .touch-section-link {
