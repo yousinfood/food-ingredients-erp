@@ -1,27 +1,28 @@
 {% load touch_search %}
-<div id="touch-search-results-panel" class="touch-search-results-panel touch-search-results-panel--home" data-query="{{ query|default:''|escape }}">
+<div id="touch-search-results-panel" class="customer-search-results-panel" data-query="{{ query|default:''|escape }}">
 {% if searched and results %}
-  <div class="touch-home-result-list">
+  <p class="customer-search-results-panel__heading" role="status">請選擇客戶</p>
+  <div class="customer-search-results-panel__list">
     {% for customer in results %}
-    <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-home-result-btn">
-      <span class="touch-home-result-name">{{ customer.name|highlight_query:query }}</span>
-      <span class="touch-home-result-phone">
-        {{ customer.phone|default:""|highlight_query:query }}{% if customer.phone_2 %} · {{ customer.phone_2|highlight_query:query }}{% endif %}
-      </span>
-      {% if customer.address %}
-      <span class="touch-home-result-address">{{ customer.address|highlight_query:query }}</span>
-      {% else %}
-      <span class="touch-home-result-address touch-home-result-address--empty">—</span>
+    <a href="{% url 'sales:customer_center' customer.pk %}" class="customer-search-result-card">
+      <span class="customer-search-result-card__name">{{ customer.name|highlight_query:query }}</span>
+      {% if customer.region %}
+      <span class="customer-search-result-card__region">{{ customer.region|highlight_query:query }}</span>
       {% endif %}
+      <span class="customer-search-result-card__address">
+        {% if customer.address %}{{ customer.address|highlight_query:query }}{% else %}—{% endif %}
+      </span>
     </a>
     {% endfor %}
   </div>
   {% if search_has_more %}
-  <button type="button" class="touch-btn touch-btn-secondary touch-search-more" data-touch-search-more="1">
+  <button type="button" class="customer-search-results-panel__more" data-touch-search-more="1">
     還有 {{ search_remaining }} 筆符合，點擊查看更多
   </button>
   {% endif %}
 {% elif searched %}
-  <p class="touch-search-empty-home" role="status">找不到客戶，請換店名、電話或地址</p>
+  <div class="customer-search-results-panel__empty" role="status" hidden aria-hidden="true">
+    <p class="customer-search-results-panel__empty-text">找不到完全符合的客戶</p>
+  </div>
 {% endif %}
 </div>

@@ -6,7 +6,7 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260729voice-rescue";
+  var ASSET_TAG = "20260729results-senior";
   var VOICE_LS_COMPLETED = "voice_permission_completed";
   var VOICE_LS_DENIED = "voice_permission_denied";
   var API_PATH = "/api/customers/search/";
@@ -746,10 +746,22 @@
 
     if (mount) {
       mount.addEventListener("click", function (e) {
-        var btn = e.target.closest("[data-touch-search-more]");
-        if (!btn) return;
+        var moreBtn = e.target.closest("[data-touch-search-more]");
+        if (moreBtn) {
+          e.preventDefault();
+          runFetch(true);
+          return;
+        }
+        var card = e.target.closest(".customer-search-result-card");
+        if (!card || card.dataset.navPending === "1") return;
+        var href = card.getAttribute("href");
+        if (!href) return;
         e.preventDefault();
-        runFetch(true);
+        card.classList.add("customer-search-result-card--pressed");
+        card.dataset.navPending = "1";
+        window.setTimeout(function () {
+          window.location.href = href;
+        }, 150);
       });
     }
   }
