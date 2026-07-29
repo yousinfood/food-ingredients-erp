@@ -2,46 +2,214 @@
 
 {% block title %}訂單紀錄 - {{ customer.name }}{% endblock %}
 
+{% block extra_head %}
+  <style>
+    .touch-main--order-history {
+      box-sizing: border-box;
+      max-width: 960px;
+      width: min(96%, 100%);
+      margin: 0 auto;
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 20px calc(24px + env(safe-area-inset-bottom, 0px));
+      overflow-x: hidden;
+    }
+
+    .touch-main--order-history .touch-back {
+      display: inline-flex;
+      align-items: center;
+      min-height: 52px;
+      margin-bottom: 12px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .touch-order-history-head {
+      margin: 0 0 14px;
+    }
+
+    .touch-order-history-title {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #243638;
+    }
+
+    .touch-order-history-customer-name {
+      margin: 0 0 4px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #243638;
+    }
+
+    .touch-order-history-customer-code {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.3;
+      color: #536b6e;
+    }
+
+    .touch-order-history-hint {
+      margin: 0 0 14px;
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: #536b6e;
+    }
+
+    .touch-order-history-new-order {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 72px;
+      min-height: 72px;
+      margin: 0 0 16px;
+      padding: 0 16px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
+      text-decoration: none;
+      color: #245235;
+      background: #ddefe4;
+      border: 2px solid #7fa98d;
+      border-radius: 14px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-order-history-new-order:active {
+      background: #cfe6d8;
+    }
+
+    .touch-order-history-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .touch-order-history-card {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      min-height: 100px;
+      padding: 18px;
+      text-decoration: none;
+      color: inherit;
+      background: #fafcfb;
+      border: 1px solid #d3deda;
+      border-radius: 14px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-order-history-card:active {
+      background: #f0f5f3;
+      border-color: #7fa98d;
+    }
+
+    .touch-order-history-card-left,
+    .touch-order-history-card-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .touch-order-history-card-right {
+      flex-shrink: 0;
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .touch-order-history-date {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #243638;
+    }
+
+    .touch-order-history-no {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: #5b6b66;
+      word-break: break-all;
+    }
+
+    .touch-order-history-amount {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: #245235;
+      white-space: nowrap;
+    }
+
+    .touch-order-history-status {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: #4f6b5a;
+    }
+
+    .touch-order-history-empty {
+      margin: 0;
+      padding: 24px 18px;
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.4;
+      text-align: center;
+      color: #536b6e;
+      background: #fafcfb;
+      border: 1px solid #d3deda;
+      border-radius: 14px;
+    }
+  </style>
+{% endblock %}
+
 {% block body %}
-<main class="touch-main">
+<main class="touch-main touch-main--order-history">
   <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-back">← 返回客戶中心</a>
 
-  <header class="touch-header">
-    <h1>📜 訂單紀錄</h1>
-    <p>{{ customer.name }}（{{ customer.code }}）</p>
+  <header class="touch-order-history-head">
+    <h1 class="touch-order-history-title">📦 訂單紀錄</h1>
+    <p class="touch-order-history-customer-name">{{ customer.name }}</p>
+    <p class="touch-order-history-customer-code">{{ customer.code }}</p>
   </header>
 
-  <section class="touch-section">
-    {% if orders %}
-    <div class="touch-table-wrap">
-      <table class="touch-table">
-        <thead>
-          <tr>
-            <th>訂單號</th>
-            <th>日期</th>
-            <th>狀態</th>
-            <th>金額</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for order in orders %}
-          <tr>
-            <td><a href="{% url 'sales:sales_order_detail' order.pk %}" class="touch-row-link">{{ order.order_no }}</a></td>
-            <td>{{ order.order_date }}</td>
-            <td>{{ order.get_status_display }}</td>
-            <td>${{ order.total_amount|floatformat:0 }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="touch-empty">尚無訂單紀錄</p>
-    {% endif %}
-  </section>
+  <p class="touch-order-history-hint">點選訂單，可查看當時商品與售價</p>
 
-  <div class="touch-form-actions">
-    <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-btn touch-btn-primary">📦 新增銷售訂單</a>
-  </div>
+  <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-order-history-new-order">📦 新增銷售訂單</a>
+
+  {% if orders %}
+  <ul class="touch-order-history-list">
+    {% for order in orders %}
+    <li>
+      <a href="{% url 'sales:sales_order_detail' order.pk %}" class="touch-order-history-card">
+        <div class="touch-order-history-card-left">
+          <span class="touch-order-history-date">{{ order.order_date|date:"Y/m/d" }}</span>
+          <span class="touch-order-history-no">{{ order.order_no }}</span>
+        </div>
+        <div class="touch-order-history-card-right">
+          <span class="touch-order-history-amount">${{ order.total_amount|floatformat:0 }}</span>
+          <span class="touch-order-history-status">{{ order.get_status_display }}</span>
+        </div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="touch-order-history-empty">尚無訂單紀錄</p>
+  {% endif %}
 </main>
 {% endblock %}
