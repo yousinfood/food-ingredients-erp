@@ -3465,6 +3465,73 @@ body.touch-app:has(.touch-home-app) {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Customer center: 70+ typography (scoped — do not change global .touch-main) */
+.touch-main--customer-center .touch-center-name {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.touch-main--customer-center .touch-center-code {
+  font-size: 22px;
+}
+
+.touch-main--customer-center .touch-center-snippet {
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+/* 收款 / 訂單 / 價格 */
+.touch-main--customer-center .touch-secondary-action {
+  font-size: 26px;
+  font-weight: 700;
+  min-height: 64px;
+}
+
+.touch-main--customer-center .touch-finance-strip-label {
+  font-size: 22px;
+}
+
+.touch-main--customer-center .touch-finance-strip-value {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.touch-main--customer-center .touch-finance-strip-value--date {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.touch-main--customer-center .touch-order-card-top strong {
+  font-size: 22px;
+}
+
+.touch-main--customer-center .touch-order-status {
+  font-size: 20px;
+}
+
+.touch-main--customer-center .touch-order-card-meta {
+  font-size: 20px;
+}
+
+.touch-main--customer-center .touch-order-amount {
+  font-size: 22px;
+}
+
+.touch-main--customer-center .touch-primary-cta {
+  font-size: 26px;
+  min-height: 64px;
+}
+
+.touch-main--customer-center .touch-disclosure-toggle {
+  font-size: 26px;
+  min-height: 64px;
+}
+
+.touch-main--customer-center .touch-section-link {
+  font-size: 26px;
+  min-height: 64px;
+}
+
 /* Homepage: iPad Safari — body locked; only results list scrolls */
 .touch-home-app__search-sticky {
   flex: 0 0 auto;
