@@ -202,7 +202,7 @@
         line.subtotalEl.textContent = formatMoney(qty * price);
         line.minusBtn.disabled = qty <= 0;
       });
-      lineCountEl.textContent = count + " 項";
+      lineCountEl.textContent = String(count);
       orderTotalEl.textContent = formatMoney(total);
       setSaveEnabled(count > 0 && !isSubmitting);
       if (orderLinesEmpty) orderLinesEmpty.hidden = true;
@@ -488,30 +488,35 @@
       const row = document.createElement("div");
       row.className = "touch-order-line";
       row.dataset.productId = String(key);
-      const specText = product.spec ? escapeHtml(product.spec) : "";
-      const unitText = escapeHtml(product.unit_label || "");
+      const specRaw = product.spec ? String(product.spec) : "";
+      const unitRaw = product.unit_label ? String(product.unit_label) : "";
+      let packText = "";
+      if (specRaw && unitRaw) {
+        packText = escapeHtml(specRaw) + "／" + escapeHtml(unitRaw);
+      } else if (specRaw) {
+        packText = escapeHtml(specRaw);
+      } else if (unitRaw) {
+        packText = escapeHtml(unitRaw);
+      }
       row.innerHTML =
-        '<div class="touch-order-line-info">' +
-          '<strong class="touch-order-line-name">' + escapeHtml(product.name) + "</strong>" +
-          (specText ? '<span class="touch-order-line-spec">' + specText + "</span>" : "") +
-        "</div>" +
+        '<strong class="touch-order-line-name">' + escapeHtml(product.name) + "</strong>" +
+        (packText ? '<span class="touch-order-line-pack">' + packText + "</span>" : "") +
         '<div class="touch-order-line-qty">' +
           '<div class="touch-qty-stepper">' +
             '<button type="button" class="touch-qty-btn touch-qty-minus" aria-label="減少">−</button>' +
             '<span class="touch-qty-display">' + escapeHtml(String(qtyDefault)) + "</span>" +
             '<button type="button" class="touch-qty-btn touch-qty-plus" aria-label="增加">+</button>' +
           "</div>" +
-          '<div class="touch-qty-quick">' +
-            '<button type="button" class="touch-qty-quick-btn" data-add="5">+5</button>' +
-            '<button type="button" class="touch-qty-quick-btn" data-add="10">+10</button>' +
-            '<button type="button" class="touch-qty-quick-btn" data-add="20">+20</button>' +
-          "</div>" +
-          (unitText ? '<span class="touch-order-line-unit">' + unitText + "</span>" : "") +
         "</div>" +
-        '<div class="touch-order-line-subtotal-wrap">' +
+        '<div class="touch-qty-quick">' +
+          '<button type="button" class="touch-qty-quick-btn" data-add="5">+5</button>' +
+          '<button type="button" class="touch-qty-quick-btn" data-add="10">+10</button>' +
+          '<button type="button" class="touch-qty-quick-btn" data-add="20">+20</button>' +
+        "</div>" +
+        '<div class="touch-order-line-footer">' +
           '<span class="touch-order-line-subtotal">$0</span>' +
+          '<button type="button" class="touch-order-line-remove" aria-label="移除">移除</button>' +
         "</div>" +
-        '<button type="button" class="touch-order-line-remove" aria-label="移除">✕</button>' +
         '<input type="hidden" class="touch-qty-hidden" value="' + escapeHtml(String(qtyDefault)) + '">' +
         '<input type="hidden" class="touch-price-hidden" value="' + escapeHtml(priceDefault) + '">';
 

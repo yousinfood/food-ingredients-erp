@@ -97,10 +97,10 @@
 
     </div>
 
-    <section class="touch-cart-section touch-cart-section--compact touch-order-cart-panel" aria-label="已選商品">
-      <div class="touch-section-head touch-section-head--calm">
-        <span class="touch-section-title">已選</span>
-        <span id="line-count" class="touch-line-count">0 項</span>
+    <section class="touch-cart-section touch-cart-section--compact touch-order-cart-panel touch-order-cart-panel--confirm" aria-label="已選商品">
+      <div class="touch-section-head touch-section-head--calm touch-order-cart-head">
+        <span class="touch-section-title touch-order-cart-title">已選</span>
+        <span class="touch-line-count touch-order-cart-count">共 <span id="line-count">0</span> 項</span>
       </div>
       <div id="order-lines" class="touch-order-lines">
         <p id="order-lines-empty" class="touch-order-lines-empty" hidden>—</p>
@@ -306,6 +306,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260728flourseries"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260729orderCartConfirm"></script>
 {% endif %}
 {% endblock %}
