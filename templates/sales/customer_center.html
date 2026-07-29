@@ -2,8 +2,79 @@
 
 {% block title %}{{ center.name }} - 客戶中心{% endblock %}
 
+{% block extra_head %}
+  <style>
+    .touch-main--customer-center-senior .touch-senior-start-order {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 96px;
+      margin: 0 0 1.25rem;
+      padding: 0.85rem 1.25rem;
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-align: center;
+      text-decoration: none;
+      color: #245235;
+      background: #ddefe4;
+      border: 2px solid #7fa98d;
+      border-radius: 18px;
+      box-shadow: 0 4px 14px rgba(36, 92, 99, 0.12);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-main--customer-center-senior .touch-senior-start-order:active {
+      background: #cfe6d8;
+      transform: scale(0.99);
+    }
+
+    .touch-main--customer-center-senior .touch-icon-btn {
+      width: 64px;
+      height: 64px;
+      min-width: 64px;
+      min-height: 64px;
+      font-size: 1.75rem;
+    }
+
+    .touch-main--customer-center-senior .touch-finance-strip {
+      pointer-events: none;
+      cursor: default;
+      border: 2px solid #afc8cc;
+      border-radius: 16px;
+      background: #f8fbfb;
+      box-shadow: none;
+    }
+
+    .touch-main--customer-center-senior .touch-finance-strip-label {
+      font-size: 26px;
+      font-weight: 700;
+      color: #536b6e;
+    }
+
+    .touch-main--customer-center-senior .touch-finance-strip-value,
+    .touch-main--customer-center-senior .touch-finance-strip-value--date {
+      font-size: 30px;
+      font-weight: 800;
+      color: #243638;
+    }
+
+    .touch-main--customer-center-senior .touch-section-title {
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .touch-main--customer-center-senior .touch-section-head .touch-section-link {
+      display: none;
+    }
+  </style>
+{% endblock %}
+
 {% block body %}
-<main class="touch-main touch-main--customer-center">
+<main class="touch-main touch-main--customer-center touch-main--customer-center-senior">
   <div class="touch-back-bar" aria-label="返回">
     <a href="{% url 'dashboard' %}" class="touch-back">← 返回儀表板</a>
   </div>
@@ -42,24 +113,9 @@
     {% endif %}
   </header>
 
-  <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-primary-cta">
-    📦 新增銷售訂單
+  <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-senior-start-order">
+    📦 開始下單
   </a>
-
-  <nav class="touch-secondary-actions" aria-label="其他操作">
-    <a href="{% url 'sales:receive_payment' customer.pk %}" class="touch-secondary-action">
-      <span class="touch-secondary-action-label" aria-hidden="true">💰</span>
-      <span class="touch-secondary-action-text">收款</span>
-    </a>
-    <a href="{% url 'sales:order_history' customer.pk %}" class="touch-secondary-action">
-      <span class="touch-secondary-action-label" aria-hidden="true">📜</span>
-      <span class="touch-secondary-action-text">訂單</span>
-    </a>
-    <a href="{% url 'sales:price_history' customer.pk %}" class="touch-secondary-action">
-      <span class="touch-secondary-action-label" aria-hidden="true">💲</span>
-      <span class="touch-secondary-action-text">價格</span>
-    </a>
-  </nav>
 
   <section class="touch-finance-strip" aria-label="帳務概況">
     <div class="touch-finance-strip-item">
@@ -87,9 +143,6 @@
   <section class="touch-section">
     <div class="touch-section-head">
       <h2 class="touch-section-title">最近訂單</h2>
-      {% if center.order_count > 3 %}
-      <a href="{% url 'sales:order_history' customer.pk %}" class="touch-section-link">全部 {{ center.order_count }} 筆 →</a>
-      {% endif %}
     </div>
     {% if center.recent_orders %}
     <ul class="touch-order-list">
@@ -203,7 +256,6 @@
         </li>
         {% endfor %}
       </ul>
-      <a href="{% url 'sales:price_history' customer.pk %}" class="touch-section-link">完整價格紀錄 →</a>
     </div>
   </details>
   {% endif %}
