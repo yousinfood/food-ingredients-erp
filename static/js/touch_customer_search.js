@@ -1,8 +1,14 @@
 (function () {
   "use strict";
 
+  if (document.getElementById("customer-search-page")) {
+    return;
+  }
+
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260728ipadscroll3";
+  var ASSET_TAG = "20260729fix-vvh";
+  var VOICE_LS_COMPLETED = "voice_permission_completed";
+  var VOICE_LS_DENIED = "voice_permission_denied";
   var API_PATH = "/api/customers/search/";
 
   function bindForm(form) {
@@ -12,7 +18,7 @@
     if (!input) return;
 
     var isHomeSearch = form.dataset.touchHomeSearch === "1";
-    var micBtn = isHomeSearch ? form.querySelector(".touch-search-mic-btn") : null;
+    var voicePrimaryBtn = isHomeSearch ? document.getElementById("touch-home-voice-primary") : null;
 
     var mount = document.getElementById("touch-search-results-mount");
     if (!mount) {
@@ -27,6 +33,11 @@
     var fetchSeq = 0;
     var pendingHtml = null;
     var speechRec = null;
+    var voiceStatusEl = isHomeSearch ? form.querySelector("#touch-home-voice-status") : null;
+    var voiceState = "idle";
+    var voiceSessionActive = false;
+    var voiceGotTranscript = false;
+    var voiceSuccessTimer = null;
     var userScrolledResults = false;
     var lastScrollQuery = null;
     var activeIndex = -1;
@@ -53,7 +64,15 @@
       if (!force && Math.abs(inset - lastKeyboardInset) < 2) return;
       lastKeyboardInset = inset;
       document.documentElement.style.setProperty("--touch-keyboard-pad", inset + "px");
-      document.documentElement.style.setProperty("--touch-vvh", Math.round(vv.height) + "px");
+      if (inset > 48) {
+        var vvh = Math.round(vv.height);
+        if (vvh < 200) {
+          vvh = Math.max(200, Math.round(window.innerHeight - inset));
+        }
+        document.documentElement.style.setProperty("--touch-vvh", vvh + "px");
+      } else {
+        document.documentElement.style.removeProperty("--touch-vvh");
+      }
       document.body.classList.toggle("touch-keyboard-open", inset > 48);
     }
 
@@ -274,7 +293,12 @@
             if (data && typeof data.html === "string") pendingHtml = data.html;
             return;
           }
-          if (!data || !data.ok) return;
+          if (!data || !data.ok) {
+            if (opts.voice && isHomeSearch) {
+              setVoicePrimaryState("fail");
+            }
+            return;
+          }
           if (opts.voice && data.normalized_q && typeof data.normalized_q === "string") {
             var normalized = data.normalized_q.trim();
             if (normalized && normalized !== input.value.trim()) {
@@ -286,12 +310,33 @@
             window.location.href = data.redirect;
             return;
           }
+          if (opts.voice && isHomeSearch) {
+            if (typeof data.html === "string") {
+              updateResultsHtml(data.html);
+            }
+            if (data.redirect && data.total >= 1) {
+              var cname = (data.customer_name || "").trim() || "客戶";
+              setVoicePrimaryState("success", cname);
+              clearVoiceSuccessTimer();
+              voiceSuccessTimer = setTimeout(function () {
+                window.location.href = data.redirect;
+              }, 1000);
+              return;
+            }
+            if (!data.total) {
+              setVoicePrimaryState("fail");
+            }
+            return;
+          }
           if (typeof data.html === "string") {
             updateResultsHtml(data.html);
           }
         })
         .catch(function (err) {
           if (err && err.name === "AbortError") return;
+          if (opts.voice && isHomeSearch) {
+            setVoicePrimaryState("fail");
+          }
         });
     }
 
@@ -315,18 +360,222 @@
       });
     }
 
-    function setMicListening(on) {
-      if (!micBtn) return;
-      micBtn.classList.toggle("touch-search-mic-btn--listening", on);
-      micBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    function voicePrimaryLines() {
+      if (!voicePrimaryBtn) return { line1: null, line2: null };
+      return {
+        line1: voicePrimaryBtn.querySelector(".touch-home-voice-primary__line1"),
+        line2: voicePrimaryBtn.querySelector(".touch-home-voice-primary__line2"),
+      };
     }
 
-    function startVoiceInput() {
-      focusInputWithoutScroll();
-      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
+    function setVoicePrimaryState(mode, detail) {
+      if (!voicePrimaryBtn) return;
+      voiceState = mode;
+      var lines = voicePrimaryLines();
+      voicePrimaryBtn.classList.remove(
+        "touch-home-voice-primary--idle",
+        "touch-home-voice-primary--listening",
+        "touch-home-voice-primary--success",
+        "touch-home-voice-primary--fail"
+      );
+      voicePrimaryBtn.disabled = false;
+      voicePrimaryBtn.removeAttribute("aria-disabled");
+
+      if (mode === "listening") {
+        voicePrimaryBtn.classList.add("touch-home-voice-primary--listening");
+        voicePrimaryBtn.setAttribute("aria-pressed", "true");
+        voicePrimaryBtn.setAttribute("aria-label", "正在錄音，點擊停止");
+        if (lines.line1) lines.line1.textContent = "🔴 正在聽...";
+        if (lines.line2) {
+          lines.line2.textContent = "請說客戶名稱";
+          lines.line2.hidden = false;
+        }
+        setVoiceStatusMessage("");
         return;
       }
+      if (mode === "success") {
+        voicePrimaryBtn.classList.add("touch-home-voice-primary--success");
+        voicePrimaryBtn.setAttribute("aria-pressed", "false");
+        voicePrimaryBtn.setAttribute("aria-label", "語音找客戶");
+        if (lines.line1) lines.line1.textContent = "🟢 已找到：";
+        if (lines.line2) {
+          lines.line2.textContent = detail || "客戶";
+          lines.line2.hidden = false;
+        }
+        setVoiceStatusMessage("");
+        return;
+      }
+      if (mode === "fail") {
+        voicePrimaryBtn.classList.add("touch-home-voice-primary--fail");
+        voicePrimaryBtn.setAttribute("aria-pressed", "false");
+        voicePrimaryBtn.setAttribute("aria-label", "語音找客戶，點一下再試");
+        if (lines.line1) lines.line1.textContent = "沒有聽清楚，";
+        if (lines.line2) {
+          lines.line2.textContent = "請再按一次。";
+          lines.line2.hidden = false;
+        }
+        setVoiceStatusMessage("");
+        return;
+      }
+      if (mode === "blocked") {
+        voicePrimaryBtn.classList.add("touch-home-voice-primary--idle");
+        voicePrimaryBtn.disabled = true;
+        voicePrimaryBtn.setAttribute("aria-disabled", "true");
+        voicePrimaryBtn.setAttribute("aria-pressed", "false");
+        if (lines.line1) lines.line1.textContent = "🎤 語音找客戶";
+        if (lines.line2) lines.line2.hidden = true;
+        setVoiceStatusMessage("語音搜尋尚未啟用，請聯絡管理員協助設定。", "error");
+        return;
+      }
+      voicePrimaryBtn.classList.add("touch-home-voice-primary--idle");
+      voicePrimaryBtn.setAttribute("aria-pressed", "false");
+      voicePrimaryBtn.setAttribute("aria-label", "語音找客戶");
+      if (lines.line1) lines.line1.textContent = "🎤 語音找客戶";
+      if (lines.line2) lines.line2.hidden = true;
+      setVoiceStatusMessage("");
+    }
+
+    function hapticVoiceTap() {
+      try {
+        if (navigator.vibrate) navigator.vibrate(40);
+      } catch (e) {
+        /* ignore */
+      }
+    }
+
+    function setVoiceStatusMessage(text, tone) {
+      if (!voiceStatusEl) return;
+      voiceStatusEl.textContent = text || "";
+      voiceStatusEl.classList.toggle("touch-home-voice-status--error", tone === "error");
+      voiceStatusEl.classList.toggle("touch-home-voice-status--success", tone === "success");
+    }
+
+    function clearVoiceSuccessTimer() {
+      if (voiceSuccessTimer) {
+        clearTimeout(voiceSuccessTimer);
+        voiceSuccessTimer = null;
+      }
+    }
+
+    function finishVoiceIdle() {
+      voiceSessionActive = false;
+      voiceGotTranscript = false;
+      clearVoiceSuccessTimer();
+      setVoicePrimaryState("idle");
+    }
+
+    function stopVoiceInput() {
+      if (speechRec) {
+        try {
+          speechRec.stop();
+        } catch (e) {
+          try {
+            speechRec.abort();
+          } catch (e2) {
+            /* ignore */
+          }
+        }
+      }
+      finishVoiceIdle();
+    }
+
+    function readVoiceFlag(key) {
+      try {
+        return localStorage.getItem(key) === "true";
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function writeVoiceFlag(key, value) {
+      try {
+        localStorage.setItem(key, value ? "true" : "false");
+      } catch (e) {
+        /* ignore */
+      }
+    }
+
+    function isVoicePermissionCompleted() {
+      return readVoiceFlag(VOICE_LS_COMPLETED);
+    }
+
+    function isVoicePermissionDenied() {
+      return readVoiceFlag(VOICE_LS_DENIED);
+    }
+
+    function markVoicePermissionCompleted() {
+      writeVoiceFlag(VOICE_LS_COMPLETED, true);
+      writeVoiceFlag(VOICE_LS_DENIED, false);
+    }
+
+    function markVoicePermissionDenied() {
+      writeVoiceFlag(VOICE_LS_DENIED, true);
+    }
+
+    function showVoiceBlockedMessage() {
+      setVoicePrimaryState("blocked");
+    }
+
+    function showVoicePermissionIntro(onConfirm) {
+      var overlay = document.getElementById("touch-voice-permission-intro");
+      var okBtn = document.getElementById("touch-voice-permission-intro-ok");
+      if (!overlay || !okBtn) {
+        onConfirm();
+        return;
+      }
+      overlay.hidden = false;
+      document.body.classList.add("touch-voice-intro-open");
+      function cleanup() {
+        overlay.hidden = true;
+        document.body.classList.remove("touch-voice-intro-open");
+        okBtn.removeEventListener("click", onOk);
+      }
+      function onOk(e) {
+        e.preventDefault();
+        cleanup();
+        onConfirm();
+      }
+      okBtn.addEventListener("click", onOk);
+    }
+
+    function requestMicrophoneAccess(thenStart) {
+      if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function") {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then(function (stream) {
+            if (stream && stream.getTracks) {
+              stream.getTracks().forEach(function (track) {
+                track.stop();
+              });
+            }
+            markVoicePermissionCompleted();
+            thenStart();
+          })
+          .catch(function () {
+            markVoicePermissionDenied();
+            showVoiceBlockedMessage();
+          });
+        return;
+      }
+      thenStart();
+    }
+
+    function beginSpeechRecognition() {
+      if (!voicePrimaryBtn || voiceSessionActive) return;
+
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        voicePrimaryBtn.hidden = true;
+        setVoiceStatusMessage("此裝置暫不支援語音搜尋，請使用文字搜尋", "error");
+        return;
+      }
+
+      hapticVoiceTap();
+      voiceSessionActive = true;
+      voiceGotTranscript = false;
+      clearVoiceSuccessTimer();
+      setVoicePrimaryState("listening");
+
       if (speechRec) {
         try {
           speechRec.abort();
@@ -334,42 +583,118 @@
           /* ignore */
         }
       }
+
       speechRec = new SpeechRecognition();
       speechRec.lang = "zh-TW";
+      speechRec.continuous = false;
       speechRec.interimResults = false;
       speechRec.maxAlternatives = 1;
-      setMicListening(true);
+
       speechRec.onresult = function (ev) {
         var text = "";
         if (ev.results && ev.results.length) {
           text = (ev.results[0][0] && ev.results[0][0].transcript) || "";
         }
         text = text.trim();
+        voiceGotTranscript = true;
+        if (!isVoicePermissionCompleted()) {
+          markVoicePermissionCompleted();
+        }
         if (text) {
           input.value = text;
           resetScrollBehaviorForQuery(text);
           runFetch(false, { voice: true });
+        } else {
+          voiceSessionActive = false;
+          setVoicePrimaryState("fail");
         }
       };
-      speechRec.onerror = function () {
-        setMicListening(false);
+
+      speechRec.onerror = function (ev) {
+        var code = ev && ev.error ? ev.error : "";
+        voiceSessionActive = false;
+        voiceGotTranscript = false;
+        clearVoiceSuccessTimer();
+        if (code === "not-allowed" || code === "service-not-allowed") {
+          markVoicePermissionDenied();
+          showVoiceBlockedMessage();
+          return;
+        }
+        if (code === "aborted") {
+          finishVoiceIdle();
+          return;
+        }
+        setVoicePrimaryState("fail");
       };
+
       speechRec.onend = function () {
-        setMicListening(false);
+        if (voiceGotTranscript) {
+          voiceSessionActive = false;
+          return;
+        }
+        if (voiceState === "listening") {
+          voiceSessionActive = false;
+          setVoicePrimaryState("fail");
+        }
       };
+
       try {
         speechRec.start();
       } catch (e) {
-        setMicListening(false);
+        voiceSessionActive = false;
+        setVoicePrimaryState("fail");
       }
     }
 
-    if (micBtn) {
-      micBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        startVoiceInput();
-      });
+    function onVoicePrimaryClick(e) {
+      e.preventDefault();
+      if (isVoicePermissionDenied()) {
+        showVoiceBlockedMessage();
+        return;
+      }
+      if (voiceState === "success") return;
+      if (voiceSessionActive && voiceState === "listening") {
+        stopVoiceInput();
+        return;
+      }
+      if (voiceSessionActive) return;
+
+      if (!isVoicePermissionCompleted()) {
+        showVoicePermissionIntro(startVoiceInputAfterConsent);
+        return;
+      }
+      beginSpeechRecognition();
     }
+
+    function startVoiceInputAfterConsent() {
+      if (isVoicePermissionDenied()) {
+        showVoiceBlockedMessage();
+        return;
+      }
+      if (isVoicePermissionCompleted()) {
+        beginSpeechRecognition();
+        return;
+      }
+      requestMicrophoneAccess(beginSpeechRecognition);
+    }
+
+    function initHomeVoiceSearch() {
+      if (!isHomeSearch || !voicePrimaryBtn) return;
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        voicePrimaryBtn.hidden = true;
+        setVoiceStatusMessage("此裝置暫不支援語音搜尋，請使用文字搜尋", "error");
+        return;
+      }
+      if (isVoicePermissionDenied()) {
+        showVoiceBlockedMessage();
+        return;
+      }
+      setVoicePrimaryState("idle");
+      voicePrimaryBtn.addEventListener("click", onVoicePrimaryClick);
+    }
+
+    initHomeVoiceSearch();
 
     form.addEventListener(
       "submit",
