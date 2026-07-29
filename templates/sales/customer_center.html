@@ -4,269 +4,573 @@
 
 {% block extra_head %}
   <style>
-    .touch-main--customer-center-senior .touch-senior-start-order {
+    body.touch-app:has(.touch-main--customer-center-senior) {
+      overflow: hidden;
+      overflow-x: hidden;
+      max-height: 100dvh;
+      height: 100dvh;
+    }
+
+    body.touch-app:has(.touch-main--customer-center-senior) .touch-home-fixed {
+      display: none !important;
+    }
+
+    .touch-main--customer-center-senior {
       box-sizing: border-box;
+      width: min(96%, 100%);
+      max-width: 1180px;
+      min-height: 100dvh;
+      max-height: 100dvh;
+      margin: 0 auto;
+      padding: calc(8px + env(safe-area-inset-top, 0px)) 22px calc(10px + env(safe-area-inset-bottom, 0px));
+      overflow: hidden;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1 1 auto;
+    }
+
+    .touch-cc-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex: 0 0 auto;
+      min-height: 52px;
+    }
+
+    .touch-cc-nav-btn {
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 0 16px;
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.2;
+      text-decoration: none;
+      color: #243638;
+      background: #f3f5f5;
+      border: 2px solid #c5d3d5;
+      border-radius: 12px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+
+    .touch-cc-nav-btn:active {
+      background: #e8ecec;
+    }
+
+    .touch-cc-profile {
+      box-sizing: border-box;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 0;
+      max-height: 200px;
+      padding: 16px 18px;
+      background: #fff;
+      border: 2px solid #d0dedf;
+      border-radius: 14px;
+    }
+
+    .touch-cc-profile-main {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .touch-cc-name {
+      margin: 0;
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.15;
+      color: #243638;
+      word-break: break-word;
+    }
+
+    .touch-cc-meta {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: #3d5255;
+    }
+
+    .touch-cc-address {
+      margin: 2px 0 0;
+      font-size: 26px;
+      font-weight: 500;
+      line-height: 1.35;
+      color: #4a5f62;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .touch-cc-contact {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .touch-cc-action-btn {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      width: 72px;
+      min-width: 72px;
+      height: 72px;
+      min-height: 72px;
+      padding: 6px 4px;
+      text-decoration: none;
+      color: #243638;
+      background: #f8fbfb;
+      border: 2px solid #c5d3d5;
+      border-radius: 14px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-cc-action-btn:active {
+      background: #eef4f4;
+      border-color: #7fa98d;
+    }
+
+    .touch-cc-action-btn--disabled {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    .touch-cc-action-icon {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .touch-cc-action-label {
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .touch-cc-start-order {
+      box-sizing: border-box;
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
-      min-height: 96px;
-      margin: 0 0 1.25rem;
-      padding: 0.85rem 1.25rem;
-      font-size: 34px;
+      height: 92px;
+      min-height: 92px;
+      margin: 0;
+      padding: 0 1rem;
+      font-size: 40px;
       font-weight: 700;
-      line-height: 1.25;
+      line-height: 1.2;
       text-align: center;
       text-decoration: none;
       color: #245235;
       background: #ddefe4;
       border: 2px solid #7fa98d;
       border-radius: 18px;
-      box-shadow: 0 4px 14px rgba(36, 92, 99, 0.12);
+      box-shadow: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
 
-    .touch-main--customer-center-senior .touch-senior-start-order:active {
+    .touch-cc-start-order:active {
       background: #cfe6d8;
-      transform: scale(0.99);
     }
 
-    .touch-main--customer-center-senior .touch-icon-btn {
-      width: 64px;
-      height: 64px;
-      min-width: 64px;
-      min-height: 64px;
-      font-size: 1.75rem;
+    .touch-cc-finance-row {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
-    .touch-main--customer-center-senior .touch-finance-strip {
+    .touch-cc-finance-card {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-height: 108px;
+      max-height: 115px;
+      padding: 16px 18px;
+      background: #f8fbfb;
+      border: 2px solid #d0dedf;
+      border-radius: 14px;
       pointer-events: none;
       cursor: default;
-      border: 2px solid #afc8cc;
-      border-radius: 16px;
-      background: #f8fbfb;
-      box-shadow: none;
     }
 
-    .touch-main--customer-center-senior .touch-finance-strip-label {
+    .touch-cc-finance-label {
+      font-size: 26px;
+      font-weight: 600;
+      color: #536b6e;
+      line-height: 1.2;
+    }
+
+    .touch-cc-finance-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #243638;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .touch-cc-finance-value--date {
+      font-size: 34px;
+    }
+
+    .touch-cc-recent {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .touch-cc-recent-title {
+      margin: 0;
+      flex: 0 0 auto;
+      font-size: 28px;
+      font-weight: 700;
+      color: #243638;
+      line-height: 1.2;
+    }
+
+    .touch-cc-recent-card {
+      box-sizing: border-box;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 115px;
+      max-height: 130px;
+      padding: 16px 18px;
+      background: #fff;
+      border: 2px solid #d0dedf;
+      border-radius: 14px;
+    }
+
+    .touch-cc-recent-left,
+    .touch-cc-recent-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .touch-cc-recent-right {
+      align-items: flex-end;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .touch-cc-order-no {
+      font-size: 26px;
+      font-weight: 600;
+      color: #243638;
+      line-height: 1.2;
+      word-break: break-all;
+    }
+
+    .touch-cc-order-date {
+      font-size: 22px;
+      font-weight: 500;
+      color: #4a5f62;
+      line-height: 1.2;
+    }
+
+    .touch-cc-order-status {
+      font-size: 24px;
+      font-weight: 600;
+      color: #3d5255;
+      line-height: 1.2;
+    }
+
+    .touch-cc-order-amount {
       font-size: 26px;
       font-weight: 700;
-      color: #536b6e;
-    }
-
-    .touch-main--customer-center-senior .touch-finance-strip-value,
-    .touch-main--customer-center-senior .touch-finance-strip-value--date {
-      font-size: 30px;
-      font-weight: 800;
       color: #243638;
+      line-height: 1.2;
     }
 
-    .touch-main--customer-center-senior .touch-section-title {
-      font-size: 30px;
-      font-weight: 700;
+    .touch-cc-empty {
+      margin: 0;
+      flex: 0 0 auto;
+      min-height: 115px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 600;
+      color: #536b6e;
+      background: #f8fbfb;
+      border: 2px solid #d0dedf;
+      border-radius: 14px;
     }
 
-    .touch-main--customer-center-senior .touch-section-head .touch-section-link {
-      display: none;
+    .touch-cc-extra {
+      display: none !important;
+    }
+
+    @media (max-height: 740px) {
+      .touch-main--customer-center-senior {
+        padding-top: calc(6px + env(safe-area-inset-top, 0px));
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+        gap: 8px;
+      }
+
+      .touch-cc-profile {
+        padding: 14px 16px;
+        max-height: 188px;
+      }
+
+      .touch-cc-finance-card {
+        min-height: 102px;
+        max-height: 108px;
+        padding: 14px 16px;
+      }
+
+      .touch-cc-recent-card,
+      .touch-cc-empty {
+        min-height: 108px;
+        max-height: 118px;
+        padding: 14px 16px;
+      }
+
+      .touch-cc-order-date {
+        display: none;
+      }
+    }
+
+    @media (max-height: 680px) {
+      .touch-cc-address {
+        -webkit-line-clamp: 1;
+      }
     }
   </style>
 {% endblock %}
 
 {% block body %}
 <main class="touch-main touch-main--customer-center touch-main--customer-center-senior">
-  <div class="touch-back-bar" aria-label="返回">
-    <a href="{% url 'dashboard' %}" class="touch-back">← 返回儀表板</a>
-  </div>
+  <nav class="touch-cc-nav" aria-label="頁面導覽">
+    <a href="{% url 'dashboard' %}" class="touch-cc-nav-btn">← 返回儀表板</a>
+    <a href="{% url 'dashboard' %}" class="touch-cc-nav-btn touch-cc-nav-btn--right">🏠 回首頁</a>
+  </nav>
 
-  <header class="touch-center-hero">
-    <div class="touch-center-hero-row">
-      <div class="touch-center-hero-main">
-        <p class="touch-center-label">客戶中心</p>
-        <h1 class="touch-center-name">{{ center.name }}</h1>
-        <p class="touch-center-code">{{ center.code }}{% if center.region != "—" %} · {{ center.region }}{% endif %}</p>
-        {% if not center.is_active %}
-        <span class="touch-badge touch-badge--muted">已停用</span>
-        {% endif %}
-      </div>
-      <div class="touch-icon-actions" aria-label="聯絡與導航">
-        {% if center.can_call %}
-        <a href="{{ center.call_href }}" class="touch-icon-btn" aria-label="致電客戶">📞</a>
-        {% else %}
-        <span class="touch-icon-btn touch-icon-btn--disabled" aria-label="無電話號碼" aria-disabled="true">📞</span>
-        {% endif %}
-        {% if center.can_navigate %}
-        <a href="#"
-           class="touch-icon-btn"
-           id="navigate-customer"
-           data-touch-navigate="1"
-           aria-label="導航至配送地址"
-           data-maps-apple="{{ center.maps_apple_href }}"
-           data-maps-google="{{ center.maps_google_href }}">📍</a>
-        {% else %}
-        <span class="touch-icon-btn touch-icon-btn--disabled" aria-label="無配送地址" aria-disabled="true">📍</span>
-        {% endif %}
-      </div>
+  <header class="touch-cc-profile">
+    <div class="touch-cc-profile-main">
+      <h1 class="touch-cc-name">{{ center.name }}</h1>
+      <p class="touch-cc-meta">{{ center.code }}{% if center.region != "—" %} · {{ center.region }}{% endif %}</p>
+      {% if center.address != "—" %}
+      <p class="touch-cc-address">{{ center.address }}</p>
+      {% endif %}
+      {% if not center.is_active %}
+      <span class="touch-badge touch-badge--muted">已停用</span>
+      {% endif %}
     </div>
-    {% if center.address != "—" %}
-    <p class="touch-center-snippet">{{ center.address }}</p>
-    {% endif %}
+    <div class="touch-cc-contact" aria-label="聯絡與導航">
+      {% if center.can_call %}
+      <a href="{{ center.call_href }}" class="touch-cc-action-btn" aria-label="致電客戶">
+        <span class="touch-cc-action-icon" aria-hidden="true">📞</span>
+        <span class="touch-cc-action-label">電話</span>
+      </a>
+      {% else %}
+      <span class="touch-cc-action-btn touch-cc-action-btn--disabled" aria-label="無電話號碼" aria-disabled="true">
+        <span class="touch-cc-action-icon" aria-hidden="true">📞</span>
+        <span class="touch-cc-action-label">電話</span>
+      </span>
+      {% endif %}
+      {% if center.can_navigate %}
+      <a href="#"
+         class="touch-cc-action-btn"
+         id="navigate-customer"
+         data-touch-navigate="1"
+         aria-label="導航至配送地址"
+         data-maps-apple="{{ center.maps_apple_href }}"
+         data-maps-google="{{ center.maps_google_href }}">
+        <span class="touch-cc-action-icon" aria-hidden="true">📍</span>
+        <span class="touch-cc-action-label">地圖</span>
+      </a>
+      {% else %}
+      <span class="touch-cc-action-btn touch-cc-action-btn--disabled" aria-label="無配送地址" aria-disabled="true">
+        <span class="touch-cc-action-icon" aria-hidden="true">📍</span>
+        <span class="touch-cc-action-label">地圖</span>
+      </span>
+      {% endif %}
+    </div>
   </header>
 
-  <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-senior-start-order">
+  <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-cc-start-order">
     📦 開始下單
   </a>
 
-  <section class="touch-finance-strip" aria-label="帳務概況">
-    <div class="touch-finance-strip-item">
-      <span class="touch-finance-strip-label">應收</span>
-      <span class="touch-finance-strip-value">{{ center.current_balance }}</span>
+  <div class="touch-cc-finance-row" aria-label="帳務概況">
+    <div class="touch-cc-finance-card">
+      <span class="touch-cc-finance-label">應收</span>
+      <span class="touch-cc-finance-value">{{ center.current_balance }}</span>
     </div>
-    <div class="touch-finance-strip-item">
-      <span class="touch-finance-strip-label">最後交易</span>
-      <span class="touch-finance-strip-value touch-finance-strip-value--date">{{ center.latest_transaction_date }}</span>
+    <div class="touch-cc-finance-card">
+      <span class="touch-cc-finance-label">最後交易</span>
+      <span class="touch-cc-finance-value touch-cc-finance-value--date">{{ center.latest_transaction_date }}</span>
     </div>
-  </section>
+  </div>
 
-  {% if center.credit_used_pct is not None %}
-  <details class="touch-disclosure">
-    <summary class="touch-disclosure-toggle">信用額度 · 已使用 {{ center.credit_used_pct }}%</summary>
-    <div class="touch-disclosure-body">
-      <p class="touch-disclosure-line">信用額度 {{ center.credit_limit }}</p>
-      <div class="touch-credit-bar" aria-hidden="true">
-        <div class="touch-credit-bar-fill" style="width: {{ center.credit_used_pct }}%;"></div>
-      </div>
-    </div>
-  </details>
-  {% endif %}
-
-  <section class="touch-section">
-    <div class="touch-section-head">
-      <h2 class="touch-section-title">最近訂單</h2>
-    </div>
+  <section class="touch-cc-recent" aria-label="最近訂單">
+    <h2 class="touch-cc-recent-title">最近訂單</h2>
     {% if center.recent_orders %}
-    <ul class="touch-order-list">
-      {% for order in center.recent_orders|slice:":3" %}
-      <li>
-        <a href="{% url 'sales:sales_order_detail' order.pk %}" class="touch-order-card">
-          <div class="touch-order-card-top">
-            <strong>{{ order.order_no }}</strong>
-            <span class="touch-order-status">{{ order.get_status_display }}</span>
-          </div>
-          <div class="touch-order-card-meta">
-            <span>{{ order.order_date }}</span>
-            <span class="touch-order-amount">${{ order.total_amount|floatformat:0 }}</span>
-          </div>
-        </a>
-      </li>
+      {% for order in center.recent_orders|slice:":1" %}
+      <div class="touch-cc-recent-card">
+        <div class="touch-cc-recent-left">
+          <span class="touch-cc-order-no">{{ order.order_no }}</span>
+          <span class="touch-cc-order-date">{{ order.order_date }}</span>
+        </div>
+        <div class="touch-cc-recent-right">
+          <span class="touch-cc-order-status">{{ order.get_status_display }}</span>
+          <span class="touch-cc-order-amount">${{ order.total_amount|floatformat:0 }}</span>
+        </div>
+      </div>
       {% endfor %}
-    </ul>
     {% else %}
-    <p class="touch-empty">尚無訂單紀錄</p>
+    <p class="touch-cc-empty">尚無訂單紀錄</p>
     {% endif %}
   </section>
 
-  <details class="touch-disclosure">
-    <summary class="touch-disclosure-toggle">配送與聯絡資訊</summary>
-    <div class="touch-disclosure-body">
-      <dl class="touch-info-grid">
-        <div class="touch-info-item">
-          <dt>配送區</dt>
-          <dd>{{ center.region }}</dd>
+  <div class="touch-cc-extra" aria-hidden="true" hidden>
+    {% if center.credit_used_pct is not None %}
+    <details class="touch-disclosure">
+      <summary class="touch-disclosure-toggle">信用額度 · 已使用 {{ center.credit_used_pct }}%</summary>
+      <div class="touch-disclosure-body">
+        <p class="touch-disclosure-line">信用額度 {{ center.credit_limit }}</p>
+        <div class="touch-credit-bar" aria-hidden="true">
+          <div class="touch-credit-bar-fill" style="width: {{ center.credit_used_pct }}%;"></div>
         </div>
-        <div class="touch-info-item">
-          <dt>固定配送日</dt>
-          <dd>{{ center.delivery_day }}</dd>
-        </div>
-        <div class="touch-info-item">
-          <dt>配送順序</dt>
-          <dd>{{ center.delivery_sequence }}</dd>
-        </div>
-        <div class="touch-info-item touch-info-item--wide">
-          <dt>配送地址</dt>
-          <dd>{{ center.address }}</dd>
-        </div>
-        <div class="touch-info-item touch-info-item--wide">
-          <dt>發票地址</dt>
-          <dd>{{ center.invoice_address }}</dd>
-        </div>
-        <div class="touch-info-item">
-          <dt>電話 1</dt>
-          <dd>
-            {% if center.phone_href %}
-            <a href="{{ center.phone_href }}" class="touch-link touch-link--phone">{{ center.phone }}</a>
-            {% else %}{{ center.phone }}{% endif %}
-          </dd>
-        </div>
-        {% if center.phone_2 != "—" %}
-        <div class="touch-info-item">
-          <dt>電話 2</dt>
-          <dd>
-            {% if center.phone_2_href %}
-            <a href="{{ center.phone_2_href }}" class="touch-link touch-link--phone">{{ center.phone_2 }}</a>
-            {% else %}{{ center.phone_2 }}{% endif %}
-          </dd>
-        </div>
-        {% endif %}
-        {% if center.phone_3 != "—" %}
-        <div class="touch-info-item">
-          <dt>電話 3</dt>
-          <dd>
-            {% if center.phone_3_href %}
-            <a href="{{ center.phone_3_href }}" class="touch-link touch-link--phone">{{ center.phone_3 }}</a>
-            {% else %}{{ center.phone_3 }}{% endif %}
-          </dd>
-        </div>
-        {% endif %}
-        {% if center.line_id != "—" %}
-        <div class="touch-info-item">
-          <dt>LINE</dt>
-          <dd>{{ center.line_id }}</dd>
-        </div>
-        {% endif %}
-        <div class="touch-info-item">
-          <dt>付款方式</dt>
-          <dd>{{ center.payment_method }}</dd>
-        </div>
-        {% if center.contact_person != "—" %}
-        <div class="touch-info-item">
-          <dt>聯絡人</dt>
-          <dd>{{ center.contact_person }}</dd>
-        </div>
-        {% endif %}
-      </dl>
-    </div>
-  </details>
+      </div>
+    </details>
+    {% endif %}
 
-  {% if center.recent_prices %}
-  <details class="touch-disclosure">
-    <summary class="touch-disclosure-toggle">最近成交價格</summary>
-    <div class="touch-disclosure-body">
-      <ul class="touch-price-list">
-        {% for row in center.recent_prices %}
-        <li class="touch-price-row">
-          <div>
-            <strong>{{ row.product_name }}</strong>
-            <span class="touch-price-sku">{{ row.product_sku }}</span>
+    <details class="touch-disclosure">
+      <summary class="touch-disclosure-toggle">配送與聯絡資訊</summary>
+      <div class="touch-disclosure-body">
+        <dl class="touch-info-grid">
+          <div class="touch-info-item">
+            <dt>配送區</dt>
+            <dd>{{ center.region }}</dd>
           </div>
-          <div class="touch-price-right">
-            <span class="touch-price-amount">${{ row.unit_price }}</span>
-            <span class="touch-price-date">{{ row.order_date }}</span>
+          <div class="touch-info-item">
+            <dt>固定配送日</dt>
+            <dd>{{ center.delivery_day }}</dd>
           </div>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-  </details>
-  {% endif %}
+          <div class="touch-info-item">
+            <dt>配送順序</dt>
+            <dd>{{ center.delivery_sequence }}</dd>
+          </div>
+          <div class="touch-info-item touch-info-item--wide">
+            <dt>配送地址</dt>
+            <dd>{{ center.address }}</dd>
+          </div>
+          <div class="touch-info-item touch-info-item--wide">
+            <dt>發票地址</dt>
+            <dd>{{ center.invoice_address }}</dd>
+          </div>
+          <div class="touch-info-item">
+            <dt>電話 1</dt>
+            <dd>
+              {% if center.phone_href %}
+              <a href="{{ center.phone_href }}" class="touch-link touch-link--phone">{{ center.phone }}</a>
+              {% else %}{{ center.phone }}{% endif %}
+            </dd>
+          </div>
+          {% if center.phone_2 != "—" %}
+          <div class="touch-info-item">
+            <dt>電話 2</dt>
+            <dd>
+              {% if center.phone_2_href %}
+              <a href="{{ center.phone_2_href }}" class="touch-link touch-link--phone">{{ center.phone_2 }}</a>
+              {% else %}{{ center.phone_2 }}{% endif %}
+            </dd>
+          </div>
+          {% endif %}
+          {% if center.phone_3 != "—" %}
+          <div class="touch-info-item">
+            <dt>電話 3</dt>
+            <dd>
+              {% if center.phone_3_href %}
+              <a href="{{ center.phone_3_href }}" class="touch-link touch-link--phone">{{ center.phone_3 }}</a>
+              {% else %}{{ center.phone_3 }}{% endif %}
+            </dd>
+          </div>
+          {% endif %}
+          {% if center.line_id != "—" %}
+          <div class="touch-info-item">
+            <dt>LINE</dt>
+            <dd>{{ center.line_id }}</dd>
+          </div>
+          {% endif %}
+          <div class="touch-info-item">
+            <dt>付款方式</dt>
+            <dd>{{ center.payment_method }}</dd>
+          </div>
+          {% if center.contact_person != "—" %}
+          <div class="touch-info-item">
+            <dt>聯絡人</dt>
+            <dd>{{ center.contact_person }}</dd>
+          </div>
+          {% endif %}
+        </dl>
+      </div>
+    </details>
 
-  {% if center.notes != "—" %}
-  <details class="touch-disclosure">
-    <summary class="touch-disclosure-toggle">備註</summary>
-    <div class="touch-disclosure-body">
-      <p class="touch-notes">{{ center.notes|linebreaksbr }}</p>
-    </div>
-  </details>
-  {% endif %}
+    {% if center.recent_prices %}
+    <details class="touch-disclosure">
+      <summary class="touch-disclosure-toggle">最近成交價格</summary>
+      <div class="touch-disclosure-body">
+        <ul class="touch-price-list">
+          {% for row in center.recent_prices %}
+          <li class="touch-price-row">
+            <div>
+              <strong>{{ row.product_name }}</strong>
+              <span class="touch-price-sku">{{ row.product_sku }}</span>
+            </div>
+            <div class="touch-price-right">
+              <span class="touch-price-amount">${{ row.unit_price }}</span>
+              <span class="touch-price-date">{{ row.order_date }}</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </details>
+    {% endif %}
+
+    {% if center.notes != "—" %}
+    <details class="touch-disclosure">
+      <summary class="touch-disclosure-toggle">備註</summary>
+      <div class="touch-disclosure-body">
+        <p class="touch-notes">{{ center.notes|linebreaksbr }}</p>
+      </div>
+    </details>
+    {% endif %}
+  </div>
 </main>
 {% endblock %}

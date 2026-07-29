@@ -4151,6 +4151,13 @@ body.touch-voice-intro-open {
   padding-top: calc(0.35rem + env(safe-area-inset-top));
 }
 
+.touch-main--customer-center-senior.touch-main--customer-center {
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  padding-left: 0;
+  padding-right: 0;
+  margin-bottom: 0;
+}
+
 .touch-main--customer-center .touch-back-bar {
   display: flex;
   align-items: center;
