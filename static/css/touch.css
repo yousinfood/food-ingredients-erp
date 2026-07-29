@@ -2930,26 +2930,27 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-complete-card {
-  width: min(100%, 480px);
-  padding: 2rem 1.5rem;
+  width: min(100%, 720px);
+  padding: 48px 40px;
   background: var(--touch-surface);
   border: 3px solid #6ee7b7;
   border-radius: calc(var(--touch-radius) + 6px);
   box-shadow: 0 12px 32px rgba(5, 150, 105, 0.15);
   text-align: center;
+  box-sizing: border-box;
 }
 
 .touch-order-complete-check {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 4.5rem;
-  height: 4.5rem;
-  margin: 0 auto 1rem;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 1.25rem;
   border-radius: 50%;
   background: #059669;
   color: #fff;
-  font-size: 2.25rem;
+  font-size: 5.5rem;
   font-weight: 800;
   line-height: 1;
   animation: touch-success-check 0.3s ease forwards;
@@ -2967,68 +2968,96 @@ button.touch-stat--btn .touch-stat-label {
 }
 
 .touch-order-complete-title {
-  margin: 0 0 1rem;
-  font-size: 1.625rem;
+  margin: 0 0 1.25rem;
+  font-size: 64px;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.15;
   color: var(--touch-text);
 }
 
 .touch-order-complete-no {
-  margin: 0 0 0.75rem;
+  margin: 0 0 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
-.touch-order-complete-no-label,
-.touch-order-complete-time-label {
-  font-size: 1rem;
+.touch-order-complete-no-label {
+  font-size: 32px;
   font-weight: 700;
   color: var(--touch-muted);
 }
 
 .touch-order-complete-no strong {
-  font-size: 1.875rem;
-  font-weight: 800;
+  font-size: 56px;
+  font-weight: 700;
   color: #047857;
   letter-spacing: 0.02em;
   word-break: break-all;
+  line-height: 1.15;
 }
 
 .touch-order-complete-time {
-  margin: 0 0 0.5rem;
+  margin: 0 0 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 1.25rem;
-  font-weight: 700;
+  gap: 0.35rem;
   color: var(--touch-text);
 }
 
-.touch-order-complete-customer {
-  margin: 0 0 1.5rem;
-  font-size: 1.125rem;
+.touch-order-complete-time-label {
+  font-size: 30px;
   font-weight: 700;
   color: var(--touch-muted);
+}
+
+.touch-order-complete-time time {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.touch-order-complete-customer {
+  margin: 0 0 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.touch-order-complete-customer-label {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--touch-muted);
+}
+
+.touch-order-complete-customer-name {
+  font-size: 60px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #14532d;
+  word-break: break-word;
 }
 
 .touch-order-complete-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 20px;
 }
 
 .touch-btn-complete-primary {
-  min-height: 76px !important;
-  font-size: 1.375rem !important;
+  min-height: 96px !important;
+  font-size: 42px !important;
   font-weight: 800 !important;
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
 }
 
 .touch-btn-complete-secondary {
-  min-height: 60px !important;
-  font-size: 1.125rem !important;
+  min-height: 88px !important;
+  font-size: 36px !important;
   font-weight: 800 !important;
+  padding-top: 0.55rem !important;
+  padding-bottom: 0.55rem !important;
 }
 
 .touch-quick-success {
@@ -3653,20 +3682,118 @@ body.touch-app:has(.touch-home-app) {
   letter-spacing: 0.02em;
 }
 
+/* 搜尋客戶 — 老人模式（語音為唯一主操作） */
+.touch-home-app--elder .touch-home-app__search-sticky--elder {
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+}
+
+.touch-home-app--elder .touch-home-app__title--elder {
+  margin-bottom: 1.5rem;
+  font-size: clamp(1.85rem, 4.5vw, 2.25rem);
+  text-align: center;
+}
+
+.touch-search-form--home-elder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.touch-home-elder-search {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.touch-home-elder-search__input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  padding: 0.85rem 1.15rem;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #fff;
+  border: 3px solid #cbd5e1;
+  border-radius: 14px;
+  -webkit-appearance: none;
+}
+
+.touch-home-elder-search__input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.touch-home-elder-search__input:focus {
+  outline: none;
+  border-color: #94a3b8;
+  box-shadow: none;
+}
+
+.touch-home-elder-voice-wrap {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1.35rem;
+}
+
+.touch-home-app--elder .touch-search-mic-btn,
+.touch-home-app--elder .touch-search-input-row .touch-search-mic-btn {
+  display: none !important;
+}
+
+.touch-home-app--elder .touch-home-voice-status--helper:empty {
+  display: none;
+  margin: 0;
+  min-height: 0;
+}
+
+.touch-home-app--elder .touch-home-voice-status:not(:empty) {
+  width: 100%;
+  max-width: 40rem;
+  margin: 1rem auto 0;
+  text-align: center;
+}
+
+.touch-home-app--elder .touch-home-app__results--elder {
+  padding-top: 0.5rem;
+}
+
 .touch-search-form--home-app {
   margin-bottom: 0.75rem;
 }
 
+.touch-home-app__search-sticky {
+  flex: 0 0 auto;
+  z-index: 100;
+  background: #fff;
+  padding: 0 max(1rem, env(safe-area-inset-left)) 0.35rem max(1rem, env(safe-area-inset-right));
+}
+
+.touch-home-app .touch-search-input-row {
+  align-items: center;
+  gap: 0.85rem;
+}
+
 .touch-home-app .touch-search-input-row .touch-search-input--home {
-  min-height: 72px;
-  padding: 0.85rem 0.5rem 0.85rem 0;
-  font-size: 28px;
+  min-height: 64px;
+  padding: 0.75rem 0.5rem 0.75rem 0;
+  font-size: 24px;
   font-weight: 600;
   color: #000;
   background: #fff;
   border: none;
   border-bottom: 3px solid #000;
   border-radius: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .touch-home-app .touch-search-input-row .touch-search-input--home::placeholder {
@@ -3680,24 +3807,267 @@ body.touch-app:has(.touch-home-app) {
   box-shadow: none;
 }
 
-.touch-home-app .touch-search-mic-btn {
-  min-width: 72px;
-  min-height: 72px;
-  width: 72px;
-  height: 72px;
-  padding: 0;
-  font-size: 2rem;
-  color: #000;
-  background: #fff;
-  border: 2px solid #000;
-  border-radius: 14px;
+.touch-home-app .touch-search-input-row--solo {
+  display: block;
 }
 
-.touch-home-app .touch-search-mic-btn:active,
-.touch-home-app .touch-search-mic-btn.touch-search-mic-btn--listening {
-  border-color: #16a34a;
+.touch-home-voice-primary {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  width: 100%;
+  max-width: 40rem;
+  min-width: 320px;
+  min-height: 80px;
+  height: auto;
+  margin: 0;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.28;
+  color: #fff;
+  background: #1e3a5f;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.52);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-home-voice-primary__line1,
+.touch-home-voice-primary__line2 {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.touch-home-voice-primary__line2 {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.touch-home-voice-primary--idle .touch-home-voice-primary__line2[hidden] {
+  display: none;
+}
+
+.touch-home-voice-primary--listening .touch-home-voice-primary__line2,
+.touch-home-voice-primary--success .touch-home-voice-primary__line2,
+.touch-home-voice-primary--fail .touch-home-voice-primary__line2 {
+  display: block;
+}
+
+.touch-home-voice-primary--listening {
+  background: #dc2626;
+  animation: touch-home-voice-primary-pulse 1.2s ease-in-out infinite;
+}
+
+.touch-home-voice-primary--listening .touch-home-voice-primary__icon,
+.touch-home-voice-primary--success .touch-home-voice-primary__icon,
+.touch-home-voice-primary--fail .touch-home-voice-primary__icon {
+  display: none;
+}
+
+.touch-home-voice-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .touch-home-voice-primary:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.touch-home-voice-primary--success {
+  background: #16a34a;
+  animation: none;
+  box-shadow: 0 10px 32px rgba(22, 163, 74, 0.45);
+}
+
+.touch-home-voice-primary--fail {
+  background: #1e3a5f;
+  animation: none;
+  box-shadow: 0 10px 32px rgba(15, 23, 42, 0.48);
+}
+
+.touch-home-voice-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes touch-home-voice-primary-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5), 0 10px 32px rgba(0, 0, 0, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0), 0 10px 32px rgba(0, 0, 0, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .touch-home-voice-primary--listening {
+    animation: none;
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.35), 0 10px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .touch-home-voice-primary:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.touch-home-app .touch-search-mic-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  min-height: 72px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  border: 3px solid #0f172a;
+  background: #1e3a5f;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-home-app .touch-search-mic-btn .touch-search-mic-icon {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.touch-home-app .touch-search-mic-btn--listening {
+  background: #dc2626;
+  border-color: #991b1b;
+  animation: touch-home-mic-pulse 1.2s ease-in-out infinite;
+}
+
+.touch-home-app .touch-search-mic-btn--success {
+  background: #16a34a;
+  border-color: #15803d;
+  animation: none;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.45);
+}
+
+.touch-home-app .touch-search-mic-btn--idle:active {
+  background: #334155;
+}
+
+@keyframes touch-home-mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55), 0 4px 16px rgba(0, 0, 0, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(220, 38, 38, 0), 0 4px 16px rgba(0, 0, 0, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .touch-home-app .touch-search-mic-btn--listening {
+    animation: none;
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.35), 0 4px 16px rgba(0, 0, 0, 0.28);
+  }
+}
+
+.touch-home-voice-status {
+  margin: 0.85rem 0 0;
+  min-height: 1.35em;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #1e293b;
+}
+
+.touch-home-voice-status--error {
+  color: #b91c1c;
+}
+
+.touch-home-voice-status--success {
+  color: #15803d;
+}
+
+.touch-voice-permission-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgba(15, 23, 42, 0.88);
+  box-sizing: border-box;
+}
+
+.touch-voice-permission-intro[hidden] {
+  display: none !important;
+}
+
+.touch-voice-permission-intro__panel {
+  width: min(100%, 40rem);
+  padding: 2rem 1.75rem;
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.touch-voice-permission-intro__text {
+  margin: 0 0 1.75rem;
+  font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: #0f172a;
+}
+
+.touch-voice-permission-intro__btn {
+  width: 100%;
+  min-height: 70px;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+body.touch-voice-intro-open {
+  overflow: hidden;
+}
+
+.touch-home-app .touch-search-mic-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #94a3b8;
+  border-color: #64748b;
+  box-shadow: none;
+  animation: none;
+}
+
+@media (max-width: 767px) {
+  .touch-home-app .touch-search-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .touch-home-app .touch-search-mic-btn {
+    align-self: flex-end;
+  }
+}
+
+@media (min-width: 768px) {
+  .touch-home-app .touch-search-input-row {
+    flex-direction: row;
+  }
 }
 
 .touch-home-app__results .touch-search-results-panel--home {
@@ -3926,13 +4296,6 @@ body.touch-app:has(.touch-home-app) {
 }
 
 /* Homepage: iPad Safari — body locked; only results list scrolls */
-.touch-home-app__search-sticky {
-  flex: 0 0 auto;
-  z-index: 100;
-  background: #fff;
-  padding: 0 1.35rem 0.35rem;
-}
-
 .touch-home-app__results {
   width: 100%;
   flex: 1 1 auto;
@@ -3957,9 +4320,212 @@ body.touch-app.touch-keyboard-open .touch-home-app .touch-search-input-row .touc
   font-size: 24px;
 }
 
+body.touch-app.touch-keyboard-open .touch-home-app--elder .touch-home-elder-search__input {
+  min-height: 56px;
+  font-size: 20px;
+}
+
 body.touch-app.touch-keyboard-open .touch-home-app .touch-search-mic-btn {
   min-width: 64px;
   min-height: 64px;
   width: 64px;
   height: 64px;
+}
+
+/* ── 訂單詳情：老人模式（iPad 12.9 橫向） ── */
+.touch-order-detail-page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 2.75rem 3.5rem;
+  box-sizing: border-box;
+}
+
+.touch-order-detail-back {
+  display: inline-block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.75rem;
+  padding: 0.5rem 0;
+}
+
+.touch-order-detail-flash {
+  margin-bottom: 1.5rem;
+}
+
+.touch-order-detail-hero {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--touch-border, #e5e7eb);
+}
+
+.touch-order-detail-order-no {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2.125rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+}
+
+.touch-order-detail-customer {
+  margin: 0 0 0.65rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.touch-order-detail-delivery {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #1e3a5f;
+}
+
+.touch-order-detail-status {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.touch-order-detail-lines {
+  margin-bottom: 2rem;
+}
+
+.touch-order-detail-lines-title {
+  margin: 0 0 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.touch-order-detail-line-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.touch-order-detail-line-card {
+  padding: 1.75rem 1.85rem;
+  border-radius: var(--touch-radius, 12px);
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.touch-order-detail-line-name {
+  margin: 0 0 1rem;
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.touch-order-detail-line-qty {
+  margin: 0;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.touch-order-detail-line-extra {
+  margin-top: 1.15rem;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.touch-order-detail-line-extra summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.35rem 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.touch-order-detail-line-extra ul {
+  margin: 0.65rem 0 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.touch-order-detail-secondary {
+  margin-bottom: 2.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--touch-radius, 12px);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 1.05rem;
+  color: #475569;
+}
+
+.touch-order-detail-secondary summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.15rem;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.touch-order-detail-secondary-body {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  line-height: 1.5;
+}
+
+.touch-order-detail-secondary-body .touch-info-label {
+  font-weight: 600;
+  color: #64748b;
+  margin-right: 0.35rem;
+}
+
+.touch-order-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.touch-order-detail-void-form {
+  margin: 0;
+  display: block;
+}
+
+.touch-order-detail-action-btn {
+  width: 100%;
+  min-height: 70px;
+  padding: 1rem 1.5rem;
+  font-size: 1.45rem;
+  font-weight: 800;
+  border-radius: var(--touch-radius, 12px);
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.touch-order-detail-action-btn--quiet {
+  font-size: 1.2rem;
+  font-weight: 700;
+  min-height: 56px;
+  opacity: 0.92;
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .touch-order-detail-page {
+    padding: 2.25rem 3.5rem 4rem;
+  }
+
+  .touch-order-detail-line-list {
+    gap: 1.5rem;
+  }
+
+  .touch-order-detail-line-card {
+    padding: 2rem 2.25rem;
+  }
 }

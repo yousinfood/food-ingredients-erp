@@ -19,9 +19,12 @@
       <time datetime="{{ saved_order.created_at|date:'c' }}">{{ saved_order.created_at|date:"Y-m-d H:i" }}</time>
       {% endtimezone %}
     </p>
-    <p class="touch-order-complete-customer">{{ customer.name }}</p>
+    <p class="touch-order-complete-customer">
+      <span class="touch-order-complete-customer-label">客戶名稱</span>
+      <strong class="touch-order-complete-customer-name">{{ customer.name }}</strong>
+    </p>
     <div class="touch-order-complete-actions">
-      <a href="{% url 'dashboard' %}" class="touch-btn touch-btn-primary touch-btn-complete-primary" id="quick-next-customer">下一位客戶</a>
+      <a href="{% url 'dashboard' %}" class="touch-btn touch-btn-primary touch-btn-complete-primary" id="quick-next-customer">📦 下一位客戶</a>
       <a href="{% url 'sales:sales_order_create' %}?customer={{ customer.pk }}" class="touch-btn touch-btn-secondary touch-btn-complete-secondary">繼續幫同客戶下單</a>
       <a href="{% url 'sales:sales_order_detail' saved_order.pk %}" class="touch-btn touch-btn-secondary touch-btn-complete-secondary">查看訂單</a>
     </div>
@@ -75,6 +78,7 @@
           {% endfor %}
         </div>
         <div id="series-chips" class="series-grid" hidden aria-label="麵粉系列"></div>
+        <div id="modified-starch-chips" class="series-grid" hidden aria-label="變性澱粉分頁"></div>
         <div id="natural-starch-chips" class="natural-starch-grid" hidden aria-label="天然澱粉"></div>
         <p id="category-series-hint" class="touch-category-hint touch-category-hint--compact" hidden>選系列：低筋／中筋／高筋／油條</p>
       </section>
@@ -319,6 +323,7 @@
         color: "#6B3552",
       },
     ],
+    modifiedStarchCategory: "變性澱粉",
     defaultCategory: "{{ default_category|escapejs }}",
     savedOrder: null,
     customerPriceMap: JSON.parse(document.getElementById("customer-price-map-data").textContent),
@@ -330,6 +335,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260729orderCartConfirmV3"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260729naturalStarchSeries"></script>
 {% endif %}
 {% endblock %}
