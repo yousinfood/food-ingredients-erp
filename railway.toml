@@ -4,6 +4,6 @@ buildCommand = "pip install -r requirements.txt && python manage.py collectstati
 
 [deploy]
 startCommand = "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
-releaseCommand = "python manage.py migrate --noinput && python manage.py import_products data/imports/product_sync_fg0064.xlsx --execute"
+releaseCommand = "python manage.py migrate --noinput"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
