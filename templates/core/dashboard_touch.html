@@ -515,7 +515,7 @@
   <div class="touch-home-app__search-sticky">
     <h1 class="touch-home-app__title">搜尋客戶</h1>
 
-    <form action="{% url 'dashboard' %}" method="get" class="touch-search-form touch-search-form--hero touch-search-form--home-app" data-touch-home-search="1">
+    <form id="customer-search-form" action="{% url 'dashboard' %}" method="get" role="search" class="touch-search-form touch-search-form--hero touch-search-form--home-app" data-touch-home-search="1">
       <div class="touch-search-input-row touch-search-input-row--solo">
         <input
           type="search"

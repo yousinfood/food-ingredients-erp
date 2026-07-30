@@ -6,7 +6,7 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260729results-senior";
+  var ASSET_TAG = "20260730search-submit-019";
   var VOICE_LS_COMPLETED = "voice_permission_completed";
   var VOICE_LS_DENIED = "voice_permission_denied";
   var API_PATH = "/api/customers/search/";
@@ -123,11 +123,44 @@
     }
 
     function dismissSearchKeyboard() {
-      if (document.activeElement === input) {
+      if (document.activeElement === customerSearchInput) {
+        customerSearchInput.blur();
+      } else if (document.activeElement === input) {
         input.blur();
       } else {
         syncKeyboardViewportAfterDismiss();
       }
+    }
+
+    function scrollResultsIntoView() {
+      if (!isHomeSearch) return;
+      var target =
+        document.getElementById("touch-search-results-mount") ||
+        document.getElementById("touch-search-results-panel");
+      if (!target) return;
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          syncKeyboardViewportAfterDismiss();
+          try {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          } catch (err) {
+            target.scrollIntoView(true);
+          }
+        }, 300);
+      });
+    }
+
+    function submitCustomerSearch() {
+      if (isComposingNow()) return;
+      clearTimeout(timer);
+      var q = customerSearchInput.value.trim();
+      if (!q.length) {
+        dismissSearchKeyboard();
+        return;
+      }
+      resetScrollBehaviorForQuery(q);
+      dismissSearchKeyboard();
+      runFetch(false, { fromSubmit: true });
     }
 
     function isHomeSearchChromeTarget(el) {
@@ -352,11 +385,15 @@
             if (typeof data.html === "string") {
               updateResultsHtml(data.html);
             }
+            scrollResultsIntoView();
             scheduleVoiceIdleReset(1000);
             return;
           }
           if (typeof data.html === "string") {
             updateResultsHtml(data.html);
+          }
+          if (opts.fromSubmit) {
+            scrollResultsIntoView();
           }
         })
         .catch(function (err) {
@@ -702,9 +739,7 @@
       function (e) {
         e.preventDefault();
         e.stopPropagation();
-        if (isComposingNow()) return;
-        clearTimeout(timer);
-        runFetch(false);
+        submitCustomerSearch();
       },
       true
     );
@@ -736,11 +771,22 @@
     });
 
     input.addEventListener("keydown", function (e) {
-      if (!isComposingNow() && !(e && e.isComposing)) return;
-      clearTimeout(timer);
-      if (e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
+      if (e.key !== "Enter") return;
+      if (isComposingNow() || (e && e.isComposing)) {
+        clearTimeout(timer);
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(
+          new Event("submit", {
+            bubbles: true,
+            cancelable: true,
+          })
+        );
       }
     });
 
@@ -757,6 +803,7 @@
         var href = card.getAttribute("href");
         if (!href) return;
         e.preventDefault();
+        dismissSearchKeyboard();
         card.classList.add("customer-search-result-card--pressed");
         card.dataset.navPending = "1";
         window.setTimeout(function () {
