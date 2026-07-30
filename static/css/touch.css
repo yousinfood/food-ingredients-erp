@@ -4536,3 +4536,56 @@ body.touch-app.touch-keyboard-open .touch-home-app .touch-search-mic-btn {
     padding: 2rem 2.25rem;
   }
 }
+
+/* Homepage search — phone: allow full-page scroll (iPad ≥768 keeps fixed shell above) */
+@media (max-width: 767px) {
+  html:has(.touch-home-app),
+  body.touch-app:has(.touch-home-app),
+  body.touch-app.touch-body-home-search {
+    height: auto !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: auto !important;
+  }
+
+  .touch-main.touch-home-app {
+    position: relative !important;
+    inset: auto !important;
+    z-index: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    display: block !important;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(48px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+
+  .touch-home-app__search-sticky {
+    position: relative !important;
+    flex: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .touch-home-app__results {
+    flex: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: auto !important;
+    touch-action: auto !important;
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .touch-home-app .touch-search-form--home-app {
+    margin-bottom: 0 !important;
+  }
+}

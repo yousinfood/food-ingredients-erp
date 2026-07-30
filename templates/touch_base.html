@@ -13,10 +13,10 @@
   <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
   <link rel="apple-touch-icon" href="{% static 'icons/app-icon.svg' %}">
   <link rel="icon" href="{% static 'icons/app-icon.svg' %}" type="image/svg+xml">
-  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260730customer-center-landscape">
+  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260730search-mobile-018">
   {% block extra_head %}{% endblock %}
 </head>
-<body class="touch-app">
+<body class="touch-app{% block body_class %}{% endblock %}">
   <a href="{% url 'dashboard' %}" class="touch-home-fixed" id="touch-go-home" data-touch-home="1">🏠 回首頁</a>
   <div id="touch-offline-banner" class="touch-offline-banner" hidden aria-hidden="true" role="alert">
     <p class="touch-offline-banner__text">目前沒有網路，請檢查 Wi‑Fi 或行動網路</p>
