@@ -4,40 +4,16 @@
 
 {% block extra_head %}
   <style>
-    body.touch-app:has(.touch-main--customer-center-senior) {
-      overflow: hidden;
-      overflow-x: hidden;
-      max-height: 100dvh;
-      height: 100dvh;
-    }
-
+    /* Shared */
     body.touch-app:has(.touch-main--customer-center-senior) .touch-home-fixed {
       display: none !important;
     }
 
     .touch-main--customer-center-senior {
       box-sizing: border-box;
-      width: min(96%, 100%);
-      max-width: 1180px;
-      min-height: 100dvh;
-      max-height: 100dvh;
+      width: 100%;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: calc(8px + env(safe-area-inset-top, 0px)) 22px calc(10px + env(safe-area-inset-bottom, 0px));
-      overflow: hidden;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1 1 auto;
-    }
-
-    .touch-cc-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex: 0 0 auto;
-      min-height: 52px;
     }
 
     .touch-cc-nav-btn {
@@ -45,11 +21,6 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 52px;
-      padding: 0 16px;
-      font-size: 24px;
-      font-weight: 600;
-      line-height: 1.2;
       text-decoration: none;
       color: #243638;
       background: #f3f5f5;
@@ -57,7 +28,6 @@
       border-radius: 12px;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
-      white-space: nowrap;
     }
 
     .touch-cc-nav-btn:active {
@@ -66,62 +36,27 @@
 
     .touch-cc-profile {
       box-sizing: border-box;
-      flex: 0 0 auto;
-      display: flex;
-      align-items: stretch;
-      justify-content: space-between;
-      gap: 16px;
-      min-height: 0;
-      max-height: 200px;
-      padding: 16px 18px;
       background: #fff;
       border: 2px solid #d0dedf;
       border-radius: 14px;
     }
 
-    .touch-cc-profile-main {
-      flex: 1 1 auto;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 4px;
-    }
-
     .touch-cc-name {
       margin: 0;
-      font-size: 42px;
       font-weight: 700;
-      line-height: 1.15;
       color: #243638;
-      word-break: break-word;
     }
 
     .touch-cc-meta {
       margin: 0;
-      font-size: 26px;
       font-weight: 600;
-      line-height: 1.25;
       color: #3d5255;
     }
 
     .touch-cc-address {
-      margin: 2px 0 0;
-      font-size: 26px;
+      margin: 0;
       font-weight: 500;
-      line-height: 1.35;
       color: #4a5f62;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .touch-cc-contact {
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     .touch-cc-action-btn {
@@ -131,11 +66,6 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      width: 72px;
-      min-width: 72px;
-      height: 72px;
-      min-height: 72px;
-      padding: 6px 4px;
       text-decoration: none;
       color: #243638;
       background: #f8fbfb;
@@ -155,31 +85,12 @@
       pointer-events: none;
     }
 
-    .touch-cc-action-icon {
-      font-size: 30px;
-      line-height: 1;
-    }
-
-    .touch-cc-action-label {
-      font-size: 22px;
-      font-weight: 600;
-      line-height: 1.1;
-    }
-
     .touch-cc-start-order {
       box-sizing: border-box;
-      flex: 0 0 auto;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
-      height: 92px;
-      min-height: 92px;
-      margin: 0;
-      padding: 0 1rem;
-      font-size: 40px;
-      font-weight: 700;
-      line-height: 1.2;
       text-align: center;
       text-decoration: none;
       color: #245235;
@@ -196,9 +107,7 @@
     }
 
     .touch-cc-finance-row {
-      flex: 0 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
@@ -208,9 +117,6 @@
       flex-direction: column;
       justify-content: center;
       gap: 6px;
-      min-height: 108px;
-      max-height: 115px;
-      padding: 16px 18px;
       background: #f8fbfb;
       border: 2px solid #d0dedf;
       border-radius: 14px;
@@ -219,27 +125,18 @@
     }
 
     .touch-cc-finance-label {
-      font-size: 26px;
       font-weight: 600;
       color: #536b6e;
       line-height: 1.2;
     }
 
     .touch-cc-finance-value {
-      font-size: 36px;
       font-weight: 700;
       color: #243638;
-      line-height: 1.15;
-      word-break: break-word;
-    }
-
-    .touch-cc-finance-value--date {
-      font-size: 34px;
+      line-height: 1.2;
     }
 
     .touch-cc-recent {
-      flex: 1 1 auto;
-      min-height: 0;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -247,8 +144,6 @@
 
     .touch-cc-recent-title {
       margin: 0;
-      flex: 0 0 auto;
-      font-size: 28px;
       font-weight: 700;
       color: #243638;
       line-height: 1.2;
@@ -256,58 +151,30 @@
 
     .touch-cc-recent-card {
       box-sizing: border-box;
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 115px;
-      max-height: 130px;
-      padding: 16px 18px;
       background: #fff;
       border: 2px solid #d0dedf;
       border-radius: 14px;
     }
 
-    .touch-cc-recent-left,
-    .touch-cc-recent-right {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .touch-cc-recent-right {
-      align-items: flex-end;
-      text-align: right;
-      flex-shrink: 0;
-    }
-
     .touch-cc-order-no {
-      font-size: 26px;
       font-weight: 600;
       color: #243638;
       line-height: 1.2;
-      word-break: break-all;
     }
 
-    .touch-cc-order-date {
-      font-size: 22px;
+    .touch-cc-order-date,
+    .touch-cc-order-status {
       font-weight: 500;
       color: #4a5f62;
-      line-height: 1.2;
+      line-height: 1.3;
     }
 
     .touch-cc-order-status {
-      font-size: 24px;
       font-weight: 600;
       color: #3d5255;
-      line-height: 1.2;
     }
 
     .touch-cc-order-amount {
-      font-size: 26px;
       font-weight: 700;
       color: #243638;
       line-height: 1.2;
@@ -315,13 +182,9 @@
 
     .touch-cc-empty {
       margin: 0;
-      flex: 0 0 auto;
-      min-height: 115px;
-      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
       font-weight: 600;
       color: #536b6e;
       background: #f8fbfb;
@@ -333,7 +196,424 @@
       display: none !important;
     }
 
-    @media (max-height: 740px) {
+    /* Phone */
+    @media (max-width: 767px) {
+      html:has(.touch-main--customer-center-senior),
+      body.touch-app:has(.touch-main--customer-center-senior) {
+        height: auto !important;
+        min-height: 100% !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+
+      .touch-main--customer-center-senior {
+        position: static;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+        display: block;
+        padding: 12px 14px calc(120px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .touch-cc-nav {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .touch-cc-nav-btn {
+        width: 100%;
+        min-width: 0;
+        height: 50px;
+        min-height: 50px;
+        padding: 6px 8px;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .touch-cc-profile {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+
+      .touch-cc-profile-main {
+        display: block;
+        width: 100%;
+      }
+
+      .touch-cc-name {
+        font-size: clamp(30px, 9vw, 38px);
+        line-height: 1.15;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        margin: 0 0 8px;
+      }
+
+      .touch-cc-meta {
+        font-size: clamp(19px, 5.5vw, 23px);
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+      }
+
+      .touch-cc-address {
+        font-size: clamp(18px, 5vw, 22px);
+        line-height: 1.4;
+        margin-top: 8px;
+        overflow-wrap: anywhere;
+        display: block;
+        -webkit-line-clamp: unset;
+        overflow: visible;
+      }
+
+      .touch-cc-contact {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        width: 100%;
+        margin-top: 14px;
+      }
+
+      .touch-cc-action-btn {
+        width: 100%;
+        min-width: 0;
+        height: 72px;
+        min-height: 72px;
+        padding: 6px 4px;
+        font-size: 20px;
+      }
+
+      .touch-cc-action-icon {
+        font-size: 26px;
+        line-height: 1;
+      }
+
+      .touch-cc-action-label {
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .touch-cc-start-order {
+        min-height: 76px;
+        height: auto;
+        padding: 12px;
+        margin-top: 12px;
+        font-size: clamp(28px, 8vw, 34px);
+        line-height: 1.2;
+        font-weight: 700;
+      }
+
+      .touch-cc-finance-row {
+        grid-template-columns: 1fr;
+        margin-top: 12px;
+      }
+
+      .touch-cc-finance-card {
+        width: 100%;
+        min-height: 86px;
+        max-height: none;
+        padding: 14px;
+      }
+
+      .touch-cc-finance-label {
+        font-size: 20px;
+      }
+
+      .touch-cc-finance-value {
+        font-size: clamp(28px, 8vw, 34px);
+        word-break: normal;
+      }
+
+      .touch-cc-finance-value--date {
+        white-space: nowrap;
+        font-size: clamp(26px, 7.5vw, 32px);
+      }
+
+      .touch-cc-recent {
+        margin-top: 10px;
+        flex: none;
+        min-height: 0;
+      }
+
+      .touch-cc-recent-title {
+        font-size: 26px;
+        margin-bottom: 8px;
+      }
+
+      .touch-cc-recent-card {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .touch-cc-recent-left,
+      .touch-cc-recent-right {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .touch-cc-recent-right {
+        align-items: flex-start;
+        text-align: left;
+        flex-shrink: 1;
+      }
+
+      .touch-cc-order-no {
+        font-size: 21px;
+        overflow-wrap: anywhere;
+        word-break: normal;
+      }
+
+      .touch-cc-order-date,
+      .touch-cc-order-status {
+        font-size: 20px;
+      }
+
+      .touch-cc-order-amount {
+        font-size: 22px;
+      }
+
+      .touch-cc-empty {
+        min-height: 86px;
+        padding: 14px;
+        font-size: 22px;
+      }
+    }
+
+    @media (min-width: 430px) and (max-width: 767px) {
+      .touch-cc-finance-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    /* iPad / desktop elder mode */
+    @media (min-width: 768px) {
+      body.touch-app:has(.touch-main--customer-center-senior) {
+        overflow: hidden;
+        overflow-x: hidden;
+        max-height: 100dvh;
+        height: 100dvh;
+      }
+
+      .touch-main--customer-center-senior {
+        width: min(96%, 100%);
+        min-height: 100dvh;
+        max-height: 100dvh;
+        padding: calc(8px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
+        overflow: hidden;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1 1 auto;
+      }
+
+      .touch-cc-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex: 0 0 auto;
+        min-height: 52px;
+      }
+
+      .touch-cc-nav-btn {
+        min-height: 52px;
+        padding: 0 16px;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .touch-cc-profile {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 0;
+        max-height: 200px;
+        padding: 16px 18px;
+      }
+
+      .touch-cc-profile-main {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      .touch-cc-name {
+        font-size: 42px;
+        line-height: 1.15;
+        word-break: break-word;
+      }
+
+      .touch-cc-meta {
+        font-size: 26px;
+        line-height: 1.25;
+      }
+
+      .touch-cc-address {
+        margin-top: 2px;
+        font-size: 26px;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .touch-cc-contact {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .touch-cc-action-btn {
+        width: 72px;
+        min-width: 72px;
+        height: 72px;
+        min-height: 72px;
+        padding: 6px 4px;
+      }
+
+      .touch-cc-action-icon {
+        font-size: 30px;
+        line-height: 1;
+      }
+
+      .touch-cc-action-label {
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1.1;
+      }
+
+      .touch-cc-start-order {
+        flex: 0 0 auto;
+        height: 92px;
+        min-height: 92px;
+        margin: 0;
+        padding: 0 1rem;
+        font-size: 40px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .touch-cc-finance-row {
+        flex: 0 0 auto;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .touch-cc-finance-card {
+        min-height: 108px;
+        max-height: 115px;
+        padding: 16px 18px;
+      }
+
+      .touch-cc-finance-label {
+        font-size: 26px;
+      }
+
+      .touch-cc-finance-value {
+        font-size: 36px;
+        line-height: 1.15;
+        word-break: break-word;
+      }
+
+      .touch-cc-finance-value--date {
+        font-size: 34px;
+      }
+
+      .touch-cc-recent {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .touch-cc-recent-title {
+        flex: 0 0 auto;
+        font-size: 28px;
+      }
+
+      .touch-cc-recent-card {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 115px;
+        max-height: 130px;
+        padding: 16px 18px;
+      }
+
+      .touch-cc-recent-left,
+      .touch-cc-recent-right {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .touch-cc-recent-right {
+        align-items: flex-end;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .touch-cc-order-no {
+        font-size: 26px;
+        word-break: break-all;
+      }
+
+      .touch-cc-order-date {
+        font-size: 22px;
+        font-weight: 500;
+        color: #4a5f62;
+      }
+
+      .touch-cc-order-status {
+        font-size: 24px;
+      }
+
+      .touch-cc-order-amount {
+        font-size: 26px;
+      }
+
+      .touch-cc-empty {
+        flex: 0 0 auto;
+        min-height: 115px;
+        padding: 16px 18px;
+        font-size: 26px;
+      }
+    }
+
+    @media (min-width: 768px) and (max-height: 740px) {
       .touch-main--customer-center-senior {
         padding-top: calc(6px + env(safe-area-inset-top, 0px));
         padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
@@ -363,7 +643,7 @@
       }
     }
 
-    @media (max-height: 680px) {
+    @media (min-width: 768px) and (max-height: 680px) {
       .touch-cc-address {
         -webkit-line-clamp: 1;
       }
