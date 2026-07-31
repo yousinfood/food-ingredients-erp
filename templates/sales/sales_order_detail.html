@@ -5,111 +5,82 @@
 
 {% block body %}
 <main class="touch-main touch-order-detail-page">
-  <div class="touch-order-detail-top">
-    <a href="{% url 'sales:customer_center' order.customer.pk %}" class="touch-back">← 返回客戶中心</a>
-    <div class="touch-order-detail-actions">
-      {% if not order.is_voided %}
-      <a href="{% url 'sales:sales_order_reorder' order.pk %}" class="touch-btn touch-btn-secondary touch-btn-sm">再次下單</a>
-      <a href="{% url 'sales:sales_order_copy' order.pk %}" class="touch-btn touch-btn-secondary touch-btn-sm">複製</a>
-      {% endif %}
-      {% if order.can_void %}
-      <form method="post" action="{% url 'sales:sales_order_void' order.pk %}" class="touch-inline-form" onsubmit="return confirm('確定要作廢此訂單？');">
-        {% csrf_token %}
-        <button type="submit" class="touch-btn touch-btn-danger touch-btn-sm">作廢訂單</button>
-      </form>
-      {% endif %}
-    </div>
-  </div>
-
-  <header class="touch-order-header-compact">
-    <h1 class="touch-order-header-name">{{ order.order_no }}</h1>
-    <p class="touch-order-header-meta">
-      {{ order.customer.name }} · {{ order.get_status_display }}
-    </p>
-  </header>
+  <a href="{% url 'sales:customer_center' order.customer.pk %}" class="touch-back touch-order-detail-back">← 返回客戶中心</a>
 
   {% if messages %}
-  <div class="touch-flash-messages">
+  <div class="touch-flash-messages touch-order-detail-flash">
     {% for message in messages %}
     <p class="touch-flash touch-flash--{{ message.tags }}">{{ message }}</p>
     {% endfor %}
   </div>
   {% endif %}
 
-  <section class="touch-info-grid touch-order-detail-meta">
-    <div class="touch-info-card">
-      <span class="touch-info-label">訂單日期</span>
-      <strong>{{ order.order_date }}</strong>
-    </div>
-    <div class="touch-info-card">
-      <span class="touch-info-label">交貨日期</span>
-      <strong>{{ order.delivery_date|default:"—" }}</strong>
-    </div>
-    <div class="touch-info-card">
-      <span class="touch-info-label">總金額</span>
-      <strong>${{ order.total_amount|floatformat:0 }}</strong>
-    </div>
-    <div class="touch-info-card">
-      <span class="touch-info-label">建立人</span>
-      <strong>{% if order.created_by %}{{ order.created_by.get_full_name|default:order.created_by.username }}{% else %}—{% endif %}</strong>
-    </div>
-    {% if order.is_voided %}
-    <div class="touch-info-card touch-info-card--danger">
-      <span class="touch-info-label">作廢時間</span>
-      <strong>{{ order.cancelled_at|date:"Y-m-d H:i" }}</strong>
-    </div>
-    <div class="touch-info-card touch-info-card--danger">
-      <span class="touch-info-label">作廢人員</span>
-      <strong>{% if order.cancelled_by %}{{ order.cancelled_by.get_full_name|default:order.cancelled_by.username }}{% else %}—{% endif %}</strong>
-    </div>
-    {% endif %}
-  </section>
+  <header class="touch-order-detail-hero">
+    <p class="touch-order-detail-order-no">{{ order.order_no }}</p>
+    <p class="touch-order-detail-customer">{{ order.customer.name }}</p>
+    <p class="touch-order-detail-delivery">
+      交貨 {{ order.delivery_date|default:"—" }}
+    </p>
+    <p class="touch-order-detail-status">{{ order.get_status_display }}{% if order.is_voided %} · 已作廢{% endif %}</p>
+  </header>
 
-  {% if order.shipping_address or order.notes %}
-  <section class="touch-section">
-    {% if order.shipping_address %}
-    <p><span class="touch-info-label">送貨地址</span> {{ order.shipping_address }}</p>
-    {% endif %}
-    {% if order.notes %}
-    <p><span class="touch-info-label">備註</span> {{ order.notes|linebreaksbr }}</p>
-    {% endif %}
-  </section>
-  {% endif %}
-
-  <section class="touch-section">
-    <h2 class="touch-section-title">訂單明細</h2>
-    <div class="touch-table-wrap">
-      <table class="touch-table">
-        <thead>
-          <tr>
-            <th>產品</th>
-            <th>數量</th>
-            <th>單價</th>
-            <th>小計</th>
-            <th>已出貨</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in order.items.all %}
-          <tr>
-            <td>{{ item.product.name }}<br><small>{{ item.product.sku }}</small></td>
-            <td>{{ item.quantity }} {{ item.product.get_unit_display }}</td>
-            <td>${{ item.unit_price }}</td>
-            <td>${{ item.line_total|floatformat:0 }}</td>
-            <td>{{ item.shipped_qty }} / {{ item.quantity }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <section class="touch-order-detail-lines" aria-label="訂單明細">
+    <h2 class="touch-order-detail-lines-title">商品</h2>
+    <div class="touch-order-detail-line-list">
+      {% for item in order.items.all %}
+      <article class="touch-order-detail-line-card">
+        <p class="touch-order-detail-line-name">{{ item.product.name }}</p>
+        <p class="touch-order-detail-line-qty">
+          {{ item.quantity|floatformat:-3 }}
+          {{ item.product.get_sales_unit_display }}
+        </p>
+        <details class="touch-order-detail-line-extra">
+          <summary>單價與出貨</summary>
+          <ul>
+            <li>料號 {{ item.product.sku }}</li>
+            <li>單價 ${{ item.unit_price }}</li>
+            <li>小計 ${{ item.line_total|floatformat:0 }}</li>
+            <li>已出貨 {{ item.shipped_qty|floatformat:-3 }} / {{ item.quantity|floatformat:-3 }}</li>
+          </ul>
+        </details>
+      </article>
+      {% empty %}
+      <p class="touch-empty">尚無明細</p>
+      {% endfor %}
     </div>
   </section>
 
-  <div class="touch-form-actions">
+  <details class="touch-order-detail-secondary">
+    <summary>訂單與金額</summary>
+    <div class="touch-order-detail-secondary-body">
+      <p><span class="touch-info-label">訂單日期</span> {{ order.order_date }}</p>
+      <p><span class="touch-info-label">總金額</span> ${{ order.total_amount|floatformat:0 }}</p>
+      <p><span class="touch-info-label">建立人</span> {% if order.created_by %}{{ order.created_by.get_full_name|default:order.created_by.username }}{% else %}—{% endif %}</p>
+      {% if order.shipping_address %}
+      <p><span class="touch-info-label">送貨地址</span> {{ order.shipping_address }}</p>
+      {% endif %}
+      {% if order.notes %}
+      <p><span class="touch-info-label">備註</span> {{ order.notes|linebreaksbr }}</p>
+      {% endif %}
+      {% if order.is_voided %}
+      <p><span class="touch-info-label">作廢時間</span> {{ order.cancelled_at|date:"Y-m-d H:i" }}</p>
+      <p><span class="touch-info-label">作廢人員</span> {% if order.cancelled_by %}{{ order.cancelled_by.get_full_name|default:order.cancelled_by.username }}{% else %}—{% endif %}</p>
+      {% endif %}
+    </div>
+  </details>
+
+  <div class="touch-order-detail-actions">
     {% if not order.is_voided %}
-    <a href="{% url 'sales:sales_order_reorder' order.pk %}" class="touch-btn touch-btn-primary">📦 再次下單</a>
-    <a href="{% url 'sales:sales_order_copy' order.pk %}" class="touch-btn touch-btn-secondary">📋 複製訂單</a>
+    <a href="{% url 'sales:sales_order_reorder' order.pk %}" class="touch-btn touch-btn-primary touch-order-detail-action-btn">再次下單</a>
+    <a href="{% url 'sales:sales_order_copy' order.pk %}" class="touch-btn touch-btn-secondary touch-order-detail-action-btn">複製訂單</a>
     {% endif %}
-    <a href="{% url 'sales:order_history' order.customer.pk %}" class="touch-btn touch-btn-secondary">訂單紀錄</a>
+    {% if order.can_void %}
+    <form method="post" action="{% url 'sales:sales_order_void' order.pk %}" class="touch-order-detail-void-form" onsubmit="return confirm('確定要作廢此訂單？');">
+      {% csrf_token %}
+      <button type="submit" class="touch-btn touch-btn-danger touch-order-detail-action-btn">作廢訂單</button>
+    </form>
+    {% endif %}
+    <a href="{% url 'sales:order_history' order.customer.pk %}" class="touch-btn touch-btn-secondary touch-order-detail-action-btn touch-order-detail-action-btn--quiet">訂單紀錄</a>
   </div>
 
   {% if debug_mode %}

@@ -21,6 +21,7 @@
     const lastOrderGrid = document.getElementById("last-order-products");
     const categoryGrid = document.getElementById("category-grid");
     const seriesChips = document.getElementById("series-chips");
+    const modifiedStarchChips = document.getElementById("modified-starch-chips");
     const naturalStarchChips = document.getElementById("natural-starch-chips");
     const seriesHint = document.getElementById("category-series-hint");
     const categoryProducts = document.getElementById("category-products");
@@ -51,10 +52,12 @@
     let activeSeries = null;
     let activeBrandSeries = null;
     let activeNaturalStarchItem = null;
+    let activeModifiedStarchSegment = "retail";
     let draftCategory = null;
     let draftSeries = null;
     let draftBrandSeries = null;
     let draftNaturalStarchItem = null;
+    let draftModifiedStarchSegment = null;
     let isSubmitting = false;
     let saveConfirmPending = false;
     let pendingRemoveConfirm = null;
@@ -347,6 +350,7 @@
         activeSeries: activeSeries,
         activeBrandSeries: activeBrandSeries,
         activeNaturalStarchItem: activeNaturalStarchItem,
+        activeModifiedStarchSegment: activeModifiedStarchSegment,
         saved_at: Date.now(),
       };
     }
@@ -382,6 +386,7 @@
         draftSeries = data.activeSeries || null;
         draftBrandSeries = data.activeBrandSeries || null;
         draftNaturalStarchItem = data.activeNaturalStarchItem || null;
+        draftModifiedStarchSegment = data.activeModifiedStarchSegment || null;
         data.items.forEach(function (item) {
           const product = {
             id: item.id,
@@ -891,6 +896,55 @@
       return category === key;
     }
 
+    function isModifiedStarchCategory(category) {
+      const key = config.modifiedStarchCategory || "變性澱粉";
+      return category === key;
+    }
+
+    function filterBySellableSegment(products, segment) {
+      const list = products || [];
+      if (segment === "formula") {
+        return list.filter(function (p) {
+          return p.is_sellable === false;
+        });
+      }
+      return list.filter(function (p) {
+        return p.is_sellable !== false;
+      });
+    }
+
+    function renderModifiedStarchChips() {
+      if (!modifiedStarchChips) return;
+      if (!isModifiedStarchCategory(activeCategory)) {
+        modifiedStarchChips.hidden = true;
+        modifiedStarchChips.innerHTML = "";
+        activeModifiedStarchSegment = "retail";
+        syncPickToolbarGap();
+        return;
+      }
+      const tabs = [
+        { key: "retail", label: "市售商品" },
+        { key: "formula", label: "自用配方" },
+      ];
+      modifiedStarchChips.innerHTML = tabs
+        .map(function (tab) {
+          const selected = activeModifiedStarchSegment === tab.key ? " series-card--selected" : "";
+          return (
+            '<button type="button" class="series-card series-card--medium' +
+            selected +
+            '" data-modified-starch-segment="' +
+            escapeHtml(tab.key) +
+            '">' +
+            '<span class="title">' +
+            escapeHtml(tab.label) +
+            "</span></button>"
+          );
+        })
+        .join("");
+      modifiedStarchChips.hidden = false;
+      syncPickToolbarGap();
+    }
+
     function naturalStarchItemDef(itemKey) {
       return (config.naturalStarchItems || []).find(function (item) {
         return item.key === itemKey;
@@ -899,22 +953,44 @@
 
     function filterNaturalStarchProducts(products, itemKey) {
       const def = naturalStarchItemDef(itemKey);
-      if (!def || !def.productNames || !def.productNames.length) return [];
+      if (!def) return [];
       const list = products || [];
       const picked = [];
-      def.productNames.forEach(function (target) {
+
+      function addProduct(p) {
+        if (!picked.some(function (x) {
+          return x.id === p.id;
+        })) {
+          picked.push(p);
+        }
+      }
+
+      const seriesByKey = {
+        potato: "馬鈴薯澱粉",
+        tapioca: "太白粉",
+        granule: "粒粉",
+        corn: "玉米澱粉",
+        glutinous: "糯米粉",
+      };
+      const seriesKey = (def.series || seriesByKey[itemKey] || "").trim();
+      if (seriesKey) {
+        list.forEach(function (p) {
+          if ((p.series || "").trim() === seriesKey) {
+            addProduct(p);
+          }
+        });
+      }
+
+      (def.productNames || []).forEach(function (target) {
         const needle = (target || "").trim();
         if (!needle) return;
         list.forEach(function (p) {
           const n = (p.name || "").trim();
           if (!n || n.indexOf(needle) < 0) return;
-          if (!picked.some(function (x) {
-            return x.id === p.id;
-          })) {
-            picked.push(p);
-          }
+          addProduct(p);
         });
       });
+
       return picked;
     }
 
@@ -1035,6 +1111,7 @@
     function applyCategoryView() {
       if (!activeCategory) return;
       renderSeriesChips();
+      renderModifiedStarchChips();
       renderNaturalStarchChips();
       if (isBrandFlourCategory(activeCategory)) {
         if (seriesHint) seriesHint.hidden = true;
@@ -1082,6 +1159,22 @@
         scrollProductsToTop();
         return;
       }
+      if (isModifiedStarchCategory(activeCategory)) {
+        if (seriesHint) seriesHint.hidden = true;
+        const modifiedCached = categoryCache.get(activeCategory) || [];
+        const sellableFiltered = filterBySellableSegment(
+          modifiedCached,
+          activeModifiedStarchSegment
+        );
+        if (!categoryProducts) return;
+        if (!sellableFiltered.length) {
+          categoryProducts.innerHTML = '<p class="touch-empty">此分頁目前沒有產品</p>';
+        } else {
+          categoryProducts.innerHTML = sellableFiltered.map(productCardHtml).join("");
+        }
+        scrollProductsToTop();
+        return;
+      }
       if (isFlourCategory(activeCategory)) {
         if (seriesHint) seriesHint.hidden = true;
         if (!activeSeries) {
@@ -1118,8 +1211,10 @@
       if (!options.keepSeries) activeSeries = null;
       if (!options.keepBrandSeries) activeBrandSeries = null;
       if (!options.keepNaturalStarch) activeNaturalStarchItem = null;
+      if (!options.keepModifiedStarchSegment) activeModifiedStarchSegment = "retail";
       setActiveCategoryButton(category);
       renderSeriesChips();
+      renderModifiedStarchChips();
       renderNaturalStarchChips();
 
       const cached = categoryCache.get(category);
@@ -1171,6 +1266,13 @@
       if (!isNaturalStarchCategory(activeCategory)) return;
       activeNaturalStarchItem = itemKey || null;
       renderNaturalStarchChips();
+      applyCategoryView();
+    }
+
+    function selectModifiedStarchSegment(segmentKey) {
+      if (!isModifiedStarchCategory(activeCategory)) return;
+      activeModifiedStarchSegment = segmentKey === "formula" ? "formula" : "retail";
+      renderModifiedStarchChips();
       applyCategoryView();
     }
 
@@ -1279,6 +1381,17 @@
       if (naturalStarchBackBtn && form.contains(naturalStarchBackBtn)) {
         e.preventDefault();
         selectNaturalStarchItem(null);
+        return;
+      }
+
+      const modifiedStarchBtn = e.target.closest("[data-modified-starch-segment]");
+      if (
+        modifiedStarchBtn &&
+        modifiedStarchChips &&
+        modifiedStarchChips.contains(modifiedStarchBtn)
+      ) {
+        e.preventDefault();
+        selectModifiedStarchSegment(modifiedStarchBtn.dataset.modifiedStarchSegment);
         return;
       }
 
@@ -1511,16 +1624,21 @@
       activeSeries = draftSeries;
       activeBrandSeries = draftBrandSeries;
       activeNaturalStarchItem = draftNaturalStarchItem;
+      activeModifiedStarchSegment = draftModifiedStarchSegment || "retail";
       selectCategory(draftCategory, {
         keepSeries: true,
         keepBrandSeries: true,
         keepNaturalStarch: true,
+        keepModifiedStarchSegment: true,
       });
       if (draftSeries && isFlourCategory(draftCategory)) {
         selectSeries(draftSeries);
       }
       if (draftNaturalStarchItem && isNaturalStarchCategory(draftCategory)) {
         selectNaturalStarchItem(draftNaturalStarchItem);
+      }
+      if (isModifiedStarchCategory(draftCategory)) {
+        selectModifiedStarchSegment(activeModifiedStarchSegment);
       }
     } else {
       selectCategory(defaultCategory);

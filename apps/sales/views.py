@@ -17,6 +17,11 @@ from apps.core.services.dashboard_order_filters import (
     DASHBOARD_FILTER_LABELS,
     queryset_for_dashboard_filter,
 )
+from .services.customer_sheet_push_ui import (
+    delete_customer_sheet_or_warn,
+    push_customer_sheet_or_warn,
+)
+from apps.sales.signals import resume_sheet_push, skip_sheet_push
 from .forms import CustomerForm
 from .models import Customer, SalesOrder, SalesOrderItem
 from .services.customer_center import (
@@ -134,7 +139,12 @@ def customer_list(request):
 def customer_create(request):
     form = CustomerForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        customer = form.save()
+        skip_sheet_push()
+        try:
+            customer = form.save()
+        finally:
+            resume_sheet_push()
+        push_customer_sheet_or_warn(request, customer)
         messages.success(request, f"已新增客戶 {customer.name}")
         return redirect("sales:customer_center", pk=customer.pk)
     return render(request, "sales/customer_form.html", {"form": form, "title": "新增客戶"})
@@ -144,7 +154,12 @@ def customer_edit(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     form = CustomerForm(request.POST or None, instance=customer)
     if request.method == "POST" and form.is_valid():
-        customer = form.save()
+        skip_sheet_push()
+        try:
+            customer = form.save()
+        finally:
+            resume_sheet_push()
+        push_customer_sheet_or_warn(request, customer)
         messages.success(request, f"已更新客戶 {customer.name}")
         return redirect("sales:customer_center", pk=customer.pk)
     return render(
@@ -169,7 +184,13 @@ def customer_delete(request, pk):
             )
         try:
             name = customer.name
-            customer.delete()
+            code = customer.code
+            skip_sheet_push()
+            try:
+                customer.delete()
+            finally:
+                resume_sheet_push()
+            delete_customer_sheet_or_warn(request, code)
         except ProtectedError:
             messages.error(request, "此客戶有關聯訂單，無法刪除。請改為停用。")
             return redirect("sales:customer_center", pk=pk)

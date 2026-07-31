@@ -1,0 +1,24 @@
+{
+  "sampled_at": "2026-07-28",
+  "method": "median RGB on center crop, excluding near-white/black/low-saturation",
+  "blue": {
+    "hex": "#172e60",
+    "rgb": [
+      23,
+      46,
+      96
+    ],
+    "source": "static/brand/packaging-yousin-blue.png",
+    "active_hex": "#152a58"
+  },
+  "red": {
+    "hex": "#69192c",
+    "rgb": [
+      105,
+      25,
+      44
+    ],
+    "source": "static/brand/packaging-yousin-red.png",
+    "active_hex": "#601728"
+  }
+}

@@ -153,6 +153,7 @@ INSTALLED_APPS = [
     "apps.inventory",
     "apps.procurement",
     "apps.sales",
+    "apps.deliveries",
     "apps.production",
     "apps.excel_schema",
 ]
@@ -233,3 +234,17 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Google「產品資料」→ Product 自動同步（接單讀商品前）
+GOOGLE_SHEETS_SPREADSHEET_ID = os.environ.get("GOOGLE_SHEETS_SPREADSHEET_ID", "").strip()
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+GOOGLE_SHEETS_PRODUCT_CSV_URL = os.environ.get("GOOGLE_SHEETS_PRODUCT_CSV_URL", "").strip()
+GOOGLE_SHEETS_CUSTOMER_CSV_URL = os.environ.get("GOOGLE_SHEETS_CUSTOMER_CSV_URL", "").strip()
+PRODUCT_SHEET_SYNC_INTERVAL_SECONDS = int(
+    os.environ.get("PRODUCT_SHEET_SYNC_INTERVAL_SECONDS", "15")
+)
+CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS = int(
+    os.environ.get("CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS", "15")
+)
+
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()

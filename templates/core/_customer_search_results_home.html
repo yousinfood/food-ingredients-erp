@@ -1,10 +1,17 @@
 {% load touch_search %}
 <div id="touch-search-results-panel" class="customer-search-results-panel" data-query="{{ query|default:''|escape }}">
 {% if searched and results %}
-  <p class="customer-search-results-panel__heading" role="status">請選擇客戶</p>
+  <p id="customer-search-results-title" class="customer-search-results-panel__heading" role="status">請選擇客戶</p>
   <div class="customer-search-results-panel__list">
     {% for customer in results %}
-    <a href="{% url 'sales:customer_center' customer.pk %}" class="customer-search-result-card">
+    <a
+      href="{% url 'sales:customer_center' customer.pk %}"
+      class="customer-search-result-card"
+      data-sort-name="{{ customer.name|escape }}"
+      data-sort-region="{{ customer.region|default:''|escape }}"
+      data-sort-address="{{ customer.address|default:''|escape }}"
+      data-sort-phone="{{ customer.phone|default:''|escape }}"
+    >
       <span class="customer-search-result-card__name">{{ customer.name|highlight_query:query }}</span>
       {% if customer.region %}
       <span class="customer-search-result-card__region">{{ customer.region|highlight_query:query }}</span>
@@ -15,14 +22,10 @@
     </a>
     {% endfor %}
   </div>
-  {% if search_has_more %}
-  <button type="button" class="customer-search-results-panel__more" data-touch-search-more="1">
-    還有 {{ search_remaining }} 筆符合，點擊查看更多
-  </button>
-  {% endif %}
 {% elif searched %}
-  <div class="customer-search-results-panel__empty" role="status" hidden aria-hidden="true">
-    <p class="customer-search-results-panel__empty-text">找不到完全符合的客戶</p>
+  <div class="customer-search-results-panel__empty" role="status">
+    <p class="customer-search-results-panel__empty-text">找不到客戶</p>
+    <button type="button" class="customer-search-empty-action" data-empty-research="1">重新搜尋</button>
   </div>
 {% endif %}
 </div>

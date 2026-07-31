@@ -3,7 +3,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f766e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,7 +13,7 @@
   <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
   <link rel="apple-touch-icon" href="{% static 'icons/app-icon.svg' %}">
   <link rel="icon" href="{% static 'icons/app-icon.svg' %}" type="image/svg+xml">
-  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260730search-mobile-018">
+  <link rel="stylesheet" href="{% static 'css/touch.css' %}?v=20260731viewport-unified-030">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="touch-app{% block body_class %}{% endblock %}">
@@ -29,7 +29,7 @@
   {% block body %}{% endblock %}
   <script src="{% static 'js/touch-connectivity.js' %}?v=20260726a" defer></script>
   <script src="{% static 'js/touch-geolocation.js' %}?v=20260726h" defer></script>
-  <script src="{% static 'js/touch_customer_search.js' %}?v=20260730search-submit-019" defer></script>
+  <script src="{% static 'js/touch_customer_search.js' %}?v=20260731ios-media-recorder-031" defer></script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

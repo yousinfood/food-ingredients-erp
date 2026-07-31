@@ -25,6 +25,12 @@ class Customer(models.Model):
     tax_id = models.CharField("統一編號", max_length=20, blank=True)
     is_active = models.BooleanField("啟用", default=True)
     notes = models.TextField("備註", blank=True)
+    voice_aliases = models.CharField(
+        "語音別名",
+        max_length=500,
+        blank=True,
+        help_text="平常稱呼與台語音近字，逗號分隔。例：華都, 花都, 華豆",
+    )
     created_at = models.DateTimeField("建立時間", auto_now_add=True)
 
     class Meta:

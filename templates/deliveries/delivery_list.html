@@ -1,0 +1,455 @@
+{% extends "touch_base.html" %}
+
+{% block title %}全部出貨單{% endblock %}
+
+{% block extra_head %}
+<style>
+  .delivery-page {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1rem 1rem 7rem;
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .delivery-page * { box-sizing: border-box; }
+
+  .delivery-head {
+    margin-bottom: 1rem;
+  }
+
+  .delivery-head h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 0.35rem;
+  }
+
+  .delivery-head p {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #64748b;
+  }
+
+  .delivery-date-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .delivery-date-nav a,
+  .delivery-date-nav span {
+    font-size: 1.125rem;
+    font-weight: 700;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.85rem;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #0f766e;
+    background: #ecfdf5;
+    border: 2px solid #99f6e4;
+  }
+
+  .delivery-date-current {
+    color: #1e293b;
+    background: #fff;
+    border-color: #e2e8f0;
+  }
+
+  .delivery-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    margin-bottom: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f766e;
+    text-decoration: none;
+  }
+
+  .delivery-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .delivery-order-card {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .delivery-order-card--selected {
+    background: #ecfdf5;
+    border-color: #0f766e;
+  }
+
+  .delivery-order-card input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    margin-right: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  .delivery-order-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .delivery-order-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.25;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .delivery-order-meta,
+  .delivery-order-address,
+  .delivery-order-items,
+  .delivery-order-qty {
+    font-size: 1.125rem;
+    line-height: 1.45;
+    color: #334155;
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+  }
+
+  .delivery-order-meta {
+    margin-bottom: 0.25rem;
+    color: #64748b;
+  }
+
+  .delivery-order-items {
+    margin-top: 0.5rem;
+  }
+
+  .delivery-order-items li {
+    list-style: none;
+    margin: 0.15rem 0;
+  }
+
+  .delivery-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    font-size: 1.25rem;
+    color: #64748b;
+    background: #fff;
+    border: 2px dashed #e2e8f0;
+    border-radius: 14px;
+  }
+
+  .delivery-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  .delivery-toolbar button {
+    min-height: 48px;
+    padding: 0.5rem 1rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-family: inherit;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    color: #1e293b;
+    cursor: pointer;
+  }
+
+  .delivery-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    border-top: 2px solid #e2e8f0;
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .delivery-bar-inner {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .delivery-bar-count {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f766e;
+    text-align: center;
+  }
+
+  .delivery-bar-submit {
+    width: 100%;
+    min-height: 60px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    font-family: inherit;
+    border: none;
+    border-radius: 14px;
+    background: #0f766e;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .delivery-bar-submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .delivery-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.55);
+  }
+
+  .delivery-modal[hidden] { display: none !important; }
+
+  .delivery-modal-card {
+    width: min(100%, 480px);
+    padding: 1.25rem;
+    background: #fff;
+    border-radius: 16px;
+    border: 2px solid #99f6e4;
+  }
+
+  .delivery-modal-card h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .delivery-modal-card p {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1.45;
+  }
+
+  .delivery-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: 1rem;
+  }
+
+  .delivery-modal-actions button {
+    min-height: 52px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-family: inherit;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .delivery-modal-confirm {
+    background: #0f766e;
+    color: #fff;
+    border: none;
+  }
+
+  .delivery-modal-cancel {
+    background: #fff;
+    color: #1e293b;
+    border: 2px solid #e2e8f0;
+  }
+
+  .delivery-flash {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="delivery-page">
+  <a href="{% url 'dashboard' %}" class="delivery-back">← 返回首頁</a>
+
+  <header class="delivery-head">
+    <h1>全部出貨單</h1>
+    <p>選擇今天要配送的訂單，建立第一趟出車</p>
+  </header>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="delivery-flash" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <nav class="delivery-date-nav" aria-label="日期">
+    <a href="?date={{ prev_date|date:'Y-m-d' }}">← 前一天</a>
+    <span class="delivery-date-current">{{ selected_date|date:'Y年n月j日' }}</span>
+    <a href="?date={{ next_date|date:'Y-m-d' }}">後一天 →</a>
+  </nav>
+
+  <form id="delivery-form" method="post" action="{% url 'deliveries:create_trip' %}">
+    {% csrf_token %}
+    <input type="hidden" name="trip_date" value="{{ selected_date|date:'Y-m-d' }}">
+
+    <div class="delivery-toolbar">
+      <button type="button" id="select-all-btn">全選本頁</button>
+      <button type="button" id="clear-all-btn">清除選擇</button>
+    </div>
+
+    {% if orders %}
+      <div class="delivery-order-list" id="delivery-order-list">
+        {% for order in orders %}
+          <label class="delivery-order-card" data-order-card>
+            <div class="delivery-order-card-top">
+              <input type="checkbox" name="order_ids" value="{{ order.pk }}" data-order-checkbox>
+              <div>
+                <div class="delivery-order-name">{{ order.customer.name }}</div>
+                <div class="delivery-order-meta">
+                  {% if order.customer.region %}{{ order.customer.region }} · {% endif %}
+                  {{ order.order_no }} · {{ order.order_date|date:'Y-m-d' }}
+                </div>
+              </div>
+            </div>
+            <div class="delivery-order-address">{{ order.display_address|default:"尚無地址" }}</div>
+            <ul class="delivery-order-items">
+              {% for line in order.summary_lines %}
+                <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            <div class="delivery-order-qty">共 {{ order.total_qty|floatformat:-3 }} 件</div>
+          </label>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="delivery-empty">這天沒有待安排的出貨單</div>
+    {% endif %}
+
+    <div class="delivery-bar">
+      <div class="delivery-bar-inner">
+        <div class="delivery-bar-count" id="selected-count" aria-live="polite">已選 0 張訂單</div>
+        <button type="button" class="delivery-bar-submit" id="open-confirm-btn" disabled>🚚 建立第一趟出車</button>
+      </div>
+    </div>
+
+    <div class="delivery-modal" id="confirm-modal" hidden role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="delivery-modal-card">
+        <h2 id="confirm-title">第一趟出車</h2>
+        <p id="confirm-order-count">共 0 張訂單</p>
+        <p id="confirm-customer-count">共 0 位客戶</p>
+        <div class="delivery-modal-actions">
+          <button type="button" class="delivery-modal-cancel" id="confirm-cancel-btn">返回修改</button>
+          <button type="submit" class="delivery-modal-confirm" id="confirm-submit-btn">確定建立</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  var cards = document.querySelectorAll("[data-order-card]");
+  var checkboxes = document.querySelectorAll("[data-order-checkbox]");
+  var countEl = document.getElementById("selected-count");
+  var openBtn = document.getElementById("open-confirm-btn");
+  var modal = document.getElementById("confirm-modal");
+  var cancelBtn = document.getElementById("confirm-cancel-btn");
+  var confirmOrderEl = document.getElementById("confirm-order-count");
+  var confirmCustomerEl = document.getElementById("confirm-customer-count");
+  var submitBtn = document.getElementById("confirm-submit-btn");
+  var form = document.getElementById("delivery-form");
+  var submitting = false;
+
+  function selectedBoxes() {
+    return Array.prototype.filter.call(checkboxes, function (cb) { return cb.checked; });
+  }
+
+  function uniqueCustomers(boxes) {
+    var names = {};
+    boxes.forEach(function (cb) {
+      var card = cb.closest("[data-order-card]");
+      var nameEl = card ? card.querySelector(".delivery-order-name") : null;
+      if (nameEl) names[nameEl.textContent.trim()] = true;
+    });
+    return Object.keys(names).length;
+  }
+
+  function refreshUI() {
+    var selected = selectedBoxes();
+    var count = selected.length;
+    countEl.textContent = "已選 " + count + " 張訂單";
+    openBtn.disabled = count === 0;
+    cards.forEach(function (card) {
+      var cb = card.querySelector("[data-order-checkbox]");
+      card.classList.toggle("delivery-order-card--selected", cb && cb.checked);
+    });
+  }
+
+  checkboxes.forEach(function (cb) {
+    cb.addEventListener("change", refreshUI);
+  });
+
+  document.getElementById("select-all-btn").addEventListener("click", function () {
+    checkboxes.forEach(function (cb) { cb.checked = true; });
+    refreshUI();
+  });
+
+  document.getElementById("clear-all-btn").addEventListener("click", function () {
+    checkboxes.forEach(function (cb) { cb.checked = false; });
+    refreshUI();
+  });
+
+  if (openBtn) {
+    openBtn.addEventListener("click", function () {
+      var selected = selectedBoxes();
+      confirmOrderEl.textContent = "共 " + selected.length + " 張訂單";
+      confirmCustomerEl.textContent = "共 " + uniqueCustomers(selected) + " 位客戶";
+      modal.hidden = false;
+    });
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", function () {
+      modal.hidden = true;
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", function () {
+      if (submitting) return false;
+      submitting = true;
+      submitBtn.disabled = true;
+      openBtn.disabled = true;
+    });
+  }
+
+  refreshUI();
+})();
+</script>
+{% endblock %}

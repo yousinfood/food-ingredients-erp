@@ -22,6 +22,7 @@ SAFE_UPDATE_FIELDS = (
     "net_weight_value",
     "net_weight_unit",
     "is_for_sale",
+    "is_sellable",
     "can_be_raw_material",
     "unit_cost",
     "shelf_life_days",
@@ -53,7 +54,7 @@ def _parse_decimal(value):
 
 
 def _coerce_field(name, value):
-    if name in ("is_for_sale", "can_be_raw_material", "is_active"):
+    if name in ("is_for_sale", "is_sellable", "can_be_raw_material", "is_active"):
         return bool(value)
     if name == "shelf_life_days":
         if value in (None, ""):

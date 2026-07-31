@@ -1261,7 +1261,7 @@ button.touch-stat--btn .touch-stat-label {
   z-index: 35;
   width: 100%;
   max-width: none;
-  min-width: 430px;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -1590,7 +1590,7 @@ button.touch-stat--btn .touch-stat-label {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .touch-order-page--entry {
     padding: 0.35rem 0.65rem calc(4.5rem + env(safe-area-inset-bottom));
     height: 100dvh;
@@ -1608,7 +1608,7 @@ button.touch-stat--btn .touch-stat-label {
 
   .touch-order-layout {
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(430px, 2fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       "top top"
@@ -1690,7 +1690,7 @@ button.touch-stat--btn .touch-stat-label {
     grid-area: cart;
     width: 100%;
     max-width: none;
-    min-width: 430px;
+    min-width: 320px;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1709,6 +1709,9 @@ button.touch-stat--btn .touch-stat-label {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 16px;
+    align-self: start;
   }
 
   .touch-order-cart-panel--confirm .touch-order-lines {
@@ -1750,8 +1753,16 @@ button.touch-stat--btn .touch-stat-label {
     font-size: 48px;
   }
 
-  .touch-product-grid--main {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .touch-product-grid--main,
+  .touch-frequent-grid,
+  #category-products.touch-frequent-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+    gap: clamp(10px, 2vw, 18px);
+  }
+
+  .touch-category-grid.touch-category-grid--toolbar {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
   }
 
   .touch-order-footer--fixed {
@@ -2667,9 +2678,9 @@ button.touch-stat--btn .touch-stat-label {
   }
 
   .touch-order-line-info { grid-area: info; }
-  .touch-order-line-qty { grid-area: qty; }
-  .touch-order-line-subtotal-wrap { grid-area: subtotal; justify-self: end; }
-  .touch-order-line-remove { grid-area: remove; justify-self: end; }
+  .touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-line-qty { grid-area: qty; }
+  .touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-line-subtotal-wrap { grid-area: subtotal; justify-self: end; }
+  .touch-order-cart-panel:not(.touch-order-cart-panel--confirm) .touch-order-line-remove { grid-area: remove; justify-self: end; }
 }
 
 /* Add-to-cart toast */
@@ -2692,7 +2703,7 @@ button.touch-stat--btn .touch-stat-label {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  max-width: calc(100vw - 2rem);
+  max-width: calc(100% - 2rem);
 }
 
 .touch-add-toast--visible {
@@ -3639,13 +3650,17 @@ a.touch-dashboard-back {
   border-radius: 16px;
 }
 
-/* Homepage: search-only app shell (production dashboard) */
+/* Homepage: search-only app shell (production dashboard) — unified iPhone/iPad scroll layout */
 html:has(.touch-home-app),
-body.touch-app:has(.touch-home-app) {
-  height: var(--touch-vvh, 100%);
-  min-height: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
+body.touch-app:has(.touch-home-app),
+body.touch-app.touch-body-home-search {
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .touch-app:has(.touch-home-app) {
@@ -3659,18 +3674,37 @@ body.touch-app:has(.touch-home-app) {
 
 .touch-main.touch-home-app {
   box-sizing: border-box;
-  position: fixed;
-  inset: 0;
+  position: relative !important;
+  inset: auto !important;
   z-index: 1;
-  max-width: none;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: calc(1.75rem + env(safe-area-inset-top)) 0 0;
-  padding-bottom: env(safe-area-inset-bottom);
+  max-width: none !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  display: block !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(48px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.touch-home-app__search-sticky {
+  position: relative !important;
+  flex: none !important;
+  z-index: 100;
+  background: #fff;
+  padding: 0 max(1rem, env(safe-area-inset-left)) 0.35rem max(1rem, env(safe-area-inset-right));
+}
+
+.touch-home-app__results {
+  flex: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: auto !important;
+  touch-action: auto !important;
+  padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 .touch-home-app__title {
@@ -3770,13 +3804,6 @@ body.touch-app:has(.touch-home-app) {
   margin-bottom: 0.75rem;
 }
 
-.touch-home-app__search-sticky {
-  flex: 0 0 auto;
-  z-index: 100;
-  background: #fff;
-  padding: 0 max(1rem, env(safe-area-inset-left)) 0.35rem max(1rem, env(safe-area-inset-right));
-}
-
 .touch-home-app .touch-search-input-row {
   align-items: center;
   gap: 0.85rem;
@@ -3820,7 +3847,7 @@ body.touch-app:has(.touch-home-app) {
   gap: 0.2rem;
   width: 100%;
   max-width: 40rem;
-  min-width: 320px;
+  min-width: 0;
   min-height: 80px;
   height: auto;
   margin: 0;
@@ -4053,21 +4080,13 @@ body.touch-voice-intro-open {
   animation: none;
 }
 
-@media (max-width: 767px) {
-  .touch-home-app .touch-search-input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .touch-home-app .touch-search-mic-btn {
-    align-self: flex-end;
-  }
+.touch-home-app .touch-search-input-row {
+  flex-direction: column;
+  align-items: stretch;
 }
 
-@media (min-width: 768px) {
-  .touch-home-app .touch-search-input-row {
-    flex-direction: row;
-  }
+.touch-home-app .touch-search-mic-btn {
+  align-self: flex-end;
 }
 
 .touch-home-app__results .touch-search-results-panel--home {
@@ -4302,21 +4321,6 @@ body.touch-voice-intro-open {
   min-height: 64px;
 }
 
-/* Homepage: iPad Safari — body locked; only results list scrolls */
-.touch-home-app__results {
-  width: 100%;
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  padding-bottom: calc(24px + var(--touch-keyboard-pad, 0px));
-}
-
 body.touch-app.touch-keyboard-open .touch-home-app__title {
   font-size: 1.65rem;
   margin-bottom: 0.85rem;
@@ -4537,55 +4541,299 @@ body.touch-app.touch-keyboard-open .touch-home-app .touch-search-mic-btn {
   }
 }
 
-/* Homepage search — phone: allow full-page scroll (iPad ≥768 keeps fixed shell above) */
-@media (max-width: 767px) {
-  html:has(.touch-home-app),
-  body.touch-app:has(.touch-home-app),
-  body.touch-app.touch-body-home-search {
-    height: auto !important;
-    min-height: 100dvh !important;
-    max-height: none !important;
+/* Task 021 — Order page: phone scroll + fluid layout; iPad dual-column at 900px+ */
+@media (max-width: 899px) {
+  html:has(.touch-order-page--entry),
+  body.touch-app:has(.touch-order-page--entry) {
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: auto !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
-  .touch-main.touch-home-app {
-    position: relative !important;
-    inset: auto !important;
-    z-index: auto !important;
-    width: 100% !important;
-    max-width: none !important;
+  .touch-order-page--entry.touch-main,
+  .touch-main.touch-order-page--entry {
+    max-width: 100% !important;
+    width: 100%;
+  }
+
+  .touch-order-page--entry {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
     height: auto !important;
-    min-height: 100dvh !important;
     max-height: none !important;
-    margin: 0 !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    display: block !important;
-    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(48px + env(safe-area-inset-bottom, 0px)) !important;
-    box-sizing: border-box !important;
+    padding: 12px 14px calc(120px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  .touch-home-app__search-sticky {
-    position: relative !important;
-    flex: none !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .touch-home-app__results {
-    flex: none !important;
+  .touch-order-form.touch-order-layout,
+  .touch-order-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    grid-template-areas: none !important;
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+    height: auto !important;
     min-height: 0 !important;
+    max-height: none !important;
     overflow: visible !important;
-    overflow-x: hidden !important;
-    overscroll-behavior: auto !important;
-    touch-action: auto !important;
-    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  .touch-home-app .touch-search-form--home-app {
-    margin-bottom: 0 !important;
+  .touch-order-layout-head,
+  .touch-order-pick-column,
+  .touch-order-cart-panel,
+  .touch-order-cart-panel--confirm {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .touch-order-pick-column {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .touch-order-products-scroll {
+    flex: none;
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .touch-order-pick-secondary,
+  .touch-order-cart-secondary {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .touch-order-cart-panel--confirm.touch-cart-section--compact {
+    min-width: 0 !important;
+    padding: clamp(12px, 3vw, 20px);
+    overflow: hidden;
+  }
+
+  .touch-order-cart-panel--confirm .touch-section-head--calm .touch-section-title,
+  .touch-order-cart-panel--confirm .touch-order-cart-title {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-cart-count {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: none !important;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0 !important;
+    padding: clamp(12px, 3vw, 20px);
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line > * {
+    grid-area: auto !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-name {
+    display: block;
+    width: 100%;
+    font-size: clamp(26px, 8vw, 38px);
+    font-weight: 800;
+    line-height: 1.15;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-pack {
+    font-size: clamp(18px, 5vw, 24px);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-qty {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .touch-order-cart-panel--confirm .touch-qty-stepper {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .touch-order-cart-panel--confirm .touch-qty-btn {
+    width: 100%;
+    min-width: 0 !important;
+    height: auto;
+    min-height: 54px;
+    font-size: clamp(24px, 7vw, 32px);
+    flex-shrink: 1;
+  }
+
+  .touch-order-cart-panel--confirm .touch-qty-display {
+    width: 100%;
+    min-width: 0;
+    font-size: clamp(28px, 8vw, 40px);
+    flex-shrink: 1;
+  }
+
+  .touch-order-cart-panel--confirm .touch-qty-quick {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .touch-order-cart-panel--confirm .touch-qty-quick-btn {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+    height: auto;
+    min-height: 54px;
+    font-size: clamp(22px, 6vw, 28px);
+    padding: 0.4rem 0.35rem;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-subtotal-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-subtotal-label {
+    font-size: clamp(16px, 4.5vw, 20px);
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-subtotal {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  .touch-order-cart-panel--confirm .touch-order-line-remove {
+    min-width: 0;
+    max-width: 100%;
+    width: auto;
+    flex: 1 1 100%;
+    min-height: 52px;
+    height: auto;
+    font-size: clamp(20px, 5.5vw, 26px);
+  }
+
+  .touch-order-footer.touch-order-footer--fixed {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: auto !important;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 16px;
+    padding: 0 !important;
+    background: transparent;
+    border-top: none;
+    box-shadow: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .touch-order-footer .touch-btn-save {
+    width: 100%;
+    max-width: 100%;
+    min-height: 72px;
+    font-size: clamp(26px, 7vw, 34px);
+  }
+
+  .touch-order-total {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .touch-order-total strong {
+    font-size: clamp(24px, 7vw, 32px);
+  }
+
+  .touch-category-grid.touch-category-grid--toolbar {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .touch-category-grid--toolbar .touch-category-btn {
+    min-width: 0;
+    min-height: 48px;
+    font-size: clamp(18px, 5vw, 28px);
+    padding: 0.4rem 0.35rem;
+  }
+
+  .touch-product-grid--main,
+  .touch-frequent-grid,
+  #category-products.touch-frequent-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+    gap: clamp(10px, 2vw, 18px);
+  }
+
+  #category-products .touch-frequent-name {
+    font-size: clamp(18px, 5vw, 26px);
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  #category-products .touch-product-quick-add {
+    min-width: 0;
+    min-height: 48px;
+    font-size: clamp(18px, 5vw, 22px);
+  }
+
+  #category-products .touch-product-card {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #series-chips.series-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: 10px;
+  }
+
+  #series-chips .series-card {
+    height: auto;
+    min-height: 96px;
+    padding: 12px 8px;
+  }
+
+  #series-chips .series-card .title {
+    font-size: clamp(28px, 8vw, 48px);
+  }
+
+  #series-chips .series-card .subtitle {
+    margin-top: 8px;
+    font-size: clamp(16px, 4.5vw, 24px);
   }
 }

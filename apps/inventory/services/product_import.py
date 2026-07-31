@@ -20,7 +20,8 @@ HEADER_ALIASES = {
     "series": ("系列",),
     "spec": ("規格",),
     "unit": ("單位",),
-    "is_for_sale": ("是否販售",),
+    "is_for_sale": ("可接單販售",),
+    "is_sellable": ("是否販售",),
     "can_be_raw_material": ("可做原料",),
     "is_active": ("啟用",),
     "notes": ("備註",),
@@ -148,9 +149,8 @@ def _packaging_from_row(*, spec: str, unit_label: str) -> dict:
     return data
 
 
-def parse_product_sheet(sheet) -> ProductImportReport:
+def parse_product_rows(rows) -> ProductImportReport:
     report = ProductImportReport()
-    rows = list(sheet.iter_rows(values_only=True))
     if not rows:
         report.errors.append(f"「{PRODUCT_SHEET}」工作表為空")
         return report
@@ -212,6 +212,7 @@ def parse_product_sheet(sheet) -> ProductImportReport:
                 "spec": spec,
                 "unit_label": unit_label,
                 "is_for_sale": _bool_from_sheet(_cell(cells, headers.get("is_for_sale")), default=True),
+                "is_sellable": _bool_from_sheet(_cell(cells, headers.get("is_sellable")), default=True),
                 "can_be_raw_material": can_be_raw,
                 "is_active": _bool_from_sheet(_cell(cells, headers.get("is_active")), default=True),
                 "notes": _norm(_cell(cells, headers.get("notes"))) or "",
@@ -222,6 +223,10 @@ def parse_product_sheet(sheet) -> ProductImportReport:
 
     report._parsed_rows = parsed_rows
     return report
+
+
+def parse_product_sheet(sheet) -> ProductImportReport:
+    return parse_product_rows(list(sheet.iter_rows(values_only=True)))
 
 
 def run_preflight(excel_path: Path | None = None) -> ProductImportReport:
@@ -260,6 +265,7 @@ def execute_import(report: ProductImportReport) -> ProductImportReport:
                 "spec": row["spec"],
                 "product_kind": row["product_kind"],
                 "is_for_sale": row["is_for_sale"],
+                "is_sellable": row["is_sellable"],
                 "can_be_raw_material": row["can_be_raw_material"],
                 "is_active": row["is_active"],
                 "description": row["notes"],
@@ -291,3 +297,11 @@ def execute_import(report: ProductImportReport) -> ProductImportReport:
             )
 
     return report
+
+
+def run_sync_from_rows(rows) -> ProductImportReport:
+    """Parse「產品資料」列並 upsert 至 Product（Google Sheet / CSV 與 Excel 共用）。"""
+    report = parse_product_rows(rows)
+    if not report.passed:
+        return report
+    return execute_import(report)

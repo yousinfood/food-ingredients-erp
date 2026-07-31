@@ -92,20 +92,34 @@
 
     .touch-home-app--senior #voice-search-button.voice-search-button--starting,
     .touch-home-app--senior #voice-search-button.voice-search-button--listening {
-      color: #a33a3a;
-      background: #ffe7e7;
-      border-color: #e8a8a8;
-      animation: voice-search-senior-pulse 1.3s ease-in-out infinite;
+      color: #a32626;
+      background: #f8dede;
+      border: 4px solid #d94b4b;
+      box-shadow: 0 0 0 8px rgba(217, 75, 75, 0.18);
+      animation: voice-listening-pulse 1.2s ease-in-out infinite;
     }
 
     .touch-home-app--senior #voice-search-button.voice-search-button--starting .voice-search-button__line2,
-    .touch-home-app--senior #voice-search-button.voice-search-button--success .voice-search-button__line2 {
-      display: none;
-    }
-
     .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line2 {
       display: block;
-      font-size: 28px;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--starting .voice-search-button__line1,
+    .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #a32626;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--starting .voice-search-button__line2,
+    .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #7f2424;
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--success .voice-search-button__line2 {
+      display: none;
     }
 
     .touch-home-app--senior #voice-search-button.voice-search-button--success {
@@ -131,13 +145,13 @@
       cursor: wait;
     }
 
-    @keyframes voice-search-senior-pulse {
+    @keyframes voice-listening-pulse {
       0%,
       100% {
-        box-shadow: 0 0 0 0 rgba(163, 58, 58, 0.35), 0 4px 12px rgba(36, 92, 99, 0.12);
+        box-shadow: 0 0 0 6px rgba(217, 75, 75, 0.14);
       }
       50% {
-        box-shadow: 0 0 0 10px rgba(163, 58, 58, 0), 0 4px 12px rgba(36, 92, 99, 0.12);
+        box-shadow: 0 0 0 14px rgba(217, 75, 75, 0.28);
       }
     }
 
@@ -244,7 +258,7 @@
     .touch-home-app--senior .touch-home-app__results {
       box-sizing: border-box;
       width: 100%;
-      padding: 0.5rem 0 1.25rem;
+      padding: 0.5rem 0 calc(8rem + env(safe-area-inset-bottom, 0px));
     }
 
     .touch-home-app--senior .customer-search-results-panel {
@@ -254,7 +268,7 @@
 
     .touch-home-app--senior .customer-search-results-panel__heading {
       margin: 0.25rem 0 1rem;
-      font-size: 32px;
+      font-size: clamp(24px, 3.2vw, 32px);
       font-weight: 700;
       line-height: 1.3;
       color: #243638;
@@ -264,8 +278,9 @@
     .touch-home-app--senior .customer-search-results-panel__list {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 0;
       width: 100%;
+      min-width: 0;
     }
 
     .touch-home-app--senior .customer-search-result-card {
@@ -273,15 +288,17 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 0.35rem;
+      gap: 0.25rem;
       width: 100%;
-      min-height: 96px;
-      padding: 20px;
+      min-width: 0;
+      min-height: 105px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
       text-decoration: none;
       color: inherit;
       background: #f8fbfb;
       border: 2px solid #afc8cc;
-      border-radius: 16px;
+      border-radius: 14px;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
       transition: background 0.12s ease, transform 0.12s ease;
@@ -289,29 +306,29 @@
 
     .touch-home-app--senior .customer-search-result-card__name {
       display: block;
-      font-size: 32px;
+      font-size: clamp(27px, 4vw, 34px);
       font-weight: 700;
-      line-height: 1.25;
+      line-height: 1.2;
       color: #243638;
-      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .touch-home-app--senior .customer-search-result-card__region {
       display: block;
-      font-size: 26px;
+      font-size: clamp(20px, 2.8vw, 25px);
       font-weight: 600;
-      line-height: 1.35;
+      line-height: 1.3;
       color: #536b6e;
-      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .touch-home-app--senior .customer-search-result-card__address {
       display: block;
-      font-size: 24px;
+      font-size: clamp(18px, 2.5vw, 23px);
       font-weight: 600;
-      line-height: 1.4;
+      line-height: 1.35;
       color: #536b6e;
-      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .touch-home-app--senior .customer-search-result-card--pressed,
@@ -320,20 +337,78 @@
       transform: scale(0.99);
     }
 
-    .touch-home-app--senior .customer-search-results-panel__more {
-      box-sizing: border-box;
+    .touch-home-app--senior .customer-search-results-panel__page-info {
+      margin: 0.5rem 0 0.75rem;
+      font-size: clamp(19px, 2.5vw, 23px);
+      font-weight: 600;
+      line-height: 1.35;
+      text-align: center;
+      color: #536b6e;
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__pager {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
       width: 100%;
+      min-width: 0;
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__page-btn {
+      box-sizing: border-box;
+      min-width: 0;
       min-height: 64px;
-      margin-top: 14px;
-      padding: 0.85rem 1rem;
+      padding: 0.75rem 1rem;
       font-family: inherit;
-      font-size: 26px;
+      font-size: clamp(23px, 3vw, 29px);
       font-weight: 700;
+      line-height: 1.2;
       color: #245c63;
       background: #f8fbfb;
       border: 2px solid #afc8cc;
       border-radius: 14px;
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__page-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__page-btn:not(:disabled):active {
+      background: #dceff2;
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__empty {
+      padding: 1.25rem 0.5rem 0.5rem;
+      text-align: center;
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__empty-text {
+      margin: 0 0 1.25rem;
+      font-size: clamp(26px, 3.5vw, 32px);
+      font-weight: 800;
+      line-height: 1.35;
+      color: #243638;
+    }
+
+    .touch-home-app--senior .customer-search-empty-action {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 72px;
+      padding: 0.85rem 1rem;
+      font-family: inherit;
+      font-size: clamp(24px, 3.2vw, 28px);
+      font-weight: 800;
+      color: #fff;
+      background: #1e3a5f;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .touch-home-app--senior .customer-search-results-panel mark,
@@ -344,166 +419,154 @@
       border-radius: 4px;
     }
 
-    /* Phone: scrollable layout + compact sizing (iPad ≥768 keeps rules above) */
-    @media (max-width: 767px) {
-      .touch-home-app--senior .touch-home-app__search-sticky {
-        margin-bottom: 8px;
-      }
-
-      .touch-home-app--senior .touch-home-app__title {
-        margin: 0 0 20px;
-        font-size: 36px;
-        font-weight: 800;
-        line-height: 1.2;
-      }
-
-      .touch-home-app--senior .touch-home-senior__input {
-        width: 100%;
-        max-width: none;
-        height: 64px;
-        min-height: 64px;
-        padding: 12px 16px;
-        font-size: 28px;
-      }
-
-      .touch-home-app--senior #customer-search-clear {
-        width: 100%;
-        min-height: 64px;
-        margin-top: 16px;
-        padding: 12px 16px;
-        font-size: 28px;
-      }
-
-      .touch-home-app--senior .touch-home-senior__or {
-        margin: 16px 0;
-        font-size: 24px;
-      }
-
-      .touch-home-app--senior #voice-search-button {
-        width: 100%;
-        max-width: none;
-        min-height: 0;
-        height: auto;
-        padding: 14px 16px;
-        border-radius: 16px;
-        gap: 0.15rem;
-      }
-
-      .touch-home-app--senior .voice-search-button__line1 {
-        font-size: 24px;
-        line-height: 1.25;
-        white-space: normal;
-        word-break: break-word;
-      }
-
-      .touch-home-app--senior .voice-search-button__line2 {
-        font-size: 20px;
-        line-height: 1.3;
-        margin-top: 4px;
-        white-space: normal;
-        word-break: break-word;
-      }
-
-      .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line2 {
-        font-size: 20px;
-      }
-
-      .touch-home-app--senior .touch-home-senior__hint {
-        margin: 8px 0 0;
-        font-size: 18px;
-        font-weight: 600;
-        line-height: 1.35;
-        white-space: normal;
-        word-break: break-word;
-      }
-
-      .touch-home-app--senior .touch-home-app__results {
-        padding: 12px 0 calc(48px + env(safe-area-inset-bottom, 0px));
-      }
-
-      .touch-home-app--senior .customer-search-results-panel__heading {
-        margin-top: 0;
-        margin-bottom: 12px;
-        font-size: 24px;
-      }
-
-      .touch-home-app--senior .customer-search-result-card {
-        width: 100%;
-        min-height: 88px;
-        padding: 16px;
-      }
-
-      .touch-home-app--senior .customer-search-result-card__name {
-        font-size: 28px;
-      }
-
-      .touch-home-app--senior .customer-search-result-card__region,
-      .touch-home-app--senior .customer-search-result-card__address {
-        font-size: 21px;
-        white-space: normal;
-        word-break: break-word;
-      }
-
-      .touch-home-app--senior .voice-search-failure {
-        margin-top: 12px;
-        padding: 0;
-      }
-
-      .touch-home-app--senior .voice-search-failure__title {
-        font-size: 24px;
-      }
-
-      .touch-home-app--senior .voice-search-failure__sub {
-        font-size: 20px;
-      }
-
-      .touch-home-app--senior #voice-search-retry {
-        min-height: 64px;
-        margin-top: 12px;
-        font-size: 24px;
-      }
+    /* Unified touch layout (iPhone + iPad) */
+    .touch-home-app--senior .touch-home-app__search-sticky {
+      margin-bottom: 8px;
     }
 
-    @media (max-width: 767px) and (orientation: landscape) {
-      .touch-home-app--senior .touch-home-app__title {
-        margin-bottom: 12px;
-        font-size: 30px;
-      }
+    .touch-home-app--senior .touch-home-app__title {
+      margin: 0 0 20px;
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
 
-      .touch-home-app--senior .touch-home-senior__input {
-        height: 56px;
-        min-height: 56px;
-        font-size: 24px;
-      }
+    .touch-home-app--senior .touch-home-senior__input {
+      width: 100%;
+      max-width: none;
+      height: 64px;
+      min-height: 64px;
+      padding: 12px 16px;
+      font-size: 28px;
+    }
 
-      .touch-home-app--senior #customer-search-clear {
-        min-height: 56px;
-        font-size: 24px;
-        margin-top: 10px;
-      }
+    .touch-home-app--senior #customer-search-clear {
+      width: 100%;
+      min-height: 64px;
+      margin-top: 16px;
+      padding: 12px 16px;
+      font-size: 28px;
+    }
 
-      .touch-home-app--senior .touch-home-senior__or {
-        margin: 12px 0;
-        font-size: 22px;
-      }
+    .touch-home-app--senior .touch-home-senior__or {
+      margin: 16px 0;
+      font-size: 24px;
+    }
 
-      .touch-home-app--senior #voice-search-button {
-        min-height: 0;
-        padding: 10px 14px;
-      }
+    .touch-home-app--senior #voice-search-button {
+      width: 100%;
+      max-width: none;
+      min-height: 0;
+      height: auto;
+      padding: 14px 16px;
+      border-radius: 16px;
+      gap: 0.15rem;
+    }
 
-      .touch-home-app--senior .voice-search-button__line1 {
-        font-size: 22px;
-      }
+    .touch-home-app--senior .voice-search-button__line1 {
+      font-size: 24px;
+      line-height: 1.25;
+      white-space: normal;
+      word-break: break-word;
+    }
 
-      .touch-home-app--senior .voice-search-button__line2 {
-        font-size: 18px;
-      }
+    .touch-home-app--senior .voice-search-button__line2 {
+      font-size: 20px;
+      line-height: 1.3;
+      margin-top: 4px;
+      white-space: normal;
+      word-break: break-word;
+    }
 
-      .touch-home-app--senior .touch-home-senior__hint {
-        margin-top: 6px;
-        font-size: 17px;
-      }
+    .touch-home-app--senior #voice-search-button.voice-search-button--starting .voice-search-button__line1,
+    .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line1 {
+      font-size: clamp(26px, 4vw, 32px);
+    }
+
+    .touch-home-app--senior #voice-search-button.voice-search-button--starting .voice-search-button__line2,
+    .touch-home-app--senior #voice-search-button.voice-search-button--listening .voice-search-button__line2 {
+      font-size: clamp(20px, 3.2vw, 24px);
+    }
+
+    .touch-home-app--senior .touch-home-senior__hint {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.35;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .touch-home-app--senior .touch-home-app__results {
+      padding: 12px 0 calc(8rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .touch-home-app--senior .customer-search-results-panel__heading {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .touch-home-app--senior .customer-search-result-card {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .touch-home-app--senior .voice-search-failure {
+      margin-top: 12px;
+      padding: 0;
+    }
+
+    .touch-home-app--senior .voice-search-failure__title {
+      font-size: 24px;
+    }
+
+    .touch-home-app--senior .voice-search-failure__sub {
+      font-size: 20px;
+    }
+
+    .touch-home-app--senior #voice-search-retry {
+      min-height: 64px;
+      margin-top: 12px;
+      font-size: 24px;
+    }
+
+    .touch-home-app--senior .touch-home-app__scroll-body {
+      display: block;
+      overflow: visible;
+      flex: none;
+      min-height: 0;
+    }
+
+    .touch-dashboard-delivery-entry {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      box-sizing: border-box;
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.25rem max(1rem, env(safe-area-inset-right)) 0.5rem max(1rem, env(safe-area-inset-left));
+    }
+
+    .touch-delivery-entry-link {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 56px;
+      padding: 0.85rem 1rem;
+      font-size: 22px;
+      font-weight: 800;
+      text-decoration: none;
+      color: #0f766e;
+      background: #ecfdf5;
+      border: 2px solid #99f6e4;
+      border-radius: 14px;
+    }
+
+    .touch-delivery-entry-link:active {
+      background: #ccfbf1;
     }
   </style>
 {% endblock %}
@@ -512,6 +575,7 @@
 
 {% block body %}
 <main class="touch-main touch-home-app touch-home-app--senior">
+  <div class="touch-home-app__scroll-body">
   <div class="touch-home-app__search-sticky">
     <h1 class="touch-home-app__title">搜尋客戶</h1>
 
@@ -546,7 +610,7 @@
         aria-pressed="false"
       >
         <span class="voice-search-button__line1">🎤 按這裡說話找客戶</span>
-        <span class="voice-search-button__line2">點一下，再說客戶名稱</span>
+        <span class="voice-search-button__line2">請用國語說客戶名稱</span>
       </button>
 
       <div id="voice-search-failure" class="voice-search-failure" hidden aria-live="polite">
@@ -554,14 +618,19 @@
         <p class="voice-search-failure__sub">請再說一次</p>
       </div>
 
-      <button type="button" id="voice-search-retry" hidden>🎤 重新說一次</button>
+      <button type="button" id="voice-search-retry" hidden>重新說一次</button>
 
       <p class="touch-home-senior__hint">可以說店名、老闆名字、電話或地區</p>
     </form>
   </div>
 
+  <div class="touch-dashboard-delivery-entry">
+    <a href="{% url 'deliveries:delivery_list' %}" class="touch-delivery-entry-link">🚚 全部出貨單</a>
+  </div>
+
   <div id="touch-search-results-mount" class="touch-home-app__results">
   {% include "core/_customer_search_results_home.html" %}
+  </div>
   </div>
 </main>
 {% endblock %}

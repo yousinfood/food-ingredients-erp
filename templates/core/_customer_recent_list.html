@@ -1,0 +1,10 @@
+<div class="touch-recent-customers" role="region" aria-label="最近客戶">
+  <h2 class="touch-recent-customers__title">最近客戶</h2>
+  <div class="touch-recent-customers__grid">
+    {% for customer in customers %}
+    <a href="{% url 'sales:customer_center' customer.pk %}" class="touch-recent-customer-btn">{{ customer.name }}</a>
+    {% empty %}
+    <p class="touch-hint touch-search-empty">尚無最近客戶。完成一筆訂單後會出現在這裡。</p>
+    {% endfor %}
+  </div>
+</div>

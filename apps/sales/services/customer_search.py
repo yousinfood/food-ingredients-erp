@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+import logging
+
 from django.db.models import Q
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
@@ -18,6 +20,24 @@ from apps.sales.services.voice_search_normalize import (
 MIN_SEARCH_QUERY_LENGTH = 1
 
 TOUCH_SEARCH_LIMIT = 12
+VOICE_SEARCH_LIMIT = 5
+
+logger = logging.getLogger(__name__)
+
+
+def _maybe_sync_customers_from_google_sheet() -> None:
+    try:
+        from apps.sales.services.google_sheet_customer_sync import (
+            maybe_sync_customers_from_google_sheet,
+        )
+
+        result = maybe_sync_customers_from_google_sheet()
+        if result.get("skipped") and result.get("reason") == "not_configured":
+            logger.warning("Customer sheet sync skipped: Google Sheet 尚未設定")
+        elif not result.get("ok") and not result.get("skipped"):
+            logger.warning("Customer sheet sync failed: %s", result)
+    except Exception as exc:
+        logger.warning("Customer sheet sync raised an exception: %s", exc, exc_info=True)
 
 
 @dataclass(frozen=True)
@@ -36,10 +56,18 @@ class RankedCustomerSearch:
         return max(0, self.total_count - len(self.customers))
 
 
+def parse_voice_aliases(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    text = raw.replace("，", ",")
+    return [part.strip() for part in text.split(",") if part.strip()]
+
+
 def _query_filter(q: str) -> Q:
     return (
         Q(name__icontains=q)
         | Q(code__icontains=q)
+        | Q(contact_person__icontains=q)
         | Q(phone__icontains=q)
         | Q(phone_2__icontains=q)
         | Q(phone_3__icontains=q)
@@ -47,6 +75,7 @@ def _query_filter(q: str) -> Q:
         | Q(address__icontains=q)
         | Q(invoice_address__icontains=q)
         | Q(region__icontains=q)
+        | Q(voice_aliases__icontains=q)
     )
 
 
@@ -100,16 +129,114 @@ def _sort_key(customer: Customer, query: str) -> tuple:
     return (tier, name.casefold(), name)
 
 
+def _voice_match_score(customer: Customer, query: str) -> float:
+    scores = [similarity_score(query, customer.name or "")]
+    for alias in parse_voice_aliases(customer.voice_aliases):
+        scores.append(similarity_score(query, alias))
+    if customer.contact_person:
+        scores.append(similarity_score(query, customer.contact_person))
+    return max(scores) if scores else 0.0
+
+
+def voice_customer_relevance_tier(customer: Customer, query: str) -> int:
+    """Voice ranking: exact name → exact alias → name prefix → alias contains → fuzzy."""
+    q = query.strip()
+    if not q:
+        return 99
+    ql = q.casefold()
+    name = customer.name or ""
+
+    if name == q:
+        return 1
+
+    for alias in parse_voice_aliases(customer.voice_aliases):
+        if alias == q:
+            return 2
+
+    if name.startswith(q):
+        return 3
+
+    for alias in parse_voice_aliases(customer.voice_aliases):
+        if q in alias or ql in alias.casefold():
+            return 4
+
+    if ql in name.casefold():
+        return 5
+    if customer.contact_person and ql in customer.contact_person.casefold():
+        return 5
+    for field in (customer.region, customer.address, customer.invoice_address):
+        if field and ql in field.casefold():
+            return 5
+    for alias in parse_voice_aliases(customer.voice_aliases):
+        if ql in alias.casefold():
+            return 5
+    if _voice_match_score(customer, query) >= VOICE_SIMILARITY_THRESHOLD:
+        return 5
+
+    return 99
+
+
+def _expand_voice_queries(candidates: list[str]) -> list[str]:
+    seen: set[str] = set()
+    expanded: list[str] = []
+    for raw in candidates:
+        for q in (raw.strip(), normalize_voice_query(raw.strip())):
+            if q and q not in seen:
+                seen.add(q)
+                expanded.append(q)
+    return expanded
+
+
+def search_customers_voice(
+    candidates: list[str],
+    *,
+    limit: int = VOICE_SEARCH_LIMIT,
+    active_only: bool = True,
+) -> RankedCustomerSearch:
+    _maybe_sync_customers_from_google_sheet()
+    queries = _expand_voice_queries(candidates)
+    if not queries:
+        return RankedCustomerSearch([], 0, limit, show_all=False)
+
+    queryset = Customer.objects.all()
+    if active_only:
+        queryset = queryset.filter(is_active=True)
+
+    best: dict[int, tuple[int, float, Customer]] = {}
+
+    def consider(customer: Customer, q: str, *, fuzzy_score: float | None = None) -> None:
+        tier = voice_customer_relevance_tier(customer, q)
+        if tier >= 99:
+            return
+        score = fuzzy_score if fuzzy_score is not None else _voice_match_score(customer, q)
+        prev = best.get(customer.pk)
+        if prev is None or tier < prev[0] or (tier == prev[0] and score > prev[1]):
+            best[customer.pk] = (tier, score, customer)
+
+    for q in queries:
+        for customer in queryset.filter(_query_filter(q)):
+            consider(customer, q)
+
+    for q in queries:
+        norm = normalize_voice_query(q)
+        for fuzzy_score, customer in _voice_fuzzy_matches(queryset, q, norm):
+            consider(customer, q, fuzzy_score=fuzzy_score)
+
+    ranked = sorted(
+        best.values(),
+        key=lambda item: (item[0], -item[1], (item[2].name or "").casefold()),
+    )
+    matches = [customer for _, _, customer in ranked]
+    shown = matches[:limit]
+    return RankedCustomerSearch(shown, len(matches), limit, show_all=False)
+
+
 def _voice_fuzzy_matches(queryset, raw_q: str, norm_q: str) -> list[tuple[float, Customer]]:
     scored: list[tuple[float, Customer]] = []
     for customer in queryset.iterator(chunk_size=500):
-        name = customer.name or ""
-        if not name:
-            continue
-        score = max(
-            similarity_score(norm_q, name),
-            similarity_score(raw_q, name),
-        )
+        score = _voice_match_score(customer, raw_q)
+        if norm_q and norm_q != raw_q:
+            score = max(score, _voice_match_score(customer, norm_q))
         if score >= VOICE_SIMILARITY_THRESHOLD:
             scored.append((score, customer))
     scored.sort(key=lambda pair: (-pair[0], (pair[1].name or "").casefold()))
@@ -124,6 +251,7 @@ def search_customers_ranked(
     active_only: bool = True,
     voice: bool = False,
 ) -> RankedCustomerSearch:
+    _maybe_sync_customers_from_google_sheet()
     raw_q = query.strip()
     q = normalize_voice_query(raw_q) if voice else raw_q
     queryset = Customer.objects.all()

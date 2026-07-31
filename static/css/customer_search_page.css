@@ -1,0 +1,416 @@
+/* 搜尋客戶頁 — voice-search-v2（獨立樣式，避免舊 touch-home 麥克風 UI） */
+
+html:has(#customer-search-page),
+body.touch-app:has(#customer-search-page) {
+  height: auto;
+  min-height: 100dvh;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.touch-app:has(#customer-search-page) .touch-home-fixed {
+  display: none;
+}
+
+.customer-search-page {
+  box-sizing: border-box;
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+  padding: calc(1rem + env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    calc(1rem + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  overflow-x: hidden;
+  overflow-y: visible;
+  background: #fff;
+  color: #0f172a;
+}
+
+.customer-search-page__header {
+  flex: 0 0 auto;
+  width: min(100%, 56rem);
+  margin: 0 auto 1.25rem;
+}
+
+.customer-search-page__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-bottom: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e3a5f;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.customer-search-page__title {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 40px);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #000;
+}
+
+.customer-search-page__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  width: min(90vw, 56rem);
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.customer-search-page__form {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.customer-search-page__input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 72px;
+  padding: 0.85rem 1.15rem;
+  font-family: inherit;
+  font-size: 28px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #fff;
+  border: 3px solid #cbd5e1;
+  border-radius: 16px;
+  -webkit-appearance: none;
+}
+
+.customer-search-page__input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.customer-search-page__input:focus {
+  outline: none;
+  border-color: #64748b;
+}
+
+.customer-search-page__or {
+  margin: 1.1rem 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  color: #64748b;
+}
+
+.customer-search-page__hint {
+  margin: 1rem 0 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  color: #475569;
+}
+
+.customer-search-page__status {
+  margin: 1rem 0 0;
+  min-height: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+  color: #b91c1c;
+}
+
+.customer-search-page__status:empty {
+  display: none;
+}
+
+.customer-search-page__status--blocked {
+  font-size: 28px;
+  color: #b91c1c;
+}
+
+.voice-search-button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 96px;
+  padding: 1rem 1.35rem;
+  border: none;
+  border-radius: 18px;
+  font-family: inherit;
+  color: #fff;
+  background: #1e3a5f;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.voice-search-button__icon {
+  flex: 0 0 auto;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.voice-search-button__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.voice-search-button__title {
+  display: block;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.voice-search-button__subtitle {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+  opacity: 0.92;
+}
+
+.voice-search-button--starting,
+.voice-search-button--listening {
+  background: #dc2626;
+  animation: voice-search-pulse 1.4s ease-in-out infinite;
+}
+
+.voice-search-button--success {
+  background: #16a34a;
+  animation: none;
+  box-shadow: 0 14px 40px rgba(22, 163, 74, 0.4);
+}
+
+.voice-search-button--starting .voice-search-button__icon,
+.voice-search-button--listening .voice-search-button__icon,
+.voice-search-button--success .voice-search-button__icon {
+  display: none;
+}
+
+.voice-search-button--starting .voice-search-button__subtitle,
+.voice-search-button--success .voice-search-button__subtitle {
+  display: none;
+}
+
+.voice-search-button--listening .voice-search-button__subtitle {
+  display: block;
+  font-size: 26px;
+}
+
+.voice-search-button:disabled {
+  opacity: 0.95;
+  cursor: wait;
+}
+
+.voice-search-button--blocked:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes voice-search-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45), 0 14px 40px rgba(0, 0, 0, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(220, 38, 38, 0), 0 14px 40px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-search-button--starting,
+  .voice-search-button--listening {
+    animation: none;
+  }
+}
+
+.customer-search-page__results {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 1.25rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding-bottom: calc(16px + var(--customer-search-kb-pad, 0px));
+}
+
+.customer-search-results-panel__lead {
+  margin: 0 0 0.85rem;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.customer-search-results-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.customer-search-result-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 72px;
+  padding: 0.85rem 1rem;
+  text-decoration: none;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.customer-search-result-btn:active {
+  background: #ecfdf5;
+  border-color: #86efac;
+}
+
+.customer-search-result-btn__name {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.customer-search-result-btn__contact {
+  font-size: 24px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.customer-search-result-btn__address {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #64748b;
+  word-break: break-word;
+}
+
+.customer-search-results-panel__more {
+  width: 100%;
+  min-height: 64px;
+  margin-top: 0.85rem;
+  font-size: 22px;
+}
+
+.customer-search-results-panel__empty {
+  padding: 1.25rem 0.5rem;
+  text-align: center;
+}
+
+.customer-search-results-panel__empty-text {
+  margin: 0 0 1.25rem;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #0f172a;
+}
+
+.customer-search-results-panel__empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.customer-search-empty-action {
+  min-height: 72px;
+  padding: 0.85rem 1rem;
+  font-family: inherit;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  background: #1e3a5f;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+}
+
+.customer-search-empty-action--secondary {
+  color: #1e3a5f;
+  background: #fff;
+  border: 3px solid #1e3a5f;
+  box-shadow: none;
+}
+
+.voice-search-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.voice-search-intro[hidden] {
+  display: none;
+}
+
+.voice-search-intro__panel {
+  width: min(100%, 40rem);
+  padding: 2rem 1.75rem;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.voice-search-intro__heading {
+  margin: 0 0 1rem;
+  font-size: clamp(1.75rem, 4vw, 2rem);
+  font-weight: 800;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.voice-search-intro__text {
+  margin: 0 0 1.75rem;
+  font-size: clamp(1.35rem, 3.5vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.voice-search-intro__cta {
+  width: 100%;
+  min-height: 72px;
+  padding: 0.85rem 1rem;
+  font-family: inherit;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  background: #16a34a;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+body.voice-search-intro-open {
+  overflow: hidden;
+}

@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+import logging
+from urllib.parse import quote
+
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.views.decorators.http import require_GET
-from urllib.parse import quote
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET, require_POST
 
-from apps.sales.services.customer_search import search_customers_ranked
+from apps.sales.services.customer_search import search_customers_ranked, search_customers_voice
 from apps.sales.services.voice_search_normalize import normalize_voice_query
 
 from .services.dashboard import get_dashboard_stats
@@ -13,6 +18,14 @@ from .services.dashboard_order_filters import (
     DASHBOARD_FILTER_LABELS,
     queryset_for_dashboard_filter,
 )
+from .services.voice_transcribe import (
+    VOICE_UNCLEAR_MESSAGE,
+    VoiceTranscribeError,
+    transcribe_audio_upload,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 def health(request):
@@ -27,13 +40,21 @@ def service_worker(request):
     return response
 
 
-def _customer_search_context(query: str, show_all: bool, *, voice: bool = False):
-    searched = bool(query)
-    search = (
-        search_customers_ranked(query, show_all=show_all, voice=voice)
-        if searched
-        else None
-    )
+def _customer_search_context(
+    query: str,
+    show_all: bool,
+    *,
+    voice: bool = False,
+    voice_alts: list[str] | None = None,
+):
+    searched = bool(query or (voice and voice_alts))
+    search = None
+    if searched:
+        if voice:
+            candidates = [query] + [alt for alt in (voice_alts or []) if alt]
+            search = search_customers_voice(candidates)
+        else:
+            search = search_customers_ranked(query, show_all=show_all, voice=False)
     results = search.customers if search else []
     return {
         "query": query,
@@ -53,7 +74,8 @@ def customer_search_api(request):
     show_all = request.GET.get("more") == "1"
     home = request.GET.get("home") == "1"
     voice = request.GET.get("voice") == "1"
-    ctx = _customer_search_context(query, show_all, voice=voice)
+    voice_alts = [alt.strip() for alt in request.GET.getlist("alt") if alt.strip()]
+    ctx = _customer_search_context(query, show_all, voice=voice, voice_alts=voice_alts)
     search = ctx.get("search")
     if (
         not home
@@ -89,6 +111,53 @@ def customer_search_api(request):
     )
 
 
+@require_POST
+def voice_transcribe_api(request):
+    user_agent = request.META.get("HTTP_USER_AGENT", "")
+    uploaded = request.FILES.get("audio")
+    if not uploaded:
+        logger.warning("voice_transcribe missing_audio user_agent=%r", user_agent)
+        return JsonResponse({"ok": False, "error": "沒有收到語音", "text": ""}, status=400)
+
+    mime_type = getattr(uploaded, "content_type", "") or ""
+    file_size = uploaded.size
+    logger.info(
+        "voice_transcribe request user_agent=%r mime_type=%r audio_file_size=%s",
+        user_agent,
+        mime_type,
+        file_size,
+    )
+
+    try:
+        text = transcribe_audio_upload(uploaded, user_agent=user_agent)
+    except VoiceTranscribeError as exc:
+        message = str(exc)
+        logger.warning(
+            "voice_transcribe failed user_agent=%r mime_type=%r audio_file_size=%s error=%r",
+            user_agent,
+            mime_type,
+            file_size,
+            message,
+        )
+        if message == VOICE_UNCLEAR_MESSAGE:
+            return JsonResponse({"ok": False, "error": message, "text": ""})
+        return JsonResponse({"ok": False, "error": message, "text": ""}, status=400)
+    except Exception as exc:
+        logger.warning(
+            "voice_transcribe unexpected_error user_agent=%r mime_type=%r audio_file_size=%s error=%s",
+            user_agent,
+            mime_type,
+            file_size,
+            exc,
+            exc_info=True,
+        )
+        return JsonResponse(
+            {"ok": False, "error": "語音辨識暫時無法使用", "text": ""},
+            status=500,
+        )
+    return JsonResponse({"ok": True, "text": text})
+
+
 @require_GET
 def dashboard_orders_api(request):
     filter_key = request.GET.get("dashboard", "").strip()
@@ -112,6 +181,12 @@ def dashboard_orders_api(request):
     )
 
 
+@ensure_csrf_cookie
+def voice_test(request):
+    return render(request, "core/voice_test.html")
+
+
+@ensure_csrf_cookie
 def dashboard(request):
     query = request.GET.get("q", "").strip()
     show_all = request.GET.get("more") == "1"

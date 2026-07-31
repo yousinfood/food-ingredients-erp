@@ -81,7 +81,8 @@ class Product(models.Model):
         choices=NetWeightUnit.choices,
         blank=True,
     )
-    is_for_sale = models.BooleanField("是否販售", default=False)
+    is_for_sale = models.BooleanField("可接單販售", default=False)
+    is_sellable = models.BooleanField("是否販售", default=True)
     can_be_raw_material = models.BooleanField("可做原料", default=False)
     unit_cost = models.DecimalField("每公斤成本", max_digits=12, decimal_places=4, null=True, blank=True)
     shelf_life_days = models.PositiveIntegerField("標準保質期(天)", default=365)
