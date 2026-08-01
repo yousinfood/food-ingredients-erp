@@ -20,6 +20,10 @@
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
+  function isVoiceSearchV2Enabled() {
+    return !!document.querySelector('script[src*="voice_search_v2"]');
+  }
+
   function hasMediaRecorderVoice() {
     return !!(
       navigator.mediaDevices &&
@@ -66,6 +70,7 @@
     var iosRecordTimer = null;
     var iosRecording = false;
     var iosProcessing = false;
+    var iosRecordedMimeType = "";
     var isListening = false;
     var voiceGotTranscript = false;
     var voiceSuccessTimer = null;
@@ -754,14 +759,18 @@
       iosRecording = false;
       isListening = false;
       iosProcessing = true;
+      var resolvedMime = mimeType || iosRecordedMimeType || "audio/mp4";
       if (!audioChunks.length) {
+        console.log("[voice-ios] blob size=0 (no chunks), mimeType=" + resolvedMime);
         destroyIOSRecording();
         showIOSVoiceUnclear();
         return;
       }
-      var blob = new Blob(audioChunks, { type: mimeType || "audio/mp4" });
+      var blob = new Blob(audioChunks, { type: resolvedMime });
       audioChunks = [];
       destroyIOSRecording();
+
+      console.log("[voice-ios] mimeType=" + resolvedMime + " blob size=" + blob.size);
 
       if (!blob.size) {
         iosProcessing = false;
@@ -771,7 +780,7 @@
 
       setVoiceSearchState("processing");
       var formData = new FormData();
-      formData.append("audio", blob, iosUploadFilename(mimeType));
+      formData.append("audio", blob, iosUploadFilename(resolvedMime));
 
       fetch(TRANSCRIBE_PATH, {
         method: "POST",
@@ -791,6 +800,8 @@
             } catch (parseErr) {
               data = null;
             }
+            console.log("[voice-ios] upload response status=" + res.status);
+            console.log("[voice-ios] response JSON=", data || text);
             return { httpOk: res.ok, status: res.status, data: data };
           });
         })
@@ -823,6 +834,13 @@
       iosRecording = false;
       isListening = false;
       if (mediaRecorder && mediaRecorder.state === "recording") {
+        if (typeof mediaRecorder.requestData === "function") {
+          try {
+            mediaRecorder.requestData();
+          } catch (e) {
+            /* ignore */
+          }
+        }
         try {
           mediaRecorder.stop();
         } catch (e) {
@@ -878,12 +896,18 @@
             return;
           }
 
+          iosRecordedMimeType = mediaRecorder.mimeType || mimeType || "audio/mp4";
+          console.log("[voice-ios] selected mimeType=" + iosRecordedMimeType);
+
           audioChunks = [];
           mediaRecorder.ondataavailable = function (ev) {
-            if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
+            if (ev.data) audioChunks.push(ev.data);
           };
           mediaRecorder.onstop = function () {
-            uploadIOSRecording(mediaRecorder.mimeType || mimeType);
+            var finalMime = iosRecordedMimeType || (mediaRecorder && mediaRecorder.mimeType) || "audio/mp4";
+            setTimeout(function () {
+              uploadIOSRecording(finalMime);
+            }, 0);
           };
           mediaRecorder.onerror = function () {
             destroyIOSRecording();
@@ -893,7 +917,7 @@
             showIOSVoiceServiceError("目前無法使用麥克風，請改用文字搜尋");
           };
 
-          mediaRecorder.start(IOS_RECORD_SLICE_MS);
+          mediaRecorder.start();
           setVoiceSearchState("listening");
           iosRecordTimer = setTimeout(function () {
             stopIOSVoiceRecording();
@@ -913,6 +937,7 @@
     }
 
     function beginSpeechRecognition() {
+      if (isIOSDevice()) return;
       if (!voiceSearchBtn || isListening) return;
 
       var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -992,6 +1017,7 @@
 
     function initHomeVoiceSearch() {
       if (!isHomeSearch || !voiceSearchBtn) return;
+      if (isVoiceSearchV2Enabled() && isIOSDevice()) return;
       var hasDesktopSpeech =
         !isIOSDevice() && (window.SpeechRecognition || window.webkitSpeechRecognition);
       var hasIOSRecorder = isIOSDevice() && hasMediaRecorderVoice();

@@ -1,5 +1,5 @@
 {% extends "touch_base.html" %}
-{% load touch_search %}
+{% load static touch_search %}
 
 {% block title %}搜尋客戶{% endblock %}
 
@@ -633,4 +633,8 @@
   </div>
   </div>
 </main>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'js/voice_search_v2.js' %}?v=20260801" defer></script>
 {% endblock %}
