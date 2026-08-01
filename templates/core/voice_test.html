@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenAI 語音測試</title>
+  <title>語音錄製測試 v3</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -13,24 +13,29 @@
       background: #f3f4f6;
       color: #111827;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      padding: 24px 16px 40px;
     }
-    .voice-test {
-      width: min(480px, 100%);
+    .v3-page {
+      width: min(520px, 100%);
+      margin: 0 auto;
       background: #fff;
       border-radius: 16px;
-      padding: 32px 24px;
+      padding: 28px 20px 32px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     }
-    .voice-test__title {
-      margin: 0 0 24px;
+    .v3-title {
+      margin: 0 0 8px;
       font-size: 28px;
       text-align: center;
     }
-    .voice-test__btn {
+    .v3-subtitle {
+      margin: 0 0 24px;
+      font-size: 16px;
+      text-align: center;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .v3-btn {
       display: block;
       width: 100%;
       border: none;
@@ -42,103 +47,136 @@
       background: #16a34a;
       color: #fff;
     }
-    .voice-test__btn:disabled {
+    .v3-btn--recording {
+      background: #dc2626;
+    }
+    .v3-btn:disabled {
       background: #9ca3af;
       cursor: not-allowed;
     }
-    .voice-test__status {
-      margin-top: 20px;
-      min-height: 28px;
+    .v3-btn--secondary {
+      margin-top: 16px;
+      background: #2563eb;
+    }
+    .v3-hint,
+    .v3-timer {
+      margin: 14px 0 0;
       text-align: center;
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 18px;
+      color: #374151;
     }
-    .voice-test__status--recording {
-      color: #fff;
-      background: #dc2626;
-      border-radius: 10px;
-      padding: 12px 16px;
-      animation: pulse 1.2s ease-in-out infinite;
+    .v3-timer {
+      font-size: 24px;
+      font-weight: 700;
+      color: #dc2626;
     }
-    .voice-test__status--processing {
-      color: #2563eb;
-    }
-    .voice-test__result {
+    .v3-section {
       margin-top: 24px;
       padding-top: 20px;
       border-top: 1px solid #e5e7eb;
     }
-    .voice-test__result-label {
+    .v3-section-title {
       margin: 0 0 12px;
       font-size: 18px;
-      color: #6b7280;
-    }
-    .voice-test__result-text {
-      margin: 0;
-      font-size: 26px;
-      line-height: 1.5;
-      word-break: break-word;
-    }
-    .voice-test__error {
-      margin-top: 16px;
-      color: #dc2626;
-      font-size: 18px;
-      text-align: center;
-      white-space: pre-wrap;
-    }
-    .voice-test__capability,
-    .voice-test__debug {
-      margin-top: 16px;
-      padding: 12px 14px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 14px;
-      line-height: 1.6;
+      font-weight: 700;
       color: #374151;
-      white-space: pre-wrap;
     }
-    .voice-test__capability-label,
-    .voice-test__debug-label {
-      margin: 0 0 8px;
-      font-size: 15px;
+    .v3-meta {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 16px;
+      font-size: 17px;
+      line-height: 1.5;
+    }
+    .v3-meta dt {
       font-weight: 700;
       color: #6b7280;
+      display: inline;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.75; }
+    .v3-meta dd {
+      margin: 0;
+      display: inline;
+      word-break: break-all;
+    }
+    .v3-audio-player {
+      width: 100%;
+      margin-top: 8px;
+    }
+    .v3-result-box {
+      margin: 0;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 18px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+    }
+    .v3-result-box--success {
+      background: #ecfdf5;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .v3-result-box--no-sound {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    .v3-result-box--format {
+      background: #fff7ed;
+      border-color: #fdba74;
+      color: #9a3412;
+    }
+    .v3-result-box--not-configured {
+      background: #fefce8;
+      border-color: #fde047;
+      color: #854d0e;
+    }
+    .v3-result-box--openai {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
+    .v3-result-box--empty {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+      color: #374151;
     }
   </style>
 </head>
 <body>
-  <main class="voice-test" id="voice-test-app">
-    <h1 class="voice-test__title">🎤 OpenAI 語音測試</h1>
+  <main class="v3-page" id="voice-test-v3-app">
+    <h1 class="v3-title">🎤 語音錄製測試 v3</h1>
+    <p class="v3-subtitle">獨立測試頁：先錄音、播放確認，再送出辨識</p>
 
-    <button type="button" class="voice-test__btn" id="voice-test-start">開始錄音</button>
+    <button type="button" class="v3-btn" id="v3-record-btn">開始錄音</button>
+    <p class="v3-hint" id="v3-record-hint">按一下開始錄音，再按一下停止</p>
+    <p class="v3-timer" id="v3-record-timer" hidden aria-live="polite"></p>
 
-    <div class="voice-test__capability" id="voice-test-capability" hidden aria-live="polite"></div>
+    <section class="v3-section" id="v3-playback-section" hidden>
+      <h2 class="v3-section-title">錄音預覽</h2>
+      <dl class="v3-meta">
+        <div><dt>錄音秒數：</dt> <dd id="v3-meta-duration">—</dd></div>
+        <div><dt>Blob bytes：</dt> <dd id="v3-meta-bytes">—</dd></div>
+        <div><dt>MIME type：</dt> <dd id="v3-meta-mime">—</dd></div>
+      </dl>
+      <audio class="v3-audio-player" id="v3-audio-player" controls playsinline></audio>
+      <button type="button" class="v3-btn v3-btn--secondary" id="v3-transcribe-btn" disabled>送出辨識</button>
+    </section>
 
-    <div class="voice-test__status" id="voice-test-status" hidden aria-live="polite"></div>
-    <p class="voice-test__error" id="voice-test-error" hidden></p>
-
-    <div id="voice-test-debug-wrap">
-      <p class="voice-test__debug-label">執行結果</p>
-      <div class="voice-test__debug" id="voice-test-debug" hidden aria-live="polite"></div>
-    </div>
-
-    <section class="voice-test__result" id="voice-test-result" hidden>
-      <p class="voice-test__result-label">辨識結果：</p>
-      <p class="voice-test__result-text" id="voice-test-result-text"></p>
+    <section class="v3-section" id="v3-result-section" hidden>
+      <h2 class="v3-section-title">辨識結果</h2>
+      <div class="v3-result-box" id="v3-result-box" hidden aria-live="polite"></div>
     </section>
   </main>
 
   <script>
-    window.VOICE_TEST_CONFIG = {
-      transcribeUrl: "{% url 'voice_transcribe_api' %}",
-      recordMs: 8000
+    window.VOICE_TEST_V3_CONFIG = {
+      transcribeUrl: "{% url 'voice_transcribe_api' %}"
     };
   </script>
-  <script src="{% static 'js/voice_test.js' %}?v=20260730voice-test-002" defer></script>
+  <script src="{% static 'js/voice_search_v3.js' %}?v=20260802-v3" defer></script>
 </body>
 </html>

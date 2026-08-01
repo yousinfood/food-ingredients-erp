@@ -6,13 +6,10 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260731ios-media-recorder-031";
+  var ASSET_TAG = "20260802voice-ios-v3";
   var VOICE_LS_COMPLETED = "voice_permission_completed";
   var VOICE_LS_DENIED = "voice_permission_denied";
   var API_PATH = "/api/customers/search/";
-  var TRANSCRIBE_PATH = "/api/voice/transcribe/";
-  var IOS_RECORD_MS = 3000;
-  var IOS_RECORD_SLICE_MS = 250;
   var VOICE_UNCLEAR_TEXT = "聽不清楚，請再說一次";
 
   function isIOSDevice() {
@@ -20,16 +17,8 @@
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
-  function isVoiceSearchV2Enabled() {
-    return !!document.querySelector('script[src*="voice_search_v2"]');
-  }
-
-  function hasMediaRecorderVoice() {
-    return !!(
-      navigator.mediaDevices &&
-      typeof navigator.mediaDevices.getUserMedia === "function" &&
-      typeof MediaRecorder !== "undefined"
-    );
+  function isVoiceSearchIOSEnabled() {
+    return !!document.querySelector('script[src*="voice_search_ios"]');
   }
 
   function getCsrfToken() {
@@ -64,13 +53,6 @@
     var fetchSeq = 0;
     var pendingHtml = null;
     var speechRec = null;
-    var mediaRecorder = null;
-    var mediaStream = null;
-    var audioChunks = [];
-    var iosRecordTimer = null;
-    var iosRecording = false;
-    var iosProcessing = false;
-    var iosRecordedMimeType = "";
     var isListening = false;
     var voiceGotTranscript = false;
     var voiceSuccessTimer = null;
@@ -679,13 +661,11 @@
     function applyVoiceTranscript(text) {
       var resolved = (text || "").trim();
       if (!resolved) {
-        showIOSVoiceUnclear();
+        showVoiceUnclear();
         return;
       }
       voiceGotTranscript = true;
       isListening = false;
-      iosProcessing = false;
-      iosRecording = false;
       setVoiceSearchState("success", resolved);
       customerSearchInput.value = resolved;
       resetScrollBehaviorForQuery(resolved);
@@ -695,245 +675,16 @@
       runFetch(false, { fromVoice: true });
     }
 
-    function showIOSVoiceUnclear() {
+    function showVoiceUnclear() {
       isListening = false;
-      iosProcessing = false;
-      iosRecording = false;
       voiceGotTranscript = false;
       setVoiceSearchState("error", VOICE_UNCLEAR_TEXT);
     }
 
-    function showIOSVoiceServiceError(detail) {
+    function showVoiceServiceError(detail) {
       isListening = false;
-      iosProcessing = false;
-      iosRecording = false;
       voiceGotTranscript = false;
       setVoiceSearchState("error", detail || "語音辨識暫時無法使用，請改用文字搜尋");
-    }
-
-    function destroyIOSRecording() {
-      if (iosRecordTimer) {
-        clearTimeout(iosRecordTimer);
-        iosRecordTimer = null;
-      }
-      if (mediaRecorder) {
-        mediaRecorder.ondataavailable = null;
-        mediaRecorder.onstop = null;
-        mediaRecorder.onerror = null;
-        if (mediaRecorder.state !== "inactive") {
-          try {
-            mediaRecorder.stop();
-          } catch (e) {
-            /* ignore */
-          }
-        }
-        mediaRecorder = null;
-      }
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(function (track) {
-          track.stop();
-        });
-        mediaStream = null;
-      }
-      audioChunks = [];
-    }
-
-    function pickIOSAudioMimeType() {
-      if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) return "";
-      var types = ["audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm"];
-      for (var i = 0; i < types.length; i++) {
-        if (MediaRecorder.isTypeSupported(types[i])) return types[i];
-      }
-      return "";
-    }
-
-    function iosUploadFilename(mimeType) {
-      if (!mimeType) return "voice.m4a";
-      if (mimeType.indexOf("mp4") >= 0) return "voice.mp4";
-      if (mimeType.indexOf("aac") >= 0) return "voice.m4a";
-      if (mimeType.indexOf("webm") >= 0) return "voice.webm";
-      return "voice.m4a";
-    }
-
-    function uploadIOSRecording(mimeType) {
-      iosRecording = false;
-      isListening = false;
-      iosProcessing = true;
-      var resolvedMime = mimeType || iosRecordedMimeType || "audio/mp4";
-      if (!audioChunks.length) {
-        console.log("[voice-ios] blob size=0 (no chunks), mimeType=" + resolvedMime);
-        destroyIOSRecording();
-        showIOSVoiceUnclear();
-        return;
-      }
-      var blob = new Blob(audioChunks, { type: resolvedMime });
-      audioChunks = [];
-      destroyIOSRecording();
-
-      console.log("[voice-ios] mimeType=" + resolvedMime + " blob size=" + blob.size);
-
-      if (!blob.size) {
-        iosProcessing = false;
-        showIOSVoiceUnclear();
-        return;
-      }
-
-      setVoiceSearchState("processing");
-      var formData = new FormData();
-      formData.append("audio", blob, iosUploadFilename(resolvedMime));
-
-      fetch(TRANSCRIBE_PATH, {
-        method: "POST",
-        body: formData,
-        credentials: "same-origin",
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRFToken": getCsrfToken(),
-        },
-      })
-        .then(function (res) {
-          return res.text().then(function (text) {
-            var data = null;
-            try {
-              data = text ? JSON.parse(text) : null;
-            } catch (parseErr) {
-              data = null;
-            }
-            console.log("[voice-ios] upload response status=" + res.status);
-            console.log("[voice-ios] response JSON=", data || text);
-            return { httpOk: res.ok, status: res.status, data: data };
-          });
-        })
-        .then(function (result) {
-          iosProcessing = false;
-          var data = result.data || {};
-          var transcript = (data.text || "").trim();
-          if (result.httpOk && data.ok && transcript) {
-            applyVoiceTranscript(transcript);
-            return;
-          }
-          if (!transcript) {
-            showIOSVoiceUnclear();
-            return;
-          }
-          showIOSVoiceServiceError(data.error || "語音辨識暫時無法使用，請改用文字搜尋");
-        })
-        .catch(function () {
-          iosProcessing = false;
-          showIOSVoiceServiceError("語音辨識暫時無法使用，請改用文字搜尋");
-        });
-    }
-
-    function stopIOSVoiceRecording() {
-      if (!iosRecording) return;
-      if (iosRecordTimer) {
-        clearTimeout(iosRecordTimer);
-        iosRecordTimer = null;
-      }
-      iosRecording = false;
-      isListening = false;
-      if (mediaRecorder && mediaRecorder.state === "recording") {
-        if (typeof mediaRecorder.requestData === "function") {
-          try {
-            mediaRecorder.requestData();
-          } catch (e) {
-            /* ignore */
-          }
-        }
-        try {
-          mediaRecorder.stop();
-        } catch (e) {
-          destroyIOSRecording();
-          showIOSVoiceUnclear();
-        }
-        return;
-      }
-      destroyIOSRecording();
-      showIOSVoiceUnclear();
-    }
-
-    function beginIOSVoiceRecording() {
-      if (!voiceSearchBtn || iosProcessing) return;
-      if (!hasMediaRecorderVoice()) {
-        voiceSearchBtn.hidden = true;
-        return;
-      }
-      if (iosRecording) {
-        stopIOSVoiceRecording();
-        return;
-      }
-
-      prepareForNewVoiceSession();
-      hapticVoiceTap();
-      destroyIOSRecording();
-      voiceGotTranscript = false;
-      iosRecording = true;
-      isListening = true;
-      clearVoiceSuccessTimer();
-      setVoiceSearchState("starting");
-
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then(function (stream) {
-          if (!iosRecording) {
-            stream.getTracks().forEach(function (track) {
-              track.stop();
-            });
-            return;
-          }
-          mediaStream = stream;
-          var mimeType = pickIOSAudioMimeType();
-          try {
-            mediaRecorder = mimeType
-              ? new MediaRecorder(stream, { mimeType: mimeType })
-              : new MediaRecorder(stream);
-          } catch (e) {
-            destroyIOSRecording();
-            iosRecording = false;
-            isListening = false;
-            showIOSVoiceServiceError("目前無法使用麥克風，請改用文字搜尋");
-            return;
-          }
-
-          iosRecordedMimeType = mediaRecorder.mimeType || mimeType || "audio/mp4";
-          console.log("[voice-ios] selected mimeType=" + iosRecordedMimeType);
-
-          audioChunks = [];
-          mediaRecorder.ondataavailable = function (ev) {
-            if (ev.data) audioChunks.push(ev.data);
-          };
-          mediaRecorder.onstop = function () {
-            var finalMime = iosRecordedMimeType || (mediaRecorder && mediaRecorder.mimeType) || "audio/mp4";
-            setTimeout(function () {
-              uploadIOSRecording(finalMime);
-            }, 0);
-          };
-          mediaRecorder.onerror = function () {
-            destroyIOSRecording();
-            iosRecording = false;
-            isListening = false;
-            iosProcessing = false;
-            showIOSVoiceServiceError("目前無法使用麥克風，請改用文字搜尋");
-          };
-
-          mediaRecorder.start();
-          setVoiceSearchState("listening");
-          iosRecordTimer = setTimeout(function () {
-            stopIOSVoiceRecording();
-          }, IOS_RECORD_MS);
-        })
-        .catch(function (err) {
-          destroyIOSRecording();
-          iosRecording = false;
-          isListening = false;
-          if (err && err.name === "NotAllowedError") {
-            markVoicePermissionDenied();
-            setVoiceSearchState("blocked");
-            return;
-          }
-          showIOSVoiceServiceError("目前無法使用麥克風，請改用文字搜尋");
-        });
     }
 
     function beginSpeechRecognition() {
@@ -1002,26 +753,37 @@
 
     function onVoiceSearchClick(e) {
       e.preventDefault();
-      if (!voiceSearchBtn || iosProcessing) return;
+      if (!voiceSearchBtn || isListening) return;
       if (isVoicePermissionDenied()) {
         setVoiceSearchState("blocked");
         return;
       }
-      if (isIOSDevice()) {
-        beginIOSVoiceRecording();
-        return;
-      }
-      if (isListening) return;
       beginSpeechRecognition();
     }
 
+    window.__yousinTouchVoice = {
+      applyTranscript: applyVoiceTranscript,
+      showUnclear: showVoiceUnclear,
+      showServiceError: showVoiceServiceError,
+      prepareSession: prepareForNewVoiceSession,
+      setState: setVoiceSearchState,
+      setBlocked: function () {
+        setVoiceSearchState("blocked");
+      },
+      isPermissionDenied: isVoicePermissionDenied,
+      markPermissionDenied: markVoicePermissionDenied,
+      haptic: hapticVoiceTap,
+      showRetry: function () {
+        if (voiceRetryBtn) voiceRetryBtn.hidden = false;
+      },
+    };
+
     function initHomeVoiceSearch() {
       if (!isHomeSearch || !voiceSearchBtn) return;
-      if (isVoiceSearchV2Enabled() && isIOSDevice()) return;
+      if (isVoiceSearchIOSEnabled() && isIOSDevice()) return;
       var hasDesktopSpeech =
         !isIOSDevice() && (window.SpeechRecognition || window.webkitSpeechRecognition);
-      var hasIOSRecorder = isIOSDevice() && hasMediaRecorderVoice();
-      if (!hasDesktopSpeech && !hasIOSRecorder) {
+      if (!hasDesktopSpeech) {
         voiceSearchBtn.hidden = true;
         return;
       }
@@ -1034,13 +796,8 @@
       if (voiceRetryBtn) {
         voiceRetryBtn.addEventListener("click", function (e) {
           e.preventDefault();
-          if (iosProcessing) return;
           if (isVoicePermissionDenied()) {
             setVoiceSearchState("blocked");
-            return;
-          }
-          if (isIOSDevice()) {
-            beginIOSVoiceRecording();
             return;
           }
           if (isListening) return;

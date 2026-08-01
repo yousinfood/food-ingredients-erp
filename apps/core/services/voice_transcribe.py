@@ -28,7 +28,6 @@ VOICE_UNCLEAR_MESSAGE = "聽不清楚，請再說一次"
 
 
 def _resolve_openai_api_key() -> str:
-    """Read API key at request time (settings + env fallback for Railway)."""
     return (
         getattr(settings, "OPENAI_API_KEY", "") or os.environ.get("OPENAI_API_KEY", "") or ""
     ).strip()
@@ -54,7 +53,6 @@ def _normalize_audio_upload(name: str, content_type: str) -> tuple[str, str]:
         or any(token in ct for token in ("mp4", "m4a", "aac", "caf"))
     )
     if is_ios_container:
-        # iOS MediaRecorder emits AAC in an M4A/MP4 container; OpenAI accepts .m4a reliably.
         if not lower.endswith(".m4a"):
             name = "voice.m4a"
         return name, "audio/mp4"
@@ -76,14 +74,9 @@ def _normalize_audio_upload(name: str, content_type: str) -> tuple[str, str]:
     return name, ct
 
 
-def _audio_header_hex(raw: bytes) -> str:
-    return raw[:16].hex() if raw else ""
-
-
 def _log_openai_exception(
     exc: Exception,
     *,
-    user_agent: str,
     filename: str,
     content_type: str,
     normalized_filename: str,
@@ -91,10 +84,9 @@ def _log_openai_exception(
     audio_file_size: int,
 ) -> None:
     logger.error(
-        "voice_transcribe openai_exception user_agent=%r filename=%r content_type=%r "
+        "voice_transcribe openai_error filename=%r content_type=%r "
         "normalized_filename=%r normalized_content_type=%r audio_file_size=%s "
         "exception_class=%s exception_message=%s",
-        user_agent,
         filename,
         content_type,
         normalized_filename,
@@ -108,13 +100,8 @@ def _log_openai_exception(
 
 def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     api_key = _resolve_openai_api_key()
-    api_key_configured = bool(api_key)
-    logger.info(
-        "voice_transcribe api_key_configured=%s user_agent=%r",
-        api_key_configured,
-        user_agent,
-    )
-    if not api_key_configured:
+    if not api_key:
+        logger.warning("voice_transcribe missing_api_key user_agent=%r", user_agent)
         raise VoiceTranscribeError("語音服務尚未設定")
 
     uploaded_file.seek(0)
@@ -128,44 +115,27 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     size = len(raw)
 
     logger.info(
-        "voice_transcribe upload user_agent=%r filename=%r content_type=%r "
-        "normalized_filename=%r normalized_content_type=%r audio_file_size=%s audio_header_hex=%s",
-        user_agent,
+        "voice_transcribe upload filename=%r content_type=%r normalized_filename=%r "
+        "normalized_content_type=%r audio_file_size=%s user_agent=%r",
         original_name,
         original_content_type,
         normalized_name,
         normalized_content_type,
         size,
-        _audio_header_hex(raw),
+        user_agent,
     )
 
     if not raw:
-        logger.warning(
-            "voice_transcribe empty_upload user_agent=%r filename=%r content_type=%r audio_file_size=0",
-            user_agent,
-            original_name,
-            original_content_type,
-        )
         raise VoiceTranscribeError(VOICE_UNCLEAR_MESSAGE)
     if size < MIN_AUDIO_BYTES:
         logger.warning(
-            "voice_transcribe audio_too_small user_agent=%r filename=%r content_type=%r audio_file_size=%s",
-            user_agent,
+            "voice_transcribe audio_too_small filename=%r audio_file_size=%s",
             original_name,
-            original_content_type,
             size,
         )
         raise VoiceTranscribeError(VOICE_UNCLEAR_MESSAGE)
 
     client = OpenAI(api_key=api_key)
-    logger.info(
-        "voice_transcribe openai_request_started user_agent=%r normalized_filename=%r "
-        "normalized_content_type=%r audio_file_size=%s model=gpt-4o-mini-transcribe",
-        user_agent,
-        normalized_name,
-        normalized_content_type,
-        size,
-    )
     try:
         result = client.audio.transcriptions.create(
             model="gpt-4o-mini-transcribe",
@@ -176,7 +146,6 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     except AuthenticationError as exc:
         _log_openai_exception(
             exc,
-            user_agent=user_agent,
             filename=original_name,
             content_type=original_content_type,
             normalized_filename=normalized_name,
@@ -187,7 +156,6 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     except RateLimitError as exc:
         _log_openai_exception(
             exc,
-            user_agent=user_agent,
             filename=original_name,
             content_type=original_content_type,
             normalized_filename=normalized_name,
@@ -198,7 +166,6 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     except BadRequestError as exc:
         _log_openai_exception(
             exc,
-            user_agent=user_agent,
             filename=original_name,
             content_type=original_content_type,
             normalized_filename=normalized_name,
@@ -209,7 +176,6 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     except (APIConnectionError, APITimeoutError) as exc:
         _log_openai_exception(
             exc,
-            user_agent=user_agent,
             filename=original_name,
             content_type=original_content_type,
             normalized_filename=normalized_name,
@@ -220,7 +186,6 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
     except Exception as exc:
         _log_openai_exception(
             exc,
-            user_agent=user_agent,
             filename=original_name,
             content_type=original_content_type,
             normalized_filename=normalized_name,
@@ -231,25 +196,16 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
 
     text = (result.text or "").strip()
     logger.info(
-        "voice_transcribe openai_response user_agent=%r normalized_filename=%r "
-        "normalized_content_type=%r audio_file_size=%s openai_response_text_length=%s",
-        user_agent,
-        normalized_name,
-        normalized_content_type,
+        "voice_transcribe ok audio_file_size=%s text_length=%s",
         size,
         len(text),
     )
     if not text:
         logger.warning(
-            "voice_transcribe empty_text user_agent=%r filename=%r content_type=%r "
-            "normalized_filename=%r normalized_content_type=%r audio_file_size=%s audio_header_hex=%s",
-            user_agent,
+            "voice_transcribe empty_text filename=%r content_type=%r audio_file_size=%s",
             original_name,
             original_content_type,
-            normalized_name,
-            normalized_content_type,
             size,
-            _audio_header_hex(raw),
         )
         raise VoiceTranscribeError(VOICE_UNCLEAR_MESSAGE)
     return text
