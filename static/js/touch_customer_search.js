@@ -387,37 +387,16 @@
         signal: fetchAbort.signal,
       })
         .then(function (res) {
-          var contentType = (res.headers.get("content-type") || "").toLowerCase();
-          return res.text().then(function (text) {
-            if (!res.ok) {
-              return { ok: false, httpStatus: res.status, contentType: contentType, text: text };
-            }
-            if (!text || !text.trim()) {
-              return { ok: false, httpStatus: res.status, contentType: contentType, text: text };
-            }
-            if (contentType.indexOf("json") < 0) {
-              return { ok: false, httpStatus: res.status, contentType: contentType, text: text };
-            }
-            try {
-              return JSON.parse(text);
-            } catch (parseErr) {
-              return { ok: false, httpStatus: res.status, contentType: contentType, text: text };
-            }
-          });
+          return res.json();
         })
         .then(function (data) {
           if (seq !== fetchSeq) return;
-          if (input.value.trim() !== q) return;
+          if (customerSearchInput.value.trim() !== q) return;
           if (isComposingNow()) {
             if (data && typeof data.html === "string") pendingHtml = data.html;
             return;
           }
-          if (!data || data.ok === false) {
-            if (opts.fromVoice && q) {
-              handleVoiceSearchApiFailure();
-            }
-            return;
-          }
+          if (!data || !data.ok) return;
           if (opts.voice && data.normalized_q && typeof data.normalized_q === "string") {
             var normalized = data.normalized_q.trim();
             if (normalized && normalized !== input.value.trim()) {
@@ -450,9 +429,6 @@
         })
         .catch(function (err) {
           if (err && err.name === "AbortError") return;
-          if (opts.fromVoice && q) {
-            handleVoiceSearchApiFailure();
-          }
         });
     }
 
