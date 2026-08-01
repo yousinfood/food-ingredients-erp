@@ -3,6 +3,7 @@
 
   var TRANSCRIBE = "/api/voice/transcribe/";
   var RECORD_MS = 4000;
+  var IOS_RECORD_SLICE_MS = 250;
   var UNCLEAR = "聽不清楚，請再說一次";
 
   function isIOS() {
@@ -137,11 +138,30 @@
     }
 
     function stopRecording() {
-      if (!recorder || recorder.state !== "recording") return;
-      if (typeof recorder.requestData === "function") {
-        try { recorder.requestData(); } catch (e) { console.error("[voice-v2]", e); }
+      if (!recorder || recorder.state !== "recording") {
+        console.log("[voice-v2] stopRecording skipped recorder.state=" + (recorder ? recorder.state : "null"));
+        return;
       }
-      try { recorder.stop(); } catch (e) { console.error("[voice-v2]", e); cleanup(); setState("error"); }
+      console.log("[voice-v2] stopRecording recorder.state=" + recorder.state);
+      if (typeof recorder.requestData === "function") {
+        try {
+          recorder.requestData();
+          console.log("[voice-v2] requestData() recorder.state=" + recorder.state);
+        } catch (e) {
+          console.error("[voice-v2]", e);
+        }
+      }
+      setTimeout(function () {
+        if (!recorder || recorder.state !== "recording") return;
+        try {
+          console.log("[voice-v2] stop() recorder.state=" + recorder.state);
+          recorder.stop();
+        } catch (e) {
+          console.error("[voice-v2]", e);
+          cleanup();
+          setState("error");
+        }
+      }, 100);
     }
 
     function startRecording() {
@@ -154,6 +174,10 @@
         .then(function (s) {
           console.log("[voice-v2] microphone permission success");
           stream = s;
+          var audioTrack = s.getAudioTracks()[0];
+          if (audioTrack) {
+            console.log("[voice-v2] audio track settings=", audioTrack.getSettings ? audioTrack.getSettings() : null);
+          }
           var picked = pickMime();
           try {
             recorder = picked ? new MediaRecorder(s, { mimeType: picked }) : new MediaRecorder(s);
@@ -166,11 +190,15 @@
           mimeType = recorder.mimeType || picked || "audio/mp4";
           console.log("[voice-v2] selected mimeType=" + mimeType);
           recorder.ondataavailable = function (ev) {
-            if (!ev.data) return;
-            console.log("[voice-v2] audio chunk size=" + ev.data.size);
-            chunks.push(ev.data);
+            var chunkSize = ev.data ? ev.data.size : 0;
+            console.log("[voice-v2] ondataavailable recorder.state=" + (recorder ? recorder.state : "null") + " chunk size=" + chunkSize);
+            if (ev.data && ev.data.size > 0) {
+              console.log("[voice-v2] audio chunk size=" + ev.data.size);
+              chunks.push(ev.data);
+            }
           };
           recorder.onstop = function () {
+            console.log("[voice-v2] onstop recorder.state=" + (recorder ? recorder.state : "null") + " chunks=" + chunks.length);
             var blob = new Blob(chunks, { type: mimeType });
             chunks = [];
             console.log("[voice-v2] final blob size=" + blob.size);
@@ -178,12 +206,12 @@
             upload(blob);
           };
           recorder.onerror = function (ev) {
-            console.error("[voice-v2] MediaRecorder error", ev);
+            console.error("[voice-v2] MediaRecorder error recorder.state=" + (recorder ? recorder.state : "null"), ev);
             cleanup();
             setState("error");
           };
-          recorder.start();
-          console.log("[voice-v2] recording started");
+          recorder.start(IOS_RECORD_SLICE_MS);
+          console.log("[voice-v2] recording started recorder.state=" + recorder.state);
           timer = setTimeout(stopRecording, RECORD_MS);
         })
         .catch(function (err) {
