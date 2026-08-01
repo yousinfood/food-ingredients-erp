@@ -3,7 +3,7 @@
 
   var TRANSCRIBE = "/api/voice/transcribe/";
   var RECORD_MS = 4000;
-  var IOS_RECORD_SLICE_MS = 250;
+  var IOS_RECORD_SLICE_MS = 1000;
   var UNCLEAR = "聽不清楚，請再說一次";
 
   function isIOS() {
