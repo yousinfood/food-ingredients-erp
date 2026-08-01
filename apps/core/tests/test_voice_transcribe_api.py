@@ -1,8 +1,10 @@
 from io import BytesIO
+import os
 from unittest.mock import MagicMock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
+from openai import AuthenticationError, BadRequestError, RateLimitError
 
 
 class VoiceTranscribeApiTests(TestCase):
@@ -74,5 +76,71 @@ class VoiceTranscribeApiTests(TestCase):
         self.assertEqual(response.json()["text"], "一中街紅豆餅")
         call_kwargs = mock_client.audio.transcriptions.create.call_args.kwargs
         file_tuple = call_kwargs["file"]
-        self.assertEqual(file_tuple[0], "voice.mp4")
+        self.assertEqual(file_tuple[0], "voice.m4a")
         self.assertEqual(file_tuple[2], "audio/mp4")
+
+    @override_settings(OPENAI_API_KEY="")
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "env-test-key"})
+    @patch("apps.core.services.voice_transcribe.OpenAI")
+    def test_api_key_falls_back_to_environment(self, mock_openai_cls):
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.audio.transcriptions.create.return_value = MagicMock(text="環境變數")
+
+        audio = SimpleUploadedFile("voice.m4a", b"x" * 1200, content_type="audio/mp4")
+        response = self.client.post("/api/voice/transcribe/", {"audio": audio})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["text"], "環境變數")
+        mock_openai_cls.assert_called_once_with(api_key="env-test-key")
+
+    @override_settings(OPENAI_API_KEY="test-key")
+    @patch("apps.core.services.voice_transcribe.OpenAI")
+    def test_openai_auth_error_returns_config_message(self, mock_openai_cls):
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.audio.transcriptions.create.side_effect = AuthenticationError(
+            "invalid api key",
+            response=MagicMock(status_code=401),
+            body=None,
+        )
+
+        audio = SimpleUploadedFile("voice.m4a", b"x" * 1200, content_type="audio/mp4")
+        response = self.client.post("/api/voice/transcribe/", {"audio": audio})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("語音服務設定錯誤", response.json()["error"])
+
+    @override_settings(OPENAI_API_KEY="test-key")
+    @patch("apps.core.services.voice_transcribe.OpenAI")
+    def test_openai_rate_limit_returns_quota_message(self, mock_openai_cls):
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.audio.transcriptions.create.side_effect = RateLimitError(
+            "rate limit",
+            response=MagicMock(status_code=429),
+            body=None,
+        )
+
+        audio = SimpleUploadedFile("voice.m4a", b"x" * 1200, content_type="audio/mp4")
+        response = self.client.post("/api/voice/transcribe/", {"audio": audio})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("使用量已達上限", response.json()["error"])
+
+    @override_settings(OPENAI_API_KEY="test-key")
+    @patch("apps.core.services.voice_transcribe.OpenAI")
+    def test_openai_bad_request_returns_format_message(self, mock_openai_cls):
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        mock_client.audio.transcriptions.create.side_effect = BadRequestError(
+            "invalid file format",
+            response=MagicMock(status_code=400),
+            body=None,
+        )
+
+        audio = SimpleUploadedFile("voice.m4a", b"x" * 1200, content_type="audio/mp4")
+        response = self.client.post("/api/voice/transcribe/", {"audio": audio})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("語音格式無法辨識", response.json()["error"])

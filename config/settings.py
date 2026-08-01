@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=False)
 
 SUPABASE_PROJECT_REF = os.environ.get("SUPABASE_PROJECT_REF", "dndsfdaqcshavdqdieck").strip()
 
