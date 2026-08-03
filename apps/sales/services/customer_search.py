@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import logging
 
+from django.db import close_old_connections
 from django.db.models import Q
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
@@ -24,20 +25,16 @@ VOICE_SEARCH_LIMIT = 5
 
 logger = logging.getLogger(__name__)
 
+CUSTOMER_SEARCH_DB_ERROR = "目前無法取得最新客戶資料，請稍後再試。"
 
-def _maybe_sync_customers_from_google_sheet() -> None:
-    try:
-        from apps.sales.services.google_sheet_customer_sync import (
-            maybe_sync_customers_from_google_sheet,
-        )
 
-        result = maybe_sync_customers_from_google_sheet()
-        if result.get("skipped") and result.get("reason") == "not_configured":
-            logger.warning("Customer sheet sync skipped: Google Sheet 尚未設定")
-        elif not result.get("ok") and not result.get("skipped"):
-            logger.warning("Customer sheet sync failed: %s", result)
-    except Exception as exc:
-        logger.warning("Customer sheet sync raised an exception: %s", exc, exc_info=True)
+def _live_customer_queryset(*, active_only: bool = True):
+    """Always read the latest rows from PostgreSQL (no in-memory customer cache)."""
+    close_old_connections()
+    queryset = Customer.objects.all()
+    if active_only:
+        queryset = queryset.filter(is_active=True)
+    return queryset
 
 
 @dataclass(frozen=True)
@@ -193,14 +190,11 @@ def search_customers_voice(
     limit: int = VOICE_SEARCH_LIMIT,
     active_only: bool = True,
 ) -> RankedCustomerSearch:
-    _maybe_sync_customers_from_google_sheet()
     queries = _expand_voice_queries(candidates)
     if not queries:
         return RankedCustomerSearch([], 0, limit, show_all=False)
 
-    queryset = Customer.objects.all()
-    if active_only:
-        queryset = queryset.filter(is_active=True)
+    queryset = _live_customer_queryset(active_only=active_only)
 
     best: dict[int, tuple[int, float, Customer]] = {}
 
@@ -231,9 +225,34 @@ def search_customers_voice(
     return RankedCustomerSearch(shown, len(matches), limit, show_all=False)
 
 
+def _voice_fuzzy_candidate_queryset(queryset, raw_q: str, norm_q: str):
+    """Prefilter fuzzy candidates — never scan the entire customers table."""
+    tokens: set[str] = set()
+    for q in (raw_q, norm_q):
+        q = (q or "").strip()
+        if len(q) >= 1:
+            tokens.add(q[0])
+        if len(q) >= 2:
+            tokens.add(q[:2])
+        if len(q) >= 3:
+            tokens.add(q[:3])
+    if not tokens:
+        return queryset.none()
+
+    prefilter = Q()
+    for token in tokens:
+        prefilter |= (
+            Q(name__icontains=token)
+            | Q(voice_aliases__icontains=token)
+            | Q(contact_person__icontains=token)
+        )
+    return queryset.filter(prefilter)
+
+
 def _voice_fuzzy_matches(queryset, raw_q: str, norm_q: str) -> list[tuple[float, Customer]]:
+    candidates = _voice_fuzzy_candidate_queryset(queryset, raw_q, norm_q)
     scored: list[tuple[float, Customer]] = []
-    for customer in queryset.iterator(chunk_size=500):
+    for customer in candidates.iterator(chunk_size=200):
         score = _voice_match_score(customer, raw_q)
         if norm_q and norm_q != raw_q:
             score = max(score, _voice_match_score(customer, norm_q))
@@ -251,12 +270,9 @@ def search_customers_ranked(
     active_only: bool = True,
     voice: bool = False,
 ) -> RankedCustomerSearch:
-    _maybe_sync_customers_from_google_sheet()
     raw_q = query.strip()
     q = normalize_voice_query(raw_q) if voice else raw_q
-    queryset = Customer.objects.all()
-    if active_only:
-        queryset = queryset.filter(is_active=True)
+    queryset = _live_customer_queryset(active_only=active_only)
     if len(raw_q) < MIN_SEARCH_QUERY_LENGTH:
         return RankedCustomerSearch([], 0, limit, show_all)
 
@@ -303,10 +319,32 @@ def search_customers_ranked(
     return RankedCustomerSearch(shown, total, limit, show_all)
 
 
+def search_customers_live(
+    query: str,
+    *,
+    voice: bool = False,
+    voice_alts: list[str] | None = None,
+    show_all: bool = False,
+    limit: int | None = None,
+    active_only: bool = True,
+) -> RankedCustomerSearch:
+    """Single entry point for text + voice search — always reads PostgreSQL live."""
+    if voice:
+        candidates = [query.strip()] + [alt.strip() for alt in (voice_alts or []) if alt.strip()]
+        voice_limit = limit if limit is not None else VOICE_SEARCH_LIMIT
+        return search_customers_voice(candidates, limit=voice_limit, active_only=active_only)
+    text_limit = limit if limit is not None else TOUCH_SEARCH_LIMIT
+    return search_customers_ranked(
+        query,
+        limit=text_limit,
+        show_all=show_all,
+        active_only=active_only,
+        voice=False,
+    )
+
+
 def search_customers(*, query="", name="", phone="", code="", tax_id="", address="", active_only=True):
-    queryset = Customer.objects.all()
-    if active_only:
-        queryset = queryset.filter(is_active=True)
+    queryset = _live_customer_queryset(active_only=active_only)
 
     q = query.strip()
     if q:
@@ -336,9 +374,7 @@ def search_customers(*, query="", name="", phone="", code="", tax_id="", address
 
 
 def filter_customers(*, query="", region="", show_inactive=False):
-    customers = Customer.objects.all()
-    if not show_inactive:
-        customers = customers.filter(is_active=True)
+    customers = _live_customer_queryset(active_only=not show_inactive)
     if region:
         customers = customers.filter(region=region)
     if query:
@@ -350,6 +386,7 @@ def filter_customers(*, query="", region="", show_inactive=False):
 
 
 def get_customer_regions():
+    close_old_connections()
     return (
         Customer.objects.exclude(region="")
         .values_list("region", flat=True)

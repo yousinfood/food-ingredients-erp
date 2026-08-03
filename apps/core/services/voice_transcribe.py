@@ -25,6 +25,7 @@ class VoiceTranscribeError(Exception):
 TRANSCRIBE_PROMPT = "請辨識台灣中文（繁體中文）客戶名稱、老闆姓名、路名、地區。"
 MIN_AUDIO_BYTES = 100
 VOICE_UNCLEAR_MESSAGE = "聽不清楚，請再說一次"
+VOICE_QUOTA_MESSAGE = "AI 額度不足，請聯絡管理員補值。"
 
 
 def _resolve_openai_api_key() -> str:
@@ -162,7 +163,7 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
             normalized_content_type=normalized_content_type,
             audio_file_size=size,
         )
-        raise VoiceTranscribeError("語音服務使用量已達上限，請稍後再試") from exc
+        raise VoiceTranscribeError(VOICE_QUOTA_MESSAGE) from exc
     except BadRequestError as exc:
         _log_openai_exception(
             exc,

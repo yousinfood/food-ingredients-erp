@@ -96,12 +96,8 @@ class VoiceCustomerSearchIntegrationTests(TestCase):
         self.assertIn("老陳炸雞", names)
 
     @patch("apps.sales.services.google_sheet_customer_sync.maybe_sync_customers_from_google_sheet")
-    def test_voice_search_uses_local_db_when_sheet_sync_fails(self, mock_sync):
-        mock_sync.return_value = {
-            "ok": False,
-            "skipped": False,
-            "reason": "Expecting value: line 1 column 1 (char 0)",
-        }
+    def test_voice_search_reads_postgres_without_sheet_sync(self, mock_sync):
         result = self._voice_search("布布")
         names = [c.name for c in result.customers]
         self.assertIn("布布炸雞", names)
+        mock_sync.assert_not_called()

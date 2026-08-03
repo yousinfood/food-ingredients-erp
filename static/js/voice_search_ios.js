@@ -86,7 +86,8 @@
       if (msg === "語音服務尚未設定") return "語音服務尚未設定，請聯絡管理員";
       if (msg.indexOf("格式") >= 0) return msg;
       if (msg.indexOf("聽不清楚") >= 0) return msg;
-      if (msg.indexOf("設定錯誤") >= 0 || msg.indexOf("使用量") >= 0) return msg;
+      if (msg.indexOf("AI 額度不足") >= 0) return msg;
+      if (msg.indexOf("設定錯誤") >= 0) return msg;
       if (msg.indexOf("暫時無法") >= 0 || httpStatus >= 500) {
         return msg || "語音辨識暫時無法使用，請改用文字搜尋";
       }

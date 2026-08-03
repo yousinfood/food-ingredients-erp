@@ -5,6 +5,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from apps.sales.models import Customer
+from apps.sales.services.customer_realtime import bump_customer_search_revision
 from apps.sales.services.google_sheet_customer_sync import (
     delete_customer_from_google_sheet,
     push_customer_to_google_sheet,
@@ -48,6 +49,7 @@ def _schedule_delete(code: str) -> None:
 
 @receiver(post_save, sender=Customer)
 def customer_saved_sync_sheet(sender, instance, **kwargs):
+    bump_customer_search_revision()
     if _skip_sheet_push:
         return
     _schedule_push(instance.pk)
@@ -55,6 +57,7 @@ def customer_saved_sync_sheet(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Customer)
 def customer_deleted_sync_sheet(sender, instance, **kwargs):
+    bump_customer_search_revision()
     if _skip_sheet_push:
         return
     _schedule_delete(instance.code)

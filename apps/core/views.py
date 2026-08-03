@@ -4,13 +4,18 @@ import logging
 from urllib.parse import quote
 
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.db import DatabaseError, OperationalError
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.sales.services.customer_search import search_customers_ranked, search_customers_voice
+from apps.sales.services.customer_realtime import (
+    get_customer_search_revision,
+    iter_customer_revision_events,
+)
+from apps.sales.services.customer_search import CUSTOMER_SEARCH_DB_ERROR, search_customers_live
 from apps.sales.services.voice_search_normalize import normalize_voice_query
 
 from .services.dashboard import get_dashboard_stats
@@ -50,11 +55,12 @@ def _customer_search_context(
     searched = bool(query or (voice and voice_alts))
     search = None
     if searched:
-        if voice:
-            candidates = [query] + [alt for alt in (voice_alts or []) if alt]
-            search = search_customers_voice(candidates)
-        else:
-            search = search_customers_ranked(query, show_all=show_all, voice=False)
+        search = search_customers_live(
+            query,
+            voice=voice,
+            voice_alts=voice_alts,
+            show_all=show_all,
+        )
     results = search.customers if search else []
     return {
         "query": query,
@@ -75,7 +81,14 @@ def customer_search_api(request):
     home = request.GET.get("home") == "1"
     voice = request.GET.get("voice") == "1"
     voice_alts = [alt.strip() for alt in request.GET.getlist("alt") if alt.strip()]
-    ctx = _customer_search_context(query, show_all, voice=voice, voice_alts=voice_alts)
+    try:
+        ctx = _customer_search_context(query, show_all, voice=voice, voice_alts=voice_alts)
+    except (OperationalError, DatabaseError):
+        logger.exception("customer_search_api database error q=%r", query)
+        return _no_store_json_response(
+            {"ok": False, "error": CUSTOMER_SEARCH_DB_ERROR, "total": 0, "html": ""},
+            status=503,
+        )
     search = ctx.get("search")
     if (
         not home
@@ -84,7 +97,7 @@ def customer_search_api(request):
         and search.total_count == 1
     ):
         customer = ctx["results"][0]
-        return JsonResponse(
+        return _no_store_json_response(
             {
                 "ok": True,
                 "total": 1,
@@ -101,7 +114,7 @@ def customer_search_api(request):
         ctx,
         request=request,
     )
-    return JsonResponse(
+    return _no_store_json_response(
         {
             "ok": True,
             "total": ctx["search_total"],
@@ -109,6 +122,30 @@ def customer_search_api(request):
             "normalized_q": normalize_voice_query(query) if voice else "",
         }
     )
+
+
+@require_GET
+def customer_search_revision_api(request):
+    return _no_store_json_response({"ok": True, "version": get_customer_search_revision()})
+
+
+@require_GET
+def customer_search_events_api(request):
+    response = StreamingHttpResponse(
+        iter_customer_revision_events(),
+        content_type="text/event-stream",
+    )
+    response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response["Connection"] = "keep-alive"
+    response["X-Accel-Buffering"] = "no"
+    return response
+
+
+def _no_store_json_response(payload: dict, *, status: int = 200) -> JsonResponse:
+    response = JsonResponse(payload, status=status)
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response["Pragma"] = "no-cache"
+    return response
 
 
 @require_POST
@@ -190,7 +227,22 @@ def voice_test(request):
 def dashboard(request):
     query = request.GET.get("q", "").strip()
     show_all = request.GET.get("more") == "1"
-    ctx = _customer_search_context(query, show_all)
+    search_error = ""
+    try:
+        ctx = _customer_search_context(query, show_all)
+    except (OperationalError, DatabaseError):
+        logger.exception("dashboard customer search database error q=%r", query)
+        ctx = {
+            "query": query,
+            "searched": bool(query),
+            "results": [],
+            "search_total": 0,
+            "search_has_more": False,
+            "search_remaining": 0,
+            "search_show_all": show_all,
+            "search": None,
+        }
+        search_error = CUSTOMER_SEARCH_DB_ERROR
     search = ctx.get("search")
 
     if ctx["searched"] and search and search.total_count == 1:
@@ -204,6 +256,7 @@ def dashboard(request):
         {
             **ctx,
             **stats,
+            "search_error": search_error,
         },
     )
 
