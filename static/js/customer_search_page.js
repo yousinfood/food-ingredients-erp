@@ -265,6 +265,7 @@
     fetch(url, {
       headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
       credentials: "same-origin",
+      cache: "no-store",
       signal: fetchAbort.signal,
     })
       .then(function (res) {

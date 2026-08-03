@@ -568,6 +568,19 @@
     .touch-delivery-entry-link:active {
       background: #ccfbf1;
     }
+
+    .touch-search-error {
+      margin: 0.75rem 0 0;
+      padding: 1rem 1.1rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.45;
+      color: #991b1b;
+      background: #fef2f2;
+      border: 2px solid #fecaca;
+      border-radius: 14px;
+      text-align: center;
+    }
   </style>
 {% endblock %}
 
@@ -629,6 +642,9 @@
   </div>
 
   <div id="touch-search-results-mount" class="touch-home-app__results">
+  {% if search_error %}
+  <div id="customer-search-error" class="touch-search-error" role="alert">{{ search_error }}</div>
+  {% endif %}
   {% include "core/_customer_search_results_home.html" %}
   </div>
   </div>

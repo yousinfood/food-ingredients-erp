@@ -6,9 +6,9 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260802voice-ios-v3";
-  var VOICE_LS_COMPLETED = "voice_permission_completed";
-  var VOICE_LS_DENIED = "voice_permission_denied";
+  var ASSET_TAG = "20260803live-v1";
+  var VOICE_SS_DENIED = "voice_permission_denied";
+  var SEARCH_DB_ERROR = "目前無法取得最新客戶資料，請稍後再試。";
   var API_PATH = "/api/customers/search/";
   var VOICE_UNCLEAR_TEXT = "聽不清楚，請再說一次";
 
@@ -18,7 +18,7 @@
   }
 
   function isVoiceSearchIOSEnabled() {
-    return !!document.querySelector('script[src*="voice_search_ios"]');
+    return !!document.querySelector('script[src*="voice_search_ios"], script[src*="voice_search_v3"]');
   }
 
   function getCsrfToken() {
@@ -60,10 +60,21 @@
     var lastScrollQuery = null;
     var activeIndex = -1;
     var lastKeyboardInset = 0;
+    var lastSearchVoice = false;
 
     function emptyHomePanelHtml() {
       return (
         '<div id="touch-search-results-panel" class="customer-search-results-panel" data-query=""></div>'
+      );
+    }
+
+    function showSearchError(message) {
+      var text = message || SEARCH_DB_ERROR;
+      updateResultsHtml(
+        '<div id="touch-search-results-panel" class="touch-search-results-panel touch-search-results-panel--error" data-query="">' +
+          '<p class="touch-search-error" role="alert">' +
+          text +
+          "</p></div>"
       );
     }
 
@@ -343,6 +354,7 @@
       }
       if (isComposingNow()) return;
 
+      lastSearchVoice = !!opts.voice;
       var q = customerSearchInput.value.trim();
       if (q.length < MIN_CHARS) {
         if (!q.length && isHomeSearch) {
@@ -368,22 +380,43 @@
       fetchAbort = new AbortController();
       var seq = ++fetchSeq;
 
-      fetch(url, {
-        headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
-        credentials: "same-origin",
-        signal: fetchAbort.signal,
-      })
-        .then(function (res) {
-          return res.json();
-        })
-        .then(function (data) {
+      var searchClient = window.YousinCustomerSearch;
+      var searchPromise = searchClient
+        ? searchClient.fetchSearch({
+            q: q,
+            home: isHomeSearch,
+            more: showAll,
+            voice: opts.voice,
+            signal: fetchAbort.signal,
+          })
+        : fetch(url, {
+            headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: fetchAbort.signal,
+          }).then(function (res) {
+            return res.json().then(function (data) {
+              return { ok: res.ok && data && data.ok, data: data || {} };
+            });
+          });
+
+      searchPromise
+        .then(function (result) {
+          var data = result.data;
           if (seq !== fetchSeq) return;
           if (customerSearchInput.value.trim() !== q) return;
           if (isComposingNow()) {
             if (data && typeof data.html === "string") pendingHtml = data.html;
             return;
           }
-          if (!data || !data.ok) return;
+          if (!data || !data.ok) {
+            if (data && data.error) {
+              showSearchError(data.error);
+            } else if (!opts.silent) {
+              showSearchError(SEARCH_DB_ERROR);
+            }
+            return;
+          }
           if (opts.voice && data.normalized_q && typeof data.normalized_q === "string") {
             var normalized = data.normalized_q.trim();
             if (normalized && normalized !== input.value.trim()) {
@@ -410,12 +443,13 @@
           if (typeof data.html === "string") {
             updateResultsHtml(data.html);
           }
-          if (opts.fromSubmit) {
+          if (opts.fromSubmit && !opts.silent) {
             scrollResultsIntoView();
           }
         })
         .catch(function (err) {
           if (err && err.name === "AbortError") return;
+          if (!opts.silent) showSearchError(SEARCH_DB_ERROR);
         });
     }
 
@@ -546,26 +580,31 @@
 
     function readVoiceFlag(key) {
       try {
-        return localStorage.getItem(key) === "true";
+        if (typeof sessionStorage !== "undefined") {
+          return sessionStorage.getItem(key) === "true";
+        }
       } catch (e) {
         return false;
       }
+      return false;
     }
 
     function writeVoiceFlag(key, value) {
       try {
-        localStorage.setItem(key, value ? "true" : "false");
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem(key, value ? "true" : "false");
+        }
       } catch (e) {
         /* ignore */
       }
     }
 
     function isVoicePermissionDenied() {
-      return readVoiceFlag(VOICE_LS_DENIED);
+      return readVoiceFlag(VOICE_SS_DENIED);
     }
 
     function markVoicePermissionDenied() {
-      writeVoiceFlag(VOICE_LS_DENIED, true);
+      writeVoiceFlag(VOICE_SS_DENIED, true);
     }
 
     function destroySpeechRecognition() {
@@ -816,6 +855,16 @@
     }
 
     initHomeVoiceSearch();
+
+    if (window.YousinCustomerSearch) {
+      window.YousinCustomerSearch.subscribeLiveRefresh(function () {
+        if (isListening) return;
+        var activeQ = customerSearchInput.value.trim();
+        if (activeQ.length >= MIN_CHARS && !isComposingNow()) {
+          runFetch(false, { silent: true, voice: lastSearchVoice });
+        }
+      });
+    }
 
     form.addEventListener(
       "submit",

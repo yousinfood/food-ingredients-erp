@@ -126,7 +126,7 @@ class VoiceTranscribeApiTests(TestCase):
         response = self.client.post("/api/voice/transcribe/", {"audio": audio})
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn("使用量已達上限", response.json()["error"])
+        self.assertIn("AI 額度不足", response.json()["error"])
 
     @override_settings(OPENAI_API_KEY="test-key")
     @patch("apps.core.services.voice_transcribe.OpenAI")

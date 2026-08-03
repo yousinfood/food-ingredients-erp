@@ -154,12 +154,10 @@
     if (msg.indexOf("聽不清楚") >= 0) {
       return { kind: "empty", title: "辨識結果為空", detail: msg };
     }
-    if (
-      msg.indexOf("設定錯誤") >= 0 ||
-      msg.indexOf("使用量") >= 0 ||
-      msg.indexOf("暫時無法") >= 0 ||
-      httpStatus >= 500
-    ) {
+    if (msg.indexOf("AI 額度不足") >= 0) {
+      return { kind: "quota", title: "AI 額度不足", detail: msg };
+    }
+    if (msg.indexOf("設定錯誤") >= 0 || msg.indexOf("暫時無法") >= 0 || httpStatus >= 500) {
       return { kind: "openai", title: "OpenAI 錯誤", detail: msg || "HTTP " + httpStatus };
     }
     if (msg.indexOf("沒有收到") >= 0) {

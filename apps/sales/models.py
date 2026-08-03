@@ -42,6 +42,19 @@ class Customer(models.Model):
         return f"{self.code} - {self.name}"
 
 
+class CustomerSearchRevision(models.Model):
+    """Monotonic version for live search refresh (SSE / Supabase Realtime hook)."""
+
+    version = models.PositiveBigIntegerField("版本", default=0)
+
+    class Meta:
+        verbose_name = "客戶搜尋版本"
+        verbose_name_plural = "客戶搜尋版本"
+
+    def __str__(self):
+        return f"v{self.version}"
+
+
 class SalesOrder(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "草稿"
