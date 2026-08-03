@@ -21,9 +21,10 @@ from .services.customer_sheet_push_ui import (
     delete_customer_sheet_or_warn,
     push_customer_sheet_or_warn,
 )
-from apps.sales.signals import resume_sheet_push, skip_sheet_push
+from apps.sales.services.customer_sheet_sync_flags import skip_sheet_push
+from apps.sales.signals import resume_sheet_push
 from .forms import CustomerForm
-from .models import Customer, SalesOrder, SalesOrderItem
+from .models import Customer, CustomerSheetSyncLog, SalesOrder, SalesOrderItem
 from .services.customer_center import (
     build_customer_center,
     compute_accounts_receivable,
@@ -41,6 +42,7 @@ from .services.order_actions import (
 )
 from .services.order_numbers import next_order_no
 from .services.product_search import product_to_dict, search_saleable_products
+from .services.google_sheet_customer_sync import sync_customers_from_google_sheet
 
 
 def customer_search(request):
@@ -123,6 +125,7 @@ def customer_list(request):
     region = request.GET.get("region", "").strip()
     show_inactive = request.GET.get("inactive") == "1"
     customers = filter_customers(query=query, region=region, show_inactive=show_inactive)
+    last_sync = CustomerSheetSyncLog.objects.first()
     return render(
         request,
         "sales/customer_list.html",
@@ -132,6 +135,53 @@ def customer_list(request):
             "region": region,
             "regions": get_customer_regions(),
             "show_inactive": show_inactive,
+            "last_sheet_sync": last_sync,
+        },
+    )
+
+
+@require_POST
+def customer_sheet_sync(request):
+    report = sync_customers_from_google_sheet(
+        force=True,
+        triggered_by=CustomerSheetSyncLog.Trigger.ADMIN,
+    )
+    if report.skipped and report.reason == "not_configured":
+        messages.error(request, "尚未設定 Google Sheet（GOOGLE_SHEETS_SPREADSHEET_ID 或 CSV URL）。")
+        return redirect("sales:customer_sheet_sync")
+
+    if report.skipped:
+        messages.warning(request, f"同步略過：{report.reason}")
+        return redirect("sales:customer_sheet_sync")
+
+    if report.ok and not report.errors:
+        messages.success(
+            request,
+            f"同步完成：新增 {report.created}、更新 {report.updated}、"
+            f"略過 {report.skipped_rows}、錯誤 {len(report.errors)}",
+        )
+    else:
+        messages.warning(
+            request,
+            f"同步完成但有 {len(report.errors)} 項錯誤；"
+            f"新增 {report.created}、更新 {report.updated}、略過 {report.skipped_rows}",
+        )
+    return redirect("sales:customer_sheet_sync")
+
+
+def customer_sheet_sync_page(request):
+    last_sync = CustomerSheetSyncLog.objects.first()
+    recent_logs = CustomerSheetSyncLog.objects.all()[:10]
+    latest_report = None
+    if request.method == "POST":
+        return customer_sheet_sync(request)
+    return render(
+        request,
+        "sales/customer_sheet_sync.html",
+        {
+            "last_sync": last_sync,
+            "recent_logs": recent_logs,
+            "latest_report": latest_report,
         },
     )
 

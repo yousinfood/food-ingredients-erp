@@ -1,3 +1,5 @@
+"""從 Google Sheet「客戶資料」同步至 PostgreSQL（upsert by code）。"""
+
 from django.core.management.base import BaseCommand
 
 from apps.sales.models import CustomerSheetSyncLog
@@ -8,7 +10,7 @@ from apps.sales.services.google_sheet_customer_sync import (
 
 
 class Command(BaseCommand):
-    help = "從 Google「客戶資料」立即同步至 Customer（lookup=客戶編號 code，force）"
+    help = "從 Google Sheet「客戶資料」同步至 Customer（唯一鍵=客戶編號 code）"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -38,4 +40,19 @@ class Command(BaseCommand):
             )
             return
 
-        self.stdout.write(str(report.as_dict()))
+        if report.skipped:
+            self.stdout.write(f"略過同步：{report.reason}")
+            return
+
+        self.stdout.write(
+            f"同步完成：新增 {report.created}、更新 {report.updated}、"
+            f"略過 {report.skipped_rows}、錯誤 {len(report.errors)}"
+        )
+        if report.synced_at:
+            self.stdout.write(f"時間：{report.synced_at}")
+        if report.errors:
+            self.stderr.write("錯誤明細：")
+            for err in report.errors:
+                self.stderr.write(f"  - {err}")
+        if not report.ok:
+            self.stderr.write("同步未完全成功。")

@@ -6,6 +6,7 @@ app_name = "sales"
 
 urlpatterns = [
     path("customers/", views.customer_list, name="customer_list"),
+    path("customers/sync-sheet/", views.customer_sheet_sync_page, name="customer_sheet_sync"),
     path("customers/new/", views.customer_create, name="customer_create"),
     path("customers/<int:pk>/", views.customer_center, name="customer_center"),
     path("customers/<int:pk>/detail/", views.customer_detail, name="customer_detail"),

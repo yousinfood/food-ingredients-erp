@@ -140,23 +140,25 @@ def customer_to_sheet_row(customer: Customer) -> list:
     ]
 
 
-def parse_customer_sheet_rows(rows: list[list]) -> tuple[list[dict], list[str]]:
+def parse_customer_sheet_rows(rows: list[list]) -> tuple[list[dict], list[str], int]:
     if not rows:
-        return [], [f"「{CUSTOMER_SHEET}」工作表為空"]
+        return [], [f"「{CUSTOMER_SHEET}」工作表為空"], 0
 
     headers = list(rows[0])
     column_map, phone_columns, errors = build_customer_column_map(headers)
     if "code" not in column_map or "name" not in column_map:
-        return [], errors
+        return [], errors, 0
 
     records: list[dict] = []
     seen_codes: set[str] = set()
+    skipped = 0
 
     for row_number, raw_row in enumerate(rows[1:], start=2):
         cells = list(raw_row)
         code = _cell_value(cells, column_map.get("code"))
         name = _cell_value(cells, column_map.get("name"))
         if not code and not name:
+            skipped += 1
             continue
         if not code:
             errors.append(f"第 {row_number} 列：缺少客戶編號")
@@ -207,7 +209,7 @@ def parse_customer_sheet_rows(rows: list[list]) -> tuple[list[dict], list[str]]:
             }
         )
 
-    return records, errors
+    return records, errors, skipped
 
 
 def customer_defaults_from_record(record: dict) -> dict:

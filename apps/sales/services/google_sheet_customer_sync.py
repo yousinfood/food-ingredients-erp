@@ -1,9 +1,8 @@
 """
-Google Sheet「客戶資料」↔ sales.Customer 同步。
+Google Sheet「客戶資料」→ sales.Customer 單向同步。
 
-Source of Truth：Google Sheet「客戶資料」工作表。
-- Sheet → ERP：搜尋客戶前節流拉取
-- ERP → Sheet：Customer 新增／修改／刪除後立即寫回
+Source of Truth：Google Sheet「客戶資料」工作表 → Railway PostgreSQL。
+Phase 1：僅 Sheet → ERP（upsert by code）；不回寫 Sheet。
 """
 
 from __future__ import annotations
@@ -12,24 +11,35 @@ import csv
 import io
 import json
 import logging
+import ssl
 import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from contextlib import contextmanager
+from dataclasses import dataclass, field
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
+from django.utils import timezone
 
-from apps.sales.models import Customer
+from apps.sales.models import Customer, CustomerSheetSyncLog
+from apps.core.services.db_connectivity import verify_database_connection
+from apps.sales.services.customer_realtime import bump_customer_search_revision
 from apps.sales.services.customer_sheet_rows import (
     CUSTOMER_SHEET,
     COLUMN_COUNT,
     customer_defaults_from_record,
     customer_to_sheet_row,
     parse_customer_sheet_rows,
+)
+from apps.sales.services.customer_sheet_sync_flags import (
+    resume_revision_bump,
+    resume_sheet_push,
+    skip_revision_bump,
+    skip_sheet_push,
 )
 from apps.sales.services.phase1_import import CUSTOMER_HEADERS
 
@@ -78,6 +88,11 @@ def customer_sync_runtime(*, spreadsheet_id: str = "", csv_url: str = ""):
     finally:
         _runtime_overrides.clear()
         _runtime_overrides.update(previous)
+
+
+def customer_sheet_push_enabled() -> bool:
+    """Phase 1: Google Sheet is source of truth — no ERP → Sheet writes."""
+    return not getattr(settings, "CUSTOMER_SHEET_ONE_WAY_SYNC", True)
 
 
 def clear_customer_search_cache() -> None:
@@ -146,6 +161,22 @@ def _parse_json_body(
     return parsed
 
 
+def _ssl_context() -> ssl.SSLContext | None:
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return None
+
+
+def _urlopen(req: urllib.request.Request, *, timeout: int = 90):
+    context = _ssl_context()
+    if context is not None:
+        return urllib.request.urlopen(req, timeout=timeout, context=context)
+    return urllib.request.urlopen(req, timeout=timeout)
+
+
 def _service_account_info() -> dict:
     raw = settings.GOOGLE_SERVICE_ACCOUNT_JSON.strip()
     if not raw:
@@ -174,7 +205,7 @@ def _access_token(*, write: bool = False) -> str:
 
 def _http_get_text(url: str) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    with _urlopen(req, timeout=90) as resp:
         status, content_type, body = _response_meta(resp)
         text = _decode_body(body)
         if status >= 400:
@@ -212,7 +243,7 @@ def _fetch_rows_via_sheets_api() -> list[list]:
     encoded_range = urllib.parse.quote(f"{CUSTOMER_SHEET}!A:Q", safe="")
     url = f"https://sheets.googleapis.com/v4/spreadsheets/{_spreadsheet_id()}/values/{encoded_range}"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}", "User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    with _urlopen(req, timeout=90) as resp:
         status, content_type, body = _response_meta(resp)
         data = _parse_json_body(
             _decode_body(body),
@@ -235,7 +266,7 @@ def _fetch_customer_rows(*, write_token: str | None = None) -> list[list]:
             url,
             headers={"Authorization": f"Bearer {write_token}", "User-Agent": USER_AGENT},
         )
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        with _urlopen(req, timeout=90) as resp:
             status, content_type, body = _response_meta(resp)
             data = _parse_json_body(
                 _decode_body(body),
@@ -261,7 +292,7 @@ def _api_request(method: str, url: str, *, token: str, payload: dict | None = No
         data = json.dumps(payload).encode("utf-8")
         headers["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    with _urlopen(req, timeout=90) as resp:
         status, content_type, raw = _response_meta(resp)
         body_text = _decode_body(raw)
         if not body_text.strip():
@@ -307,14 +338,81 @@ def _customer_sheet_gid(*, token: str) -> int:
     raise RuntimeError(f"找不到工作表：{CUSTOMER_SHEET}")
 
 
-def run_sync_from_rows(rows: list[list]) -> dict:
-    records, errors = parse_customer_sheet_rows(rows)
+@dataclass
+class CustomerSheetSyncReport:
+    ok: bool = False
+    skipped: bool = False
+    reason: str = ""
+    created: int = 0
+    updated: int = 0
+    skipped_rows: int = 0
+    errors: list[str] = field(default_factory=list)
+    synced_at: str = ""
+    log_id: int | None = None
+
+    def as_dict(self) -> dict:
+        return {
+            "ok": self.ok,
+            "skipped": self.skipped,
+            "reason": self.reason,
+            "created": self.created,
+            "updated": self.updated,
+            "skipped_rows": self.skipped_rows,
+            "errors": self.errors,
+            "synced_at": self.synced_at,
+            "log_id": self.log_id,
+        }
+
+
+def _persist_sync_log(
+    report: CustomerSheetSyncReport,
+    *,
+    triggered_by: str,
+) -> CustomerSheetSyncLog:
+    message_parts = []
+    if report.skipped:
+        message_parts.append(report.reason or "skipped")
+    else:
+        message_parts.append(f"新增 {report.created}、更新 {report.updated}、略過 {report.skipped_rows}")
+        if report.errors:
+            message_parts.append(f"錯誤 {len(report.errors)}")
+    log = CustomerSheetSyncLog.objects.create(
+        triggered_by=triggered_by,
+        ok=report.ok and not report.skipped,
+        created_count=report.created,
+        updated_count=report.updated,
+        skipped_count=report.skipped_rows,
+        error_count=len(report.errors),
+        error_details=report.errors,
+        message="；".join(message_parts)[:500],
+    )
+    report.log_id = log.pk
+    return log
+
+
+def run_sync_from_rows(
+    rows: list[list],
+    *,
+    triggered_by: str = CustomerSheetSyncLog.Trigger.COMMAND,
+) -> CustomerSheetSyncReport:
+    """Sheet rows → PostgreSQL upsert by code only (no delete)."""
+    report = CustomerSheetSyncReport(synced_at=timezone.now().isoformat())
+    records, errors, skipped_rows = parse_customer_sheet_rows(rows)
+    report.skipped_rows = skipped_rows
+    report.errors = list(errors)
+
     if not records:
-        return {"ok": False, "created": 0, "updated": 0, "errors": errors or ["沒有可同步的客戶列"]}
+        report.ok = False
+        if not report.errors:
+            report.errors = ["沒有可同步的客戶列"]
+        _persist_sync_log(report, triggered_by=triggered_by)
+        return report
 
     created = 0
     updated = 0
     _set_pulling_from_sheet(True)
+    skip_sheet_push()
+    skip_revision_bump()
     try:
         with transaction.atomic():
             for record in records:
@@ -327,48 +425,82 @@ def run_sync_from_rows(rows: list[list]) -> dict:
                     created += 1
                 else:
                     updated += 1
+    except Exception as exc:
+        logger.exception("Customer sheet sync failed during upsert")
+        report.ok = False
+        report.errors.append(f"資料庫寫入失敗：{exc}")
+        _persist_sync_log(report, triggered_by=triggered_by)
+        return report
     finally:
         _set_pulling_from_sheet(False)
+        resume_sheet_push()
+        resume_revision_bump()
 
+    report.created = created
+    report.updated = updated
+    report.ok = not report.errors
+    if created or updated:
+        bump_customer_search_revision()
     clear_customer_search_cache()
-    return {
-        "ok": not errors,
-        "created": created,
-        "updated": updated,
-        "errors": errors,
-    }
+    _persist_sync_log(report, triggered_by=triggered_by)
+    logger.info(
+        "Customer sheet pull: created=%s updated=%s skipped=%s errors=%s",
+        created,
+        updated,
+        skipped_rows,
+        len(report.errors),
+    )
+    return report
 
 
-def maybe_sync_customers_from_google_sheet(*, force: bool = False) -> dict:
+def sync_customers_from_google_sheet(
+    *,
+    force: bool = False,
+    triggered_by: str = CustomerSheetSyncLog.Trigger.COMMAND,
+) -> CustomerSheetSyncReport:
     """Sheet → ERP：拉取「客戶資料」並 upsert Customer（lookup=code）。"""
+    report = CustomerSheetSyncReport(synced_at=timezone.now().isoformat())
+    try:
+        verify_database_connection()
+    except RuntimeError as exc:
+        report.ok = False
+        report.errors = [str(exc)]
+        _persist_sync_log(report, triggered_by=triggered_by)
+        return report
+
     if not _sync_configured():
-        return {"ok": False, "skipped": True, "reason": "not_configured"}
+        report.skipped = True
+        report.reason = "not_configured"
+        report.errors = ["未設定 GOOGLE_SHEETS_SPREADSHEET_ID 或 GOOGLE_SHEETS_CUSTOMER_CSV_URL"]
+        _persist_sync_log(report, triggered_by=triggered_by)
+        return report
 
     interval = settings.CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS
     now = time.time()
     last = cache.get(CACHE_KEY_LAST)
     if not force and last is not None and (now - float(last)) < interval:
-        return {"ok": True, "skipped": True, "reason": "throttled"}
+        report.skipped = True
+        report.reason = "throttled"
+        return report
 
     if not cache.add(CACHE_KEY_LOCK, "1", timeout=180):
-        return {"ok": True, "skipped": True, "reason": "in_progress"}
+        report.skipped = True
+        report.reason = "in_progress"
+        return report
 
     try:
         rows = _fetch_customer_rows()
         if not rows:
-            return {"ok": False, "skipped": False, "reason": "empty_sheet"}
+            report.ok = False
+            report.errors = ["Google Sheet 工作表為空"]
+            _persist_sync_log(report, triggered_by=triggered_by)
+            return report
 
-        report = run_sync_from_rows(rows)
+        result = run_sync_from_rows(rows, triggered_by=triggered_by)
         cache.set(CACHE_KEY_LAST, now, timeout=max(interval * 4, 120))
-        if report.get("errors"):
-            logger.warning("Customer sheet pull finished with issues: %s", report["errors"])
-        logger.info(
-            "Customer sheet pull: created=%s updated=%s ok=%s",
-            report.get("created"),
-            report.get("updated"),
-            report.get("ok"),
-        )
-        return {"ok": report.get("ok", False), "skipped": False, **report}
+        if result.errors:
+            logger.warning("Customer sheet pull finished with issues: %s", result.errors)
+        return result
     except urllib.error.HTTPError as exc:
         body_text = ""
         try:
@@ -380,18 +512,36 @@ def maybe_sync_customers_from_google_sheet(*, force: bool = False) -> dict:
             exc.code,
             body_text[:200],
         )
+        report.ok = False
         if exc.code in (401, 403):
-            return {"ok": False, "skipped": False, "reason": "sheet_access_denied"}
-        return {"ok": False, "skipped": False, "reason": f"http_{exc.code}"}
+            report.errors = ["Google Sheet 存取被拒絕，請確認 Service Account 權限"]
+        else:
+            report.errors = [f"Google Sheet HTTP 錯誤：{exc.code}"]
+        _persist_sync_log(report, triggered_by=triggered_by)
+        return report
     except Exception as exc:
         logger.warning("Google Sheet customer pull failed: %s", exc, exc_info=True)
-        return {"ok": False, "skipped": False, "reason": str(exc)}
+        report.ok = False
+        report.errors = [str(exc)]
+        _persist_sync_log(report, triggered_by=triggered_by)
+        return report
     finally:
         cache.delete(CACHE_KEY_LOCK)
 
 
+def maybe_sync_customers_from_google_sheet(*, force: bool = False) -> dict:
+    """Legacy wrapper — returns dict for callers expecting the old shape."""
+    report = sync_customers_from_google_sheet(force=force)
+    payload = report.as_dict()
+    if report.skipped and report.reason:
+        payload["reason"] = report.reason
+    return payload
+
+
 def push_customer_to_google_sheet(customer: Customer) -> dict:
-    """ERP → Sheet：新增或更新一列客戶資料。"""
+    """ERP → Sheet：Phase 1 單向同步時停用。"""
+    if not customer_sheet_push_enabled():
+        return {"ok": True, "skipped": True, "reason": "one_way_sync"}
     if _is_pulling_from_sheet():
         return {"ok": True, "skipped": True, "reason": "pull_in_progress"}
 
@@ -454,7 +604,9 @@ def push_customer_to_google_sheet(customer: Customer) -> dict:
 
 
 def delete_customer_from_google_sheet(code: str) -> dict:
-    """ERP → Sheet：刪除客戶列。"""
+    """ERP → Sheet：Phase 1 單向同步時停用。"""
+    if not customer_sheet_push_enabled():
+        return {"ok": True, "skipped": True, "reason": "one_way_sync"}
     if _is_pulling_from_sheet():
         return {"ok": True, "skipped": True, "reason": "pull_in_progress"}
 

@@ -12,6 +12,8 @@ def push_customer_sheet_or_warn(request, customer) -> dict:
         return result
 
     reason = result.get("reason", "unknown")
+    if reason == "one_way_sync":
+        return result
     if reason == "sheet_write_denied":
         text = "客戶已儲存，但 Google Sheet 寫入失敗（服務帳號需編輯權限）"
     elif reason == "not_configured":
@@ -28,6 +30,8 @@ def delete_customer_sheet_or_warn(request, code: str) -> dict:
         return result
 
     reason = result.get("reason", "unknown")
+    if reason == "one_way_sync":
+        return result
     if reason == "sheet_write_denied":
         text = "客戶已刪除，但 Google Sheet 更新失敗（服務帳號需編輯權限）"
     elif reason == "not_configured":

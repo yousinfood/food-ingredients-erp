@@ -19,12 +19,35 @@ def _build_supabase_database_url(password: str) -> str:
     )
 
 
+def _on_railway() -> bool:
+    return bool(
+        os.environ.get("RAILWAY_ENVIRONMENT", "").strip()
+        or os.environ.get("RAILWAY_SERVICE_NAME", "").strip()
+    )
+
+
 def _resolve_database_url():
-    """Railway / 雲端：優先 DATABASE_URL（PostgreSQL）。本機預設 SQLite。"""
-    url = os.environ.get("DATABASE_URL", "").strip()
+    """Railway / 雲端：優先 DATABASE_URL（PostgreSQL）。本機預設 SQLite。
+
+    本機開發必須用 DATABASE_PUBLIC_URL（或不含 railway.internal 的 DATABASE_URL）。
+    Railway 容器內才使用 postgres.railway.internal。
+    """
     placeholders = ("YOUR_PASSWORD", "YOUR_PROJECT_REF", "YOUR-PROJECT-REF")
-    if url and not any(token in url for token in placeholders):
-        return url
+
+    def _valid(url: str) -> bool:
+        return bool(url) and not any(token in url for token in placeholders)
+
+    public_url = os.environ.get("DATABASE_PUBLIC_URL", "").strip()
+    database_url = os.environ.get("DATABASE_URL", "").strip()
+
+    if _on_railway():
+        if _valid(database_url):
+            return database_url
+    else:
+        if _valid(public_url):
+            return public_url
+        if _valid(database_url) and "railway.internal" not in database_url:
+            return database_url
 
     if os.environ.get("USE_POSTGRES", "").strip().lower() not in ("1", "true", "yes"):
         return f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
@@ -197,6 +220,7 @@ _default_db = dj_database_url.parse(
 if _default_db.get("ENGINE") == "django.db.backends.postgresql":
     _default_db.setdefault("OPTIONS", {})
     _default_db["OPTIONS"].setdefault("sslmode", "require")
+    _default_db["OPTIONS"].setdefault("connect_timeout", 30)
 
 DATABASES = {"default": _default_db}
 
@@ -246,5 +270,6 @@ PRODUCT_SHEET_SYNC_INTERVAL_SECONDS = int(
 CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS = int(
     os.environ.get("CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS", "15")
 )
+CUSTOMER_SHEET_ONE_WAY_SYNC = _env_bool("CUSTOMER_SHEET_ONE_WAY_SYNC", default=True)
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()

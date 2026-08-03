@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}同步 Google Sheet 客戶資料 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header page-header--row">
+  <div>
+    <h2>同步 Google Sheet 客戶資料</h2>
+    <p>Google Sheet「客戶資料」→ PostgreSQL（唯一鍵：客戶編號 code）</p>
+  </div>
+  <a href="{% url 'sales:customer_list' %}" class="btn btn-outline">← 返回客戶列表</a>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card-title">手動同步</div>
+  <p style="margin: 0 0 1rem;">
+    Sheet 為唯一資料來源。同步只會依 <strong>code</strong> 新增或更新，不會刪除 PostgreSQL 既有客戶。
+  </p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">同步 Google Sheet 客戶資料</button>
+  </form>
+</div>
+
+{% if last_sync %}
+<div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card-title">最後同步</div>
+  <div class="detail-grid">
+    <div class="detail-item">
+      <div class="label">時間</div>
+      <div class="value">{{ last_sync.synced_at|date:"Y-m-d H:i:s" }}</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">結果</div>
+      <div class="value">{% if last_sync.ok %}成功{% else %}有錯誤{% endif %}</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">新增</div>
+      <div class="value">{{ last_sync.created_count }}</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">更新</div>
+      <div class="value">{{ last_sync.updated_count }}</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">略過</div>
+      <div class="value">{{ last_sync.skipped_count }}</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">錯誤</div>
+      <div class="value">{{ last_sync.error_count }}</div>
+    </div>
+  </div>
+  {% if last_sync.message %}
+  <p style="margin-top: 1rem;">{{ last_sync.message }}</p>
+  {% endif %}
+  {% if last_sync.error_details %}
+  <ul style="margin-top: 0.75rem;">
+    {% for err in last_sync.error_details %}
+    <li>{{ err }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% else %}
+<div class="card" style="margin-bottom: 1.5rem;">
+  <p class="empty-state">尚無同步紀錄。</p>
+</div>
+{% endif %}
+
+{% if recent_logs %}
+<div class="card">
+  <div class="card-title">最近同步紀錄</div>
+  <table>
+    <thead>
+      <tr>
+        <th>時間</th>
+        <th>來源</th>
+        <th>結果</th>
+        <th>新增</th>
+        <th>更新</th>
+        <th>略過</th>
+        <th>錯誤</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in recent_logs %}
+      <tr>
+        <td>{{ log.synced_at|date:"Y-m-d H:i:s" }}</td>
+        <td>{{ log.get_triggered_by_display }}</td>
+        <td>{% if log.ok %}OK{% else %}FAIL{% endif %}</td>
+        <td>{{ log.created_count }}</td>
+        <td>{{ log.updated_count }}</td>
+        <td>{{ log.skipped_count }}</td>
+        <td>{{ log.error_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

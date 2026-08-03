@@ -8,8 +8,18 @@
     <h2>客戶中心</h2>
     <p>客戶主檔管理 · 共 {{ customers|length }} 筆</p>
   </div>
-  <a href="{% url 'sales:customer_create' %}" class="btn btn-primary">＋ 新增客戶</a>
+  <div class="page-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+    <a href="{% url 'sales:customer_sheet_sync' %}" class="btn btn-outline">同步 Google Sheet 客戶資料</a>
+    <a href="{% url 'sales:customer_create' %}" class="btn btn-primary">＋ 新增客戶</a>
+  </div>
 </div>
+
+{% if last_sheet_sync %}
+<p style="margin: -0.5rem 0 1rem; color: #555;">
+  最後 Sheet 同步：{{ last_sheet_sync.synced_at|date:"Y-m-d H:i" }}
+  · 新增 {{ last_sheet_sync.created_count }} / 更新 {{ last_sheet_sync.updated_count }}
+</p>
+{% endif %}
 
 <form method="get" class="search-bar">
   <input type="search" name="q" value="{{ query }}" placeholder="搜尋編號、名稱、電話、統編、區域…" class="search-input">

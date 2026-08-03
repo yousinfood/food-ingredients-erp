@@ -1,11 +1,42 @@
 from django.contrib import admin
 
-from .models import Customer, SalesOrder, SalesOrderItem
+from .models import Customer, CustomerSheetSyncLog, SalesOrder, SalesOrderItem
 
 
 class SalesOrderItemInline(admin.TabularInline):
     model = SalesOrderItem
     extra = 1
+
+
+@admin.register(CustomerSheetSyncLog)
+class CustomerSheetSyncLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "synced_at",
+        "triggered_by",
+        "ok",
+        "created_count",
+        "updated_count",
+        "skipped_count",
+        "error_count",
+    )
+    list_filter = ("ok", "triggered_by")
+    readonly_fields = (
+        "synced_at",
+        "triggered_by",
+        "ok",
+        "created_count",
+        "updated_count",
+        "skipped_count",
+        "error_count",
+        "error_details",
+        "message",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Customer)

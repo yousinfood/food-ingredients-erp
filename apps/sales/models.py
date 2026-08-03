@@ -55,6 +55,32 @@ class CustomerSearchRevision(models.Model):
         return f"v{self.version}"
 
 
+class CustomerSheetSyncLog(models.Model):
+    class Trigger(models.TextChoices):
+        COMMAND = "command", "指令"
+        ADMIN = "admin", "管理頁"
+        WEBHOOK = "webhook", "Webhook"
+
+    synced_at = models.DateTimeField("同步時間", auto_now_add=True)
+    triggered_by = models.CharField("觸發來源", max_length=20, choices=Trigger.choices, default=Trigger.COMMAND)
+    ok = models.BooleanField("成功", default=False)
+    created_count = models.PositiveIntegerField("新增", default=0)
+    updated_count = models.PositiveIntegerField("更新", default=0)
+    skipped_count = models.PositiveIntegerField("略過", default=0)
+    error_count = models.PositiveIntegerField("錯誤", default=0)
+    error_details = models.JSONField("錯誤明細", default=list, blank=True)
+    message = models.CharField("摘要", max_length=500, blank=True)
+
+    class Meta:
+        verbose_name = "客戶 Sheet 同步紀錄"
+        verbose_name_plural = "客戶 Sheet 同步紀錄"
+        ordering = ["-synced_at"]
+
+    def __str__(self):
+        status = "OK" if self.ok else "FAIL"
+        return f"{self.synced_at:%Y-%m-%d %H:%M} {status} +{self.created_count}/~{self.updated_count}"
+
+
 class SalesOrder(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "草稿"
