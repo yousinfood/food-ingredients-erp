@@ -6,8 +6,59 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260804search-p0";
+  var ASSET_TAG = "20260804debug-v1";
+  var DEBUG_TAG = "[ys-debug-touch]";
   var VOICE_SS_DENIED = "voice_permission_denied";
+
+  function debugLog(label, data) {
+    try {
+      if (data !== undefined) console.log(DEBUG_TAG, label, data);
+      else console.log(DEBUG_TAG, label);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function debugSessionStorageAll() {
+    var out = {};
+    try {
+      for (var i = 0; i < sessionStorage.length; i++) {
+        var key = sessionStorage.key(i);
+        out[key] = sessionStorage.getItem(key);
+      }
+      if (!sessionStorage.length) out._empty = true;
+    } catch (e) {
+      out._readError = String(e);
+    }
+    return out;
+  }
+
+  function debugLogPermissions() {
+    if (!navigator.permissions || typeof navigator.permissions.query !== "function") {
+      debugLog("navigator.permissions", { supported: false });
+      return;
+    }
+    navigator.permissions
+      .query({ name: "microphone" })
+      .then(function (perm) {
+        debugLog("navigator.permissions.query(microphone)", { supported: true, state: perm.state });
+      })
+      .catch(function (err) {
+        debugLog("navigator.permissions.query(microphone)", {
+          supported: true,
+          error: err && err.name,
+          message: err && err.message,
+        });
+      });
+  }
+
+  debugLog("script load", {
+    assetTag: ASSET_TAG,
+    readyState: document.readyState,
+    userAgent: navigator.userAgent,
+    sessionStorage: debugSessionStorageAll(),
+  });
+  debugLogPermissions();
   var SEARCH_DB_ERROR = "目前無法取得最新客戶資料，請稍後再試。";
   var SEARCH_TIMEOUT_ERROR = "搜尋逾時，請稍後再試";
   var SEARCH_NO_RESULTS = "查無客戶，請改用電話搜尋";
@@ -29,6 +80,10 @@
   }
 
   function bindForm(form) {
+    debugLog("bindForm enter", {
+      bound: form && form.dataset.touchLiveSearch,
+      home: form && form.dataset.touchHomeSearch,
+    });
     if (!form || form.dataset.touchLiveSearch === "bound") return;
     form.dataset.touchLiveSearch = "bound";
     var input = form.querySelector('input[type="search"], input[type="text"][name="q"], input[name="q"]');
@@ -642,11 +697,25 @@
     }
 
     function isVoicePermissionDenied() {
-      return readVoiceFlag(VOICE_SS_DENIED);
+      var denied = readVoiceFlag(VOICE_SS_DENIED);
+      debugLog("isVoicePermissionDenied", {
+        denied: denied,
+        raw: (function () {
+          try {
+            return sessionStorage.getItem(VOICE_SS_DENIED);
+          } catch (e) {
+            return "_error";
+          }
+        })(),
+        sessionStorage: debugSessionStorageAll(),
+      });
+      return denied;
     }
 
     function markVoicePermissionDenied() {
+      debugLog("markVoicePermissionDenied before", debugSessionStorageAll());
       writeVoiceFlag(VOICE_SS_DENIED, true);
+      debugLog("markVoicePermissionDenied after", debugSessionStorageAll());
     }
 
     function destroySpeechRecognition() {
@@ -860,20 +929,37 @@
     };
 
     function initHomeVoiceSearch() {
-      if (!isHomeSearch || !voiceSearchBtn) return;
-      if (isVoiceSearchIOSEnabled() && isIOSDevice()) return;
+      debugLog("initHomeVoiceSearch enter", {
+        isHomeSearch: isHomeSearch,
+        voiceSearchBtn: !!voiceSearchBtn,
+        customerSearchClearBtn: !!customerSearchClearBtn,
+        isIOSDevice: isIOSDevice(),
+        isVoiceSearchIOSEnabled: isVoiceSearchIOSEnabled(),
+        sessionStorage: debugSessionStorageAll(),
+      });
+      if (!isHomeSearch || !voiceSearchBtn) {
+        debugLog("initHomeVoiceSearch exit", "not home search or missing voice button");
+        return;
+      }
+      if (isVoiceSearchIOSEnabled() && isIOSDevice()) {
+        debugLog("initHomeVoiceSearch exit", "iOS early return — clear click listener NOT registered");
+        return;
+      }
       var hasDesktopSpeech =
         !isIOSDevice() && (window.SpeechRecognition || window.webkitSpeechRecognition);
       if (!hasDesktopSpeech) {
+        debugLog("initHomeVoiceSearch exit", "no desktop speech — hiding voice button");
         voiceSearchBtn.hidden = true;
         return;
       }
       if (isVoicePermissionDenied()) {
+        debugLog("initHomeVoiceSearch exit", "permission denied flag — blocked");
         setVoiceSearchState("blocked");
         return;
       }
       setVoiceSearchState("idle");
       voiceSearchBtn.addEventListener("click", onVoiceSearchClick);
+      debugLog("addEventListener voice-search-button click", "registered");
       if (voiceRetryBtn) {
         voiceRetryBtn.addEventListener("click", function (e) {
           e.preventDefault();
@@ -884,16 +970,28 @@
           if (isListening) return;
           beginSpeechRecognition();
         });
+        debugLog("addEventListener voice-search-retry click", "registered");
       }
       if (customerSearchClearBtn) {
         customerSearchClearBtn.addEventListener("click", function (e) {
+          debugLog("customer-search-clear click", {
+            inputValueBefore: customerSearchInput.value,
+            sessionStorage: debugSessionStorageAll(),
+          });
           e.preventDefault();
           clearCustomerSearchInput();
           clearSearchResults();
           clearVoiceFailureUI();
+          debugLog("customer-search-clear done", {
+            inputValueAfter: customerSearchInput.value,
+          });
         });
+        debugLog("addEventListener customer-search-clear click", "registered");
+      } else {
+        debugLog("addEventListener customer-search-clear click", "SKIPPED — button not in DOM");
       }
       syncCustomerClearButton();
+      debugLog("initHomeVoiceSearch complete", "desktop path");
     }
 
     initHomeVoiceSearch();
@@ -987,6 +1085,22 @@
     }
   }
 
+  debugLog("before bindForm", {
+    readyState: document.readyState,
+    forms: document.querySelectorAll(".touch-search-form").length,
+  });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      debugLog("DOMContentLoaded", {
+        sessionStorage: debugSessionStorageAll(),
+        userAgent: navigator.userAgent,
+      });
+    });
+  } else {
+    debugLog("DOMContentLoaded skipped", "document already past loading");
+  }
+
   document.querySelectorAll(".touch-search-form").forEach(bindForm);
   window.__touchCustomerSearchVersion = ASSET_TAG;
+  debugLog("bindForm complete", { version: ASSET_TAG });
 })();

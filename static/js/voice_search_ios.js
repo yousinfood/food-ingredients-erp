@@ -5,6 +5,49 @@
   var STOP_FLUSH_MS = 120;
   var MIN_BLOB_BYTES = 100;
   var TRANSCRIBE_URL = "/api/voice/transcribe/";
+  var DEBUG_TAG = "[ys-debug-voice-ios]";
+
+  function debugLog(label, data) {
+    try {
+      if (data !== undefined) console.log(DEBUG_TAG, label, data);
+      else console.log(DEBUG_TAG, label);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function debugSessionStorageAll() {
+    var out = {};
+    try {
+      for (var i = 0; i < sessionStorage.length; i++) {
+        var key = sessionStorage.key(i);
+        out[key] = sessionStorage.getItem(key);
+      }
+      if (!sessionStorage.length) out._empty = true;
+    } catch (e) {
+      out._readError = String(e);
+    }
+    return out;
+  }
+
+  function debugLogPermissions() {
+    if (!navigator.permissions || typeof navigator.permissions.query !== "function") {
+      debugLog("navigator.permissions", { supported: false });
+      return;
+    }
+    navigator.permissions
+      .query({ name: "microphone" })
+      .then(function (perm) {
+        debugLog("navigator.permissions.query(microphone)", { supported: true, state: perm.state });
+      })
+      .catch(function (err) {
+        debugLog("navigator.permissions.query(microphone)", {
+          supported: true,
+          error: err && err.name,
+          message: err && err.message,
+        });
+      });
+  }
 
   function isIOS() {
     var ua = navigator.userAgent || "";
@@ -32,15 +75,39 @@
   }
 
   function init() {
-    if (!isIOS()) return;
+    debugLog("init enter", {
+      readyState: document.readyState,
+      userAgent: navigator.userAgent,
+      isIOS: isIOS(),
+      sessionStorage: debugSessionStorageAll(),
+      hasMediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+      hasMediaRecorder: typeof MediaRecorder !== "undefined",
+      location: { origin: location.origin, href: location.href, protocol: location.protocol },
+      userActivation: navigator.userActivation
+        ? {
+            isActive: navigator.userActivation.isActive,
+            hasBeenActive: navigator.userActivation.hasBeenActive,
+          }
+        : null,
+    });
+    debugLogPermissions();
+
+    if (!isIOS()) {
+      debugLog("init exit", "not iOS");
+      return;
+    }
 
     var btn = document.getElementById("voice-search-button");
     var retry = document.getElementById("voice-search-retry");
-    if (!btn) return;
+    if (!btn) {
+      debugLog("init exit", "missing #voice-search-button");
+      return;
+    }
 
     var hooks = window.__yousinTouchVoice;
     if (!hooks) {
       console.error("[voice-ios] missing window.__yousinTouchVoice");
+      debugLog("init exit", "missing window.__yousinTouchVoice");
       return;
     }
 
@@ -191,7 +258,10 @@
     }
 
     function startRecording() {
-      if (busy) return;
+      if (busy) {
+        debugLog("startRecording skip", "busy");
+        return;
+      }
       busy = true;
       chunks = [];
 
@@ -203,17 +273,38 @@
       if (typeof navigator.mediaDevices === "undefined" || !navigator.mediaDevices.getUserMedia) {
         resetBusy();
         hooks.showServiceError("此裝置無法使用麥克風錄音");
+        debugLog("startRecording exit", "no mediaDevices.getUserMedia");
         return;
       }
       if (typeof MediaRecorder === "undefined") {
         resetBusy();
         hooks.showServiceError("此瀏覽器不支援語音錄音");
+        debugLog("startRecording exit", "no MediaRecorder");
         return;
       }
+
+      debugLog("getUserMedia before", {
+        sessionStorage: debugSessionStorageAll(),
+        isPermissionDenied: hooks.isPermissionDenied(),
+        userAgent: navigator.userAgent,
+        userActivation: navigator.userActivation
+          ? {
+              isActive: navigator.userActivation.isActive,
+              hasBeenActive: navigator.userActivation.hasBeenActive,
+            }
+          : null,
+        visibilityState: document.visibilityState,
+        hasFocus: document.hasFocus(),
+      });
 
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then(function (s) {
+          debugLog("getUserMedia after", {
+            ok: true,
+            trackCount: s && s.getTracks ? s.getTracks().length : null,
+            trackLabels: s && s.getTracks ? s.getTracks().map(function (t) { return t.label; }) : null,
+          });
           stream = s;
           var picked = pickMimeType();
           try {
@@ -224,6 +315,7 @@
             releaseStream();
             resetBusy();
             hooks.showServiceError("無法啟動錄音，請改用文字搜尋");
+            debugLog("MediaRecorder construct error", { name: e.name, message: e.message });
             return;
           }
 
@@ -249,6 +341,11 @@
           maxStopTimer = setTimeout(stopRecording, MAX_RECORD_MS);
         })
         .catch(function (err) {
+          debugLog("getUserMedia catch", {
+            name: err && err.name,
+            message: err && err.message,
+            sessionStorage: debugSessionStorageAll(),
+          });
           releaseStream();
           resetBusy();
           if (err && err.name === "NotAllowedError") {
@@ -262,29 +359,57 @@
     }
 
     function onMicClick(e) {
+      debugLog("click enter", {
+        type: e && e.type,
+        busy: busy,
+        isRecording: isRecording,
+        isPermissionDenied: hooks.isPermissionDenied(),
+        sessionStorage: debugSessionStorageAll(),
+        userActivation: navigator.userActivation
+          ? {
+              isActive: navigator.userActivation.isActive,
+              hasBeenActive: navigator.userActivation.hasBeenActive,
+            }
+          : null,
+      });
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (busy && !isRecording) return;
+      if (busy && !isRecording) {
+        debugLog("click exit", "busy && !isRecording");
+        return;
+      }
       if (hooks.isPermissionDenied()) {
+        debugLog("click exit", "isPermissionDenied — setBlocked");
         hooks.setBlocked();
         return;
       }
       if (isRecording) {
+        debugLog("click exit", "stopRecording");
         stopRecording();
         return;
       }
+      debugLog("click → startRecording", null);
       startRecording();
     }
 
     btn.addEventListener("click", onMicClick, true);
-    if (retry) retry.addEventListener("click", onMicClick, true);
+    debugLog("addEventListener voice-search-button click", "registered capture=true");
+    if (retry) {
+      retry.addEventListener("click", onMicClick, true);
+      debugLog("addEventListener voice-search-retry click", "registered capture=true");
+    }
     hooks.setState("idle");
-    window.__voiceSearchIOS = "20260802";
+    window.__voiceSearchIOS = "20260804debug-v1";
+    debugLog("init complete", { tag: window.__voiceSearchIOS });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", function () {
+      debugLog("DOMContentLoaded", { readyState: document.readyState });
+      init();
+    });
   } else {
+    debugLog("DOMContentLoaded skipped", "document already past loading");
     init();
   }
 })();
