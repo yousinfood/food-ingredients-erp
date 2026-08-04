@@ -10,7 +10,7 @@
       box-sizing: border-box;
       display: block;
       width: 100%;
-      min-height: 72px;
+      min-height: 48px;
       height: 72px;
       padding: 0 1.15rem;
       font-family: inherit;
@@ -51,7 +51,7 @@
       justify-content: center;
       gap: 0.25rem;
       width: 100%;
-      min-height: 100px;
+      min-height: 48px;
       height: auto;
       margin: 0;
       padding: 0.85rem 1rem;
@@ -581,6 +581,19 @@
       border-radius: 14px;
       text-align: center;
     }
+
+    .touch-home-app--senior .touch-search-loading {
+      margin: 1rem 0 0;
+      padding: 1rem 1.1rem;
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.45;
+      text-align: center;
+      color: #245c63;
+      background: #eef6f7;
+      border: 2px solid #b8d4d8;
+      border-radius: 14px;
+    }
   </style>
 {% endblock %}
 
@@ -600,7 +613,7 @@
           id="customer-search-input"
           value="{{ query }}"
           class="touch-search-input touch-search-input--hero touch-search-input--home touch-home-senior__input"
-          placeholder="輸入客戶名稱"
+          placeholder="輸入姓名或電話"
           autofocus
           enterkeyhint="search"
           inputmode="search"

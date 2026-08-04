@@ -6,9 +6,11 @@
   }
 
   var MIN_CHARS = 1;
-  var ASSET_TAG = "20260803live-v1";
+  var ASSET_TAG = "20260804search-p0";
   var VOICE_SS_DENIED = "voice_permission_denied";
   var SEARCH_DB_ERROR = "目前無法取得最新客戶資料，請稍後再試。";
+  var SEARCH_TIMEOUT_ERROR = "搜尋逾時，請稍後再試";
+  var SEARCH_NO_RESULTS = "查無客戶，請改用電話搜尋";
   var API_PATH = "/api/customers/search/";
   var VOICE_UNCLEAR_TEXT = "聽不清楚，請再說一次";
 
@@ -75,6 +77,29 @@
           '<p class="touch-search-error" role="alert">' +
           text +
           "</p></div>"
+      );
+    }
+
+    function showSearchLoading(query) {
+      var q = query || "";
+      updateResultsHtml(
+        '<div id="touch-search-results-panel" class="customer-search-results-panel customer-search-results-panel--loading" data-query="' +
+          q.replace(/"/g, "&quot;") +
+          '">' +
+          '<p class="touch-search-loading" role="status" aria-live="polite">搜尋中</p></div>'
+      );
+    }
+
+    function showNoResults(query) {
+      var q = query || "";
+      updateResultsHtml(
+        '<div id="touch-search-results-panel" class="customer-search-results-panel customer-search-results-panel--empty" data-query="' +
+          q.replace(/"/g, "&quot;") +
+          '">' +
+          '<div class="customer-search-results-panel__empty" role="status">' +
+          '<p class="customer-search-results-panel__empty-text">' +
+          SEARCH_NO_RESULTS +
+          "</p></div></div>"
       );
     }
 
@@ -380,6 +405,10 @@
       fetchAbort = new AbortController();
       var seq = ++fetchSeq;
 
+      if (!opts.silent) {
+        showSearchLoading(q);
+      }
+
       var searchClient = window.YousinCustomerSearch;
       var searchPromise = searchClient
         ? searchClient.fetchSearch({
@@ -388,6 +417,7 @@
             more: showAll,
             voice: opts.voice,
             signal: fetchAbort.signal,
+            timeoutMs: searchClient.SEARCH_TIMEOUT_MS,
           })
         : fetch(url, {
             headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -396,7 +426,11 @@
             signal: fetchAbort.signal,
           }).then(function (res) {
             return res.json().then(function (data) {
-              return { ok: res.ok && data && data.ok, data: data || {} };
+              return {
+                status: res.status,
+                ok: res.ok && data && data.ok,
+                data: data || {},
+              };
             });
           });
 
@@ -410,6 +444,10 @@
             return;
           }
           if (!data || !data.ok) {
+            if (result.timedOut || (data && data.error && data.error.indexOf("逾時") >= 0)) {
+              if (!opts.silent) showSearchError(SEARCH_TIMEOUT_ERROR);
+              return;
+            }
             if (data && data.error) {
               showSearchError(data.error);
             } else if (!opts.silent) {
@@ -438,6 +476,10 @@
             }
             scrollResultsIntoView();
             scheduleVoiceIdleReset(1000);
+            return;
+          }
+          if (!data.total || data.total === 0) {
+            if (!opts.silent) showNoResults(q);
             return;
           }
           if (typeof data.html === "string") {
