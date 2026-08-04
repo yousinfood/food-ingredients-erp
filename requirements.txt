@@ -7,3 +7,7 @@ dj-database-url>=2.1.0
 gunicorn>=22.0.0
 whitenoise>=6.6.0
 openai>=1.40.0
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
