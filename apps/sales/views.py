@@ -555,6 +555,7 @@ def sales_order_create(request):
                 product_id=line["product_id"],
                 quantity=line["quantity"],
                 unit_price=line["unit_price"],
+                sale_price_snapshot=line["unit_price"],
             )
 
         customer.last_transaction_date = order_date
