@@ -248,3 +248,28 @@ CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS = int(
 )
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
+
+# Log full tracebacks for 500 errors to stdout (Railway deploy logs).
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
