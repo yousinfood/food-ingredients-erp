@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import time
 from urllib.parse import quote
@@ -235,6 +236,22 @@ def voice_transcribe_api(request):
         )
     logger.info("voice_perf label=transcribe_response_sent elapsed_ms=%s", perf_elapsed_ms())
     return JsonResponse({"ok": True, "text": text})
+
+
+@require_POST
+def voice_ts_log_api(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    logger.info(
+        "voice_ts label=%r since_mic_ms=%s detail=%r user_agent=%r",
+        str(payload.get("label", "")).strip(),
+        payload.get("since_mic_ms"),
+        payload.get("detail"),
+        request.META.get("HTTP_USER_AGENT", ""),
+    )
+    return JsonResponse({"ok": True})
 
 
 @require_GET

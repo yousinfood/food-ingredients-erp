@@ -18,6 +18,26 @@
   var tsSpeechStartLogged = false;
   var tsSilenceLogged = false;
 
+  function tsMirrorToServer(label, sinceMic, detail) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/voice/ts-log/", true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.setRequestHeader("Accept", "application/json");
+      xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+      xhr.send(
+        JSON.stringify({
+          label: label,
+          since_mic_ms: sinceMic,
+          detail: detail !== undefined ? detail : null,
+        })
+      );
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
   function tsMark(label, detail) {
     try {
       var now = performance.now();
@@ -25,6 +45,7 @@
       var sinceMic = Math.round(now - tsMicPress);
       if (detail !== undefined) console.log(TS_TAG, label, "since_mic_ms=" + sinceMic, detail);
       else console.log(TS_TAG, label, "since_mic_ms=" + sinceMic);
+      tsMirrorToServer(label, sinceMic, detail);
     } catch (e) {
       /* ignore */
     }
