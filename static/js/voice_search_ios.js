@@ -10,9 +10,32 @@
   var TRANSCRIBE_URL = "/api/voice/transcribe/";
   var DEBUG_TAG = "[ys-debug-voice-ios]";
   var PERF_TAG = "[ys-voice-perf]";
+  var TS_TAG = "[ys-voice-ts]";
   var perfT0 = 0;
   var perfPrev = 0;
   var perfSearchActive = false;
+  var tsMicPress = 0;
+  var tsSpeechStartLogged = false;
+  var tsSilenceLogged = false;
+
+  function tsMark(label, detail) {
+    try {
+      var now = performance.now();
+      if (!tsMicPress) tsMicPress = now;
+      var sinceMic = Math.round(now - tsMicPress);
+      if (detail !== undefined) console.log(TS_TAG, label, "since_mic_ms=" + sinceMic, detail);
+      else console.log(TS_TAG, label, "since_mic_ms=" + sinceMic);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function tsReset() {
+    tsMicPress = performance.now();
+    tsSpeechStartLogged = false;
+    tsSilenceLogged = false;
+    tsMark("按下麥克風");
+  }
 
   function perfMark(step, label, detail) {
     try {
@@ -241,6 +264,10 @@
             sum += sample * sample;
           }
           if (Math.sqrt(sum / data.length) > SILENCE_THRESHOLD) {
+            if (!hasHeardSpeech && !tsSpeechStartLogged) {
+              tsSpeechStartLogged = true;
+              tsMark("偵測到開始說話", { rms: Math.sqrt(sum / data.length) });
+            }
             hasHeardSpeech = true;
             silenceStartedAt = 0;
             return;
@@ -248,9 +275,14 @@
           if (!hasHeardSpeech) return;
           if (!silenceStartedAt) {
             silenceStartedAt = Date.now();
+            if (!tsSilenceLogged) {
+              tsSilenceLogged = true;
+              tsMark("偵測到靜音");
+            }
             return;
           }
           if (Date.now() - silenceStartedAt >= SILENCE_STOP_MS) {
+            tsMark("靜音達標，觸發 stopRecording", { silence_stop_ms: SILENCE_STOP_MS });
             stopRecording();
           }
         }, 50);
@@ -296,6 +328,7 @@
     }
 
     function uploadBlob(blob) {
+      tsMark("開始 upload /api/voice/transcribe/", { bytes: blob.size });
       perfMark(4, "開始上傳", { bytes: blob.size });
       hooks.setState("processing");
       var line1 = btn.querySelector(".voice-search-button__line1");
@@ -325,6 +358,7 @@
           });
         })
         .then(function (result) {
+          tsMark("upload 完成", { status: result.status, ok: result.ok });
           resetBusy();
           var transcript = ((result.data && result.data.text) || "").trim();
           if (result.ok && result.data.ok && transcript) {
@@ -387,6 +421,7 @@
           return;
         }
         try {
+          tsMark("呼叫 MediaRecorder.stop()");
           recorder.stop();
         } catch (e) {
           finishRecording();
@@ -465,6 +500,7 @@
             if (ev.data && ev.data.size > 0) chunks.push(ev.data);
           };
           recorder.onstop = function () {
+            tsMark("onstop");
             finishRecording();
           };
           recorder.onerror = function () {
@@ -477,7 +513,10 @@
           recorder.start();
           perfMark(2, "開始錄音");
           startSilenceMonitor(s);
-          maxStopTimer = setTimeout(stopRecording, MAX_RECORD_MS);
+          maxStopTimer = setTimeout(function () {
+            tsMark("MAX_RECORD_MS 達標，觸發 stopRecording", { max_record_ms: MAX_RECORD_MS });
+            stopRecording();
+          }, MAX_RECORD_MS);
         })
         .catch(function (err) {
           debugLog("getUserMedia catch", {
@@ -529,6 +568,7 @@
       }
       debugLog("click → startRecording", null);
       perfReset();
+      tsReset();
       perfMark(1, "按下麥克風");
       startRecording();
     }
