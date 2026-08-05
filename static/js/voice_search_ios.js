@@ -1,11 +1,53 @@
 (function () {
   "use strict";
 
-  var MAX_RECORD_MS = 6000;
+  var MAX_RECORD_MS = 3000;
+  var SILENCE_STOP_MS = 700;
+  var SILENCE_THRESHOLD = 0.018;
   var STOP_FLUSH_MS = 120;
   var MIN_BLOB_BYTES = 100;
+  var MIC_START_FAIL_MSG = "麥克風無法啟動，請重新按一次";
   var TRANSCRIBE_URL = "/api/voice/transcribe/";
   var DEBUG_TAG = "[ys-debug-voice-ios]";
+  var PERF_TAG = "[ys-voice-perf]";
+  var perfT0 = 0;
+  var perfPrev = 0;
+  var perfSearchActive = false;
+
+  function perfMark(step, label, detail) {
+    try {
+      var now = Date.now();
+      if (!perfT0) perfT0 = now;
+      var totalMs = now - perfT0;
+      var stepMs = perfPrev ? now - perfPrev : 0;
+      perfPrev = now;
+      if (detail !== undefined) console.log(PERF_TAG, "step=" + step, label, "total_ms=" + totalMs, "step_ms=" + stepMs, detail);
+      else console.log(PERF_TAG, "step=" + step, label, "total_ms=" + totalMs, "step_ms=" + stepMs);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function perfReset() {
+    perfT0 = Date.now();
+    perfPrev = perfT0;
+    perfSearchActive = false;
+  }
+
+  function watchSearchResultsDisplay() {
+    var mount = document.getElementById("touch-search-results-mount");
+    if (!mount) {
+      perfMark(12, "顯示搜尋結果", { note: "missing mount" });
+      return;
+    }
+    var observer = new MutationObserver(function () {
+      var panel = mount.querySelector("#touch-search-results-panel");
+      if (!panel || panel.classList.contains("customer-search-results-panel--loading")) return;
+      perfMark(12, "顯示搜尋結果");
+      observer.disconnect();
+    });
+    observer.observe(mount, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  }
 
   function debugLog(label, data) {
     try {
@@ -111,12 +153,41 @@
       return;
     }
 
+    var origApplyTranscript = hooks.applyTranscript;
+    var origFetch = window.fetch;
+    hooks.applyTranscript = function (text) {
+      perfMark(8, "開始搜尋客戶", { text: text });
+      perfSearchActive = true;
+      watchSearchResultsDisplay();
+      return origApplyTranscript(text);
+    };
+    window.fetch = function (input, init) {
+      var url = typeof input === "string" ? input : input && input.url ? input.url : "";
+      var promise = origFetch.apply(this, arguments);
+      if (perfSearchActive && url.indexOf("/api/customers/search/") >= 0 && url.indexOf("voice=1") >= 0) {
+        var searchFetchStart = Date.now();
+        return promise.then(function (res) {
+          perfMark(11, "前端收到結果", {
+            status: res.status,
+            fetch_ms: Date.now() - searchFetchStart,
+          });
+          perfSearchActive = false;
+          return res;
+        });
+      }
+      return promise;
+    };
+
     var recorder = null;
     var stream = null;
     var chunks = [];
     var mimeType = "";
     var recordStartedAt = 0;
     var maxStopTimer = null;
+    var silenceCheckTimer = null;
+    var silenceStartedAt = 0;
+    var hasHeardSpeech = false;
+    var audioCtx = null;
     var isRecording = false;
     var busy = false;
 
@@ -125,9 +196,71 @@
         clearTimeout(maxStopTimer);
         maxStopTimer = null;
       }
+      if (silenceCheckTimer) {
+        clearInterval(silenceCheckTimer);
+        silenceCheckTimer = null;
+      }
+      silenceStartedAt = 0;
+      hasHeardSpeech = false;
+    }
+
+    function stopSilenceMonitor() {
+      clearTimers();
+      if (audioCtx) {
+        try {
+          audioCtx.close();
+        } catch (e) {
+          /* ignore */
+        }
+        audioCtx = null;
+      }
+    }
+
+    function setRecordingUI() {
+      hooks.setState("listening");
+      var line1 = btn.querySelector(".voice-search-button__line1");
+      var line2 = btn.querySelector(".voice-search-button__line2");
+      if (line1) line1.textContent = "🔴 請說客戶名稱";
+      if (line2) line2.textContent = "";
+    }
+
+    function startSilenceMonitor(mediaStream) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioCtx.createMediaStreamSource(mediaStream);
+        var analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        var data = new Uint8Array(analyser.fftSize);
+        silenceCheckTimer = setInterval(function () {
+          if (!isRecording) return;
+          analyser.getByteTimeDomainData(data);
+          var sum = 0;
+          for (var i = 0; i < data.length; i++) {
+            var sample = (data[i] - 128) / 128;
+            sum += sample * sample;
+          }
+          if (Math.sqrt(sum / data.length) > SILENCE_THRESHOLD) {
+            hasHeardSpeech = true;
+            silenceStartedAt = 0;
+            return;
+          }
+          if (!hasHeardSpeech) return;
+          if (!silenceStartedAt) {
+            silenceStartedAt = Date.now();
+            return;
+          }
+          if (Date.now() - silenceStartedAt >= SILENCE_STOP_MS) {
+            stopRecording();
+          }
+        }, 50);
+      } catch (e) {
+        debugLog("silence monitor failed", e);
+      }
     }
 
     function releaseStream() {
+      stopSilenceMonitor();
       if (recorder) {
         recorder.ondataavailable = null;
         recorder.onstop = null;
@@ -163,7 +296,10 @@
     }
 
     function uploadBlob(blob) {
+      perfMark(4, "開始上傳", { bytes: blob.size });
       hooks.setState("processing");
+      var line1 = btn.querySelector(".voice-search-button__line1");
+      if (line1) line1.textContent = "🎤 正在辨識，請稍候";
       var formData = new FormData();
       formData.append("audio", blob, filenameForMime(blob.type || mimeType));
 
@@ -212,6 +348,7 @@
     }
 
     function finishRecording() {
+      perfMark(3, "停止錄音");
       clearTimers();
       isRecording = false;
       releaseStream();
@@ -272,13 +409,13 @@
 
       if (typeof navigator.mediaDevices === "undefined" || !navigator.mediaDevices.getUserMedia) {
         resetBusy();
-        hooks.showServiceError("此裝置無法使用麥克風錄音");
+        hooks.showServiceError(MIC_START_FAIL_MSG);
         debugLog("startRecording exit", "no mediaDevices.getUserMedia");
         return;
       }
       if (typeof MediaRecorder === "undefined") {
         resetBusy();
-        hooks.showServiceError("此瀏覽器不支援語音錄音");
+        hooks.showServiceError(MIC_START_FAIL_MSG);
         debugLog("startRecording exit", "no MediaRecorder");
         return;
       }
@@ -314,7 +451,7 @@
           } catch (e) {
             releaseStream();
             resetBusy();
-            hooks.showServiceError("無法啟動錄音，請改用文字搜尋");
+            hooks.showServiceError(MIC_START_FAIL_MSG);
             debugLog("MediaRecorder construct error", { name: e.name, message: e.message });
             return;
           }
@@ -322,7 +459,7 @@
           mimeType = recorder.mimeType || picked || "audio/mp4";
           recordStartedAt = Date.now();
           isRecording = true;
-          hooks.setState("listening");
+          setRecordingUI();
 
           recorder.ondataavailable = function (ev) {
             if (ev.data && ev.data.size > 0) chunks.push(ev.data);
@@ -338,6 +475,8 @@
           };
 
           recorder.start();
+          perfMark(2, "開始錄音");
+          startSilenceMonitor(s);
           maxStopTimer = setTimeout(stopRecording, MAX_RECORD_MS);
         })
         .catch(function (err) {
@@ -353,7 +492,7 @@
             hooks.setBlocked();
             return;
           }
-          hooks.showServiceError("無法使用麥克風，請改用文字搜尋");
+          hooks.showServiceError(MIC_START_FAIL_MSG);
           hooks.showRetry();
         });
     }
@@ -389,6 +528,8 @@
         return;
       }
       debugLog("click → startRecording", null);
+      perfReset();
+      perfMark(1, "按下麥克風");
       startRecording();
     }
 

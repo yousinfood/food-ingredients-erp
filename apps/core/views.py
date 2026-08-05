@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from urllib.parse import quote
 
 from django.conf import settings
@@ -81,6 +82,18 @@ def customer_search_api(request):
     home = request.GET.get("home") == "1"
     voice = request.GET.get("voice") == "1"
     voice_alts = [alt.strip() for alt in request.GET.getlist("alt") if alt.strip()]
+    perf_t0 = time.perf_counter() if voice else None
+
+    def perf_elapsed_ms():
+        if perf_t0 is None:
+            return 0
+        return int((time.perf_counter() - perf_t0) * 1000)
+
+    if voice:
+        logger.info(
+            "voice_perf step=8 label=search_api_received elapsed_ms=0 q=%r",
+            query,
+        )
     try:
         ctx = _customer_search_context(query, show_all, voice=voice, voice_alts=voice_alts)
     except (OperationalError, DatabaseError):
@@ -89,6 +102,20 @@ def customer_search_api(request):
             {"ok": False, "error": CUSTOMER_SEARCH_DB_ERROR, "total": 0, "html": ""},
             status=503,
         )
+    if voice:
+        logger.info(
+            "voice_perf step=9 label=search_done elapsed_ms=%s total=%s",
+            perf_elapsed_ms(),
+            ctx.get("search_total", 0),
+        )
+
+    def log_search_response_sent():
+        if voice:
+            logger.info(
+                "voice_perf step=10 label=search_response_sent elapsed_ms=%s",
+                perf_elapsed_ms(),
+            )
+
     search = ctx.get("search")
     if (
         not home
@@ -97,6 +124,7 @@ def customer_search_api(request):
         and search.total_count == 1
     ):
         customer = ctx["results"][0]
+        log_search_response_sent()
         return _no_store_json_response(
             {
                 "ok": True,
@@ -114,6 +142,7 @@ def customer_search_api(request):
         ctx,
         request=request,
     )
+    log_search_response_sent()
     return _no_store_json_response(
         {
             "ok": True,
@@ -150,8 +179,14 @@ def _no_store_json_response(payload: dict, *, status: int = 200) -> JsonResponse
 
 @require_POST
 def voice_transcribe_api(request):
+    perf_t0 = time.perf_counter()
+
+    def perf_elapsed_ms():
+        return int((time.perf_counter() - perf_t0) * 1000)
+
     user_agent = request.META.get("HTTP_USER_AGENT", "")
     uploaded = request.FILES.get("audio")
+    logger.info("voice_perf step=5 label=api_received elapsed_ms=%s", perf_elapsed_ms())
     if not uploaded:
         logger.warning("voice_transcribe missing_audio user_agent=%r", user_agent)
         return JsonResponse({"ok": False, "error": "沒有收到語音", "text": ""}, status=400)
@@ -166,7 +201,13 @@ def voice_transcribe_api(request):
     )
 
     try:
+        logger.info("voice_perf step=6 label=transcribe_start elapsed_ms=%s", perf_elapsed_ms())
         text = transcribe_audio_upload(uploaded, user_agent=user_agent)
+        logger.info(
+            "voice_perf step=7 label=transcribe_done elapsed_ms=%s text_len=%s",
+            perf_elapsed_ms(),
+            len(text),
+        )
     except VoiceTranscribeError as exc:
         message = str(exc)
         logger.warning(
@@ -192,6 +233,7 @@ def voice_transcribe_api(request):
             {"ok": False, "error": "語音辨識暫時無法使用", "text": ""},
             status=500,
         )
+    logger.info("voice_perf label=transcribe_response_sent elapsed_ms=%s", perf_elapsed_ms())
     return JsonResponse({"ok": True, "text": text})
 
 
