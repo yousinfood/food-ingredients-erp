@@ -141,6 +141,26 @@ class SalesOrderItem(models.Model):
     unit_price = models.DecimalField(
         "單價", max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))]
     )
+    sale_price_snapshot = models.DecimalField(
+        "成交售價快照",
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))],
+        help_text="訂單成立當下由後端寫入，不受日後售價調整影響",
+    )
+    price_source = models.CharField(
+        "售價來源",
+        max_length=20,
+        blank=True,
+        default="",
+        help_text="customer=客戶專屬售價，standard=標準售價",
+    )
+    price_version = models.PositiveIntegerField(
+        "售價版本",
+        null=True,
+        blank=True,
+        help_text="CustomerProductPrice 主鍵（客戶售價時）",
+    )
     shipped_qty = models.DecimalField("已出貨數量", max_digits=12, decimal_places=3, default=Decimal("0"))
 
     class Meta:
