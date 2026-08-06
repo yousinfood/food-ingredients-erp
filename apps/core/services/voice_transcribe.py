@@ -142,7 +142,6 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
             model="gpt-4o-mini-transcribe",
             file=(normalized_name, raw, normalized_content_type),
             language="zh",
-            prompt=TRANSCRIBE_PROMPT,
         )
     except AuthenticationError as exc:
         _log_openai_exception(
