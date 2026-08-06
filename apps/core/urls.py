@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/customers/events/", views.customer_search_events_api, name="customer_search_events_api"),
     path("api/voice/transcribe/", views.voice_transcribe_api, name="voice_transcribe_api"),
     path("api/voice/ts-log/", views.voice_ts_log_api, name="voice_ts_log_api"),
+    path("api/debug/audio/", views.debug_audio_api, name="debug_audio_api"),
     path("api/dashboard/orders/", views.dashboard_orders_api, name="dashboard_orders_api"),
     path("voice-test/", views.voice_test, name="voice_test"),
     path("", views.dashboard, name="dashboard"),

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from urllib.parse import quote
 
 from django.conf import settings
 from django.db import DatabaseError, OperationalError
-from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -252,6 +253,18 @@ def voice_ts_log_api(request):
         request.META.get("HTTP_USER_AGENT", ""),
     )
     return JsonResponse({"ok": True})
+
+
+DEBUG_AUDIO_PATH = "/tmp/debug_audio.m4a"
+
+
+@require_GET
+def debug_audio_api(request):
+    if not os.path.isfile(DEBUG_AUDIO_PATH):
+        raise Http404("No debug audio file")
+    response = FileResponse(open(DEBUG_AUDIO_PATH, "rb"), content_type="audio/mp4")
+    response["Content-Disposition"] = 'attachment; filename="debug_audio.m4a"'
+    return response
 
 
 @require_GET
