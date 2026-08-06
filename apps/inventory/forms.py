@@ -20,6 +20,7 @@ class ProductForm(forms.ModelForm):
             "storage_temp_min",
             "storage_temp_max",
             "description",
+            "standard_price",
             "is_active",
         ]
         widgets = {
@@ -31,6 +32,7 @@ class ProductForm(forms.ModelForm):
             "net_weight_value": forms.NumberInput(attrs={"placeholder": "例如 20 或 600", "step": "any"}),
             "unit": forms.Select(),
             "description": forms.Textarea(attrs={"rows": 3}),
+            "standard_price": forms.NumberInput(attrs={"placeholder": "例如 40.00", "step": "0.01", "min": "0"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -40,3 +42,5 @@ class ProductForm(forms.ModelForm):
         self.fields["net_weight_unit"].label = "淨重單位"
         self.fields["net_weight_unit"].required = False
         self.fields["unit"].label = "庫存單位"
+        self.fields["standard_price"].label = "標準售價"
+        self.fields["standard_price"].required = False

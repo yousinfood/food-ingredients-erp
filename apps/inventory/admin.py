@@ -12,9 +12,39 @@ class WarehouseAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "category", "unit", "shelf_life_days", "is_active")
+    list_display = ("sku", "name", "standard_price", "unit_cost", "category", "unit", "is_active")
     list_filter = ("category", "unit", "is_active")
     search_fields = ("sku", "name")
+    fieldsets = (
+        (None, {"fields": ("sku", "name", "product_kind", "category", "brand", "series", "spec")}),
+        (
+            "定價",
+            {
+                "fields": (
+                    "standard_price",
+                    "unit_cost",
+                    "target_margin_rate",
+                    "warning_margin_rate",
+                    "minimum_margin_rate",
+                ),
+            },
+        ),
+        (
+            "銷售與庫存",
+            {
+                "fields": (
+                    "unit",
+                    "sales_unit",
+                    "net_weight_value",
+                    "net_weight_unit",
+                    "is_for_sale",
+                    "is_sellable",
+                    "can_be_raw_material",
+                ),
+            },
+        ),
+        ("其他", {"fields": ("shelf_life_days", "storage_temp_min", "storage_temp_max", "description", "is_active")}),
+    )
 
 
 @admin.register(Batch)

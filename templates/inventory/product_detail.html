@@ -12,6 +12,7 @@
 </div>
 
 <div class="detail-grid">
+  <div class="detail-item"><div class="label">標準售價</div><div class="value">{% if product.standard_price is not None %}${{ product.standard_price }}{% else %}-{% endif %}</div></div>
   <div class="detail-item"><div class="label">分類</div><div class="value">{{ product.category|default:"-" }}</div></div>
   <div class="detail-item"><div class="label">品牌</div><div class="value">{{ product.brand|default:"-" }}</div></div>
   <div class="detail-item"><div class="label">系列</div><div class="value">{{ product.series|default:"-" }}</div></div>
