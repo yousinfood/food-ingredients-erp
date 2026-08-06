@@ -1,10 +1,12 @@
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 from apps.inventory.packaging import format_packaging
+from apps.inventory.pricing_validators import MARGIN_RATE_VALIDATORS, NON_NEGATIVE_PRICE_VALIDATORS
 
 
 class Warehouse(models.Model):
@@ -85,6 +87,37 @@ class Product(models.Model):
     is_sellable = models.BooleanField("是否販售", default=True)
     can_be_raw_material = models.BooleanField("可做原料", default=False)
     unit_cost = models.DecimalField("每公斤成本", max_digits=12, decimal_places=4, null=True, blank=True)
+    standard_price = models.DecimalField(
+        "標準售價",
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=NON_NEGATIVE_PRICE_VALIDATORS,
+        help_text="無客戶專屬價時的預設售價（銷售單位）",
+    )
+    target_margin_rate = models.DecimalField(
+        "目標毛利率",
+        max_digits=5,
+        decimal_places=4,
+        default=Decimal("0.2500"),
+        validators=MARGIN_RATE_VALIDATORS,
+        help_text="例：0.25 = 25%",
+    )
+    warning_margin_rate = models.DecimalField(
+        "預警毛利率",
+        max_digits=5,
+        decimal_places=4,
+        default=Decimal("0.1500"),
+        validators=MARGIN_RATE_VALIDATORS,
+    )
+    minimum_margin_rate = models.DecimalField(
+        "最低毛利率",
+        max_digits=5,
+        decimal_places=4,
+        default=Decimal("0.0500"),
+        validators=MARGIN_RATE_VALIDATORS,
+    )
     shelf_life_days = models.PositiveIntegerField("標準保質期(天)", default=365)
     storage_temp_min = models.DecimalField(
         "最低儲存溫度(°C)", max_digits=5, decimal_places=1, null=True, blank=True
@@ -105,6 +138,23 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.sku} - {self.name}"
 
+    def clean(self):
+        super().clean()
+        if self.target_margin_rate >= Decimal("1"):
+            raise ValidationError({"target_margin_rate": "目標毛利率必須小於 1"})
+        if self.minimum_margin_rate > self.warning_margin_rate:
+            raise ValidationError(
+                {"warning_margin_rate": "預警毛利率不得低於最低毛利率"}
+            )
+        if self.warning_margin_rate > self.target_margin_rate:
+            raise ValidationError(
+                {"target_margin_rate": "目標毛利率不得低於預警毛利率"}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     @property
     def packaging_display(self) -> str:
         return format_packaging(
@@ -120,6 +170,148 @@ class Product(models.Model):
     @property
     def total_quantity(self):
         return self.batches.aggregate(total=models.Sum("quantity"))["total"] or Decimal("0")
+
+
+class ProductCostHistoryQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise ValidationError("成本歷史不可修改，請新增紀錄")
+
+    def delete(self):
+        raise ValidationError("成本歷史不可刪除")
+
+
+class ProductCostHistoryManager(models.Manager):
+    def get_queryset(self):
+        return ProductCostHistoryQuerySet(self.model, using=self._db)
+
+
+class ProductCostHistory(models.Model):
+    class Source(models.TextChoices):
+        MANUAL = "manual", "手動"
+        IMPORT = "import", "匯入"
+        PURCHASE = "purchase", "採購"
+        SYNC = "sync", "同步"
+
+    _COST_FACT_FIELDS = (
+        "product_id",
+        "unit_cost",
+        "effective_at",
+        "previous_cost",
+        "change_amount",
+        "change_percent",
+        "source",
+    )
+
+    product = models.ForeignKey(
+        Product, on_delete=models.PROTECT, related_name="cost_history", verbose_name="產品"
+    )
+    unit_cost = models.DecimalField(
+        "單位成本",
+        max_digits=12,
+        decimal_places=4,
+        validators=NON_NEGATIVE_PRICE_VALIDATORS,
+    )
+    effective_at = models.DateTimeField("生效時間")
+    previous_cost = models.DecimalField(
+        "前次成本", max_digits=12, decimal_places=4, null=True, blank=True
+    )
+    change_amount = models.DecimalField(
+        "成本變動", max_digits=12, decimal_places=4, null=True, blank=True
+    )
+    change_percent = models.DecimalField(
+        "成本漲幅", max_digits=8, decimal_places=4, null=True, blank=True
+    )
+    source = models.CharField(
+        "來源", max_length=20, choices=Source.choices, default=Source.MANUAL
+    )
+    note = models.TextField("備註", blank=True)
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="product_cost_history_created",
+        verbose_name="建立人",
+    )
+    created_at = models.DateTimeField("建立時間", auto_now_add=True)
+
+    objects = ProductCostHistoryManager()
+
+    class Meta:
+        verbose_name = "產品成本歷史"
+        verbose_name_plural = "產品成本歷史"
+        ordering = ["-effective_at", "-pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "effective_at"],
+                name="inventory_unique_product_cost_effective_at",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.product.sku} @ {self.unit_cost} ({self.effective_at:%Y-%m-%d})"
+
+    def clean(self):
+        super().clean()
+        if self._state.adding:
+            duplicate = ProductCostHistory.objects.filter(
+                product=self.product,
+                effective_at=self.effective_at,
+            )
+            if duplicate.exists():
+                raise ValidationError(
+                    {"effective_at": "同一產品同一生效時間不可重複"}
+                )
+
+    def _apply_cost_deltas(self):
+        prior = (
+            ProductCostHistory.objects.filter(
+                product=self.product,
+                effective_at__lt=self.effective_at,
+            )
+            .order_by("-effective_at", "-pk")
+            .first()
+        )
+        if prior is None:
+            self.previous_cost = None
+            self.change_amount = None
+            self.change_percent = None
+            return
+        self.previous_cost = prior.unit_cost
+        self.change_amount = self.unit_cost - prior.unit_cost
+        if prior.unit_cost > 0:
+            self.change_percent = (self.change_amount / prior.unit_cost).quantize(
+                Decimal("0.0001")
+            )
+        else:
+            self.change_percent = None
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding and self.pk:
+            previous = ProductCostHistory.objects.get(pk=self.pk)
+            for field in self._COST_FACT_FIELDS:
+                if getattr(previous, field) != getattr(self, field):
+                    raise ValidationError("成本歷史不可修改成本事實，請新增紀錄")
+            self.full_clean()
+            return super().save(*args, **kwargs)
+
+        if self._state.adding:
+            self._apply_cost_deltas()
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("成本歷史不可刪除")
+
+    @classmethod
+    def get_latest_for_product(cls, product, *, as_of=None):
+        """Return the latest cost row effective on or before as_of."""
+        as_of = as_of or timezone.now()
+        return (
+            cls.objects.filter(product=product, effective_at__lte=as_of)
+            .order_by("-effective_at", "-pk")
+            .first()
+        )
 
 
 class Batch(models.Model):

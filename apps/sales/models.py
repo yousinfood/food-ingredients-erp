@@ -1,7 +1,11 @@
 from decimal import Decimal
+from datetime import date, timedelta
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
+
+from apps.inventory.pricing_validators import NON_NEGATIVE_PRICE_VALIDATORS
 
 
 class Customer(models.Model):
@@ -173,3 +177,123 @@ class SalesOrderItem(models.Model):
     @property
     def line_total(self):
         return self.quantity * self.unit_price
+
+
+class CustomerProductPrice(models.Model):
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="product_prices", verbose_name="客戶"
+    )
+    product = models.ForeignKey(
+        "inventory.Product", on_delete=models.PROTECT, related_name="customer_prices", verbose_name="產品"
+    )
+    price = models.DecimalField("售價", max_digits=12, decimal_places=2, validators=NON_NEGATIVE_PRICE_VALIDATORS)
+    effective_from = models.DateField("生效日")
+    effective_to = models.DateField("失效日", null=True, blank=True)
+    is_active = models.BooleanField("啟用", default=True)
+    note = models.TextField("備註", blank=True)
+    created_at = models.DateTimeField("建立時間", auto_now_add=True)
+    updated_at = models.DateTimeField("更新時間", auto_now=True)
+
+    class Meta:
+        verbose_name = "客戶專屬售價"
+        verbose_name_plural = "客戶專屬售價"
+        ordering = ["-effective_from", "-pk"]
+        indexes = [
+            models.Index(
+                fields=["customer", "product", "is_active", "effective_from"],
+                name="sales_custo_custome_6a8b0d_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.customer.code} · {self.product.sku} = {self.price}"
+
+    _IMMUTABLE_FIELDS = ("customer_id", "product_id", "price", "effective_from")
+
+    def clean(self):
+        super().clean()
+        if self.effective_to and self.effective_to < self.effective_from:
+            raise ValidationError({"effective_to": "失效日不得早於生效日"})
+
+        if self.is_active:
+            if not self.customer.is_active:
+                raise ValidationError("停用客戶不可建立有效售價")
+            if not self.product.is_active:
+                raise ValidationError("停用產品不可建立有效售價")
+            self._validate_no_active_overlap()
+
+    def _validate_no_active_overlap(self):
+        others = CustomerProductPrice.objects.filter(
+            customer=self.customer,
+            product=self.product,
+            is_active=True,
+        )
+        if self.pk:
+            others = others.exclude(pk=self.pk)
+
+        for other in others:
+            if other.effective_from == self.effective_from:
+                raise ValidationError("不可有兩筆同日生效的有效售價")
+            if self._periods_overlap(
+                self.effective_from,
+                self.effective_to,
+                other.effective_from,
+                other.effective_to,
+            ):
+                raise ValidationError("同一客戶與產品的有效售價有效期間不可重疊")
+
+    def _auto_close_prior_active_prices(self):
+        """Close any active price that would overlap the new price's start date."""
+        close_date = self.effective_from - timedelta(days=1)
+        priors = (
+            CustomerProductPrice.objects.select_for_update()
+            .filter(
+                customer_id=self.customer_id,
+                product_id=self.product_id,
+                is_active=True,
+            )
+            .order_by("-effective_from", "-pk")
+        )
+
+        for prior in priors:
+            prior_end = prior.effective_to or date.max
+            if prior_end < self.effective_from:
+                continue
+            if prior.effective_from >= self.effective_from:
+                raise ValidationError(
+                    {"effective_from": "新售價生效日必須晚於現行有效售價生效日"}
+                )
+            if close_date < prior.effective_from:
+                raise ValidationError(
+                    {
+                        "effective_from": (
+                            "新售價生效日與現行售價過近，無法自動結束舊紀錄"
+                        )
+                    }
+                )
+            prior.effective_to = close_date
+            super(CustomerProductPrice, prior).save(
+                update_fields=["effective_to", "updated_at"]
+            )
+
+    @staticmethod
+    def _periods_overlap(from_a, to_a, from_b, to_b) -> bool:
+        end_a = to_a or date.max
+        end_b = to_b or date.max
+        return from_a <= end_b and from_b <= end_a
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = CustomerProductPrice.objects.filter(pk=self.pk).first()
+            if previous:
+                for field in self._IMMUTABLE_FIELDS:
+                    if getattr(previous, field) != getattr(self, field):
+                        raise ValidationError(
+                            "歷史售價不可修改核心欄位，請新增紀錄"
+                        )
+
+        with transaction.atomic():
+            if self._state.adding and self.is_active:
+                self._auto_close_prior_active_prices()
+            self.full_clean()
+            super().save(*args, **kwargs)
