@@ -136,6 +136,23 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
         )
         raise VoiceTranscribeError(VOICE_UNCLEAR_MESSAGE)
 
+    logger.info(
+        "voice_transcribe debug_audio normalized_name=%r normalized_content_type=%r raw_len=%s",
+        normalized_name,
+        normalized_content_type,
+        len(raw),
+    )
+    debug_audio_path = "/tmp/debug_audio" + os.path.splitext(normalized_name)[1]
+    try:
+        with open(debug_audio_path, "wb") as debug_audio_file:
+            debug_audio_file.write(raw)
+    except OSError as exc:
+        logger.warning(
+            "voice_transcribe debug_audio_write_failed path=%r error=%s",
+            debug_audio_path,
+            exc,
+        )
+
     client = OpenAI(api_key=api_key)
     try:
         result = client.audio.transcriptions.create(
