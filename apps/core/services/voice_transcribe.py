@@ -196,6 +196,13 @@ def transcribe_audio_upload(uploaded_file, *, user_agent: str = "") -> str:
         raise VoiceTranscribeError("語音辨識暫時無法使用") from exc
 
     text = (result.text or "").strip()
+    if text == TRANSCRIBE_PROMPT:
+        logger.warning(
+            "voice_transcribe prompt_echo filename=%r audio_file_size=%s",
+            original_name,
+            size,
+        )
+        raise VoiceTranscribeError(VOICE_UNCLEAR_MESSAGE)
     logger.info(
         "voice_transcribe ok audio_file_size=%s text_length=%s",
         size,
