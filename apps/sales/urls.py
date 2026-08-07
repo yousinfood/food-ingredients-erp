@@ -23,4 +23,8 @@ urlpatterns = [
     path("orders/<int:pk>/copy/", views.sales_order_copy, name="sales_order_copy"),
     path("orders/<int:pk>/success/", views.sales_order_success, name="sales_order_success"),
     path("products/search/", views.product_search_api, name="product_search_api"),
+    path("api/pricing/resolve/", views.pricing_resolve_api, name="pricing_resolve_api"),
+    path("pricing/", views.customer_product_price_list, name="customer_product_price_list"),
+    path("pricing/new/", views.customer_product_price_create, name="customer_product_price_create"),
+    path("pricing/<int:pk>/deactivate/", views.customer_product_price_deactivate, name="customer_product_price_deactivate"),
 ]

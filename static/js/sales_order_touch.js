@@ -43,6 +43,7 @@
     const lines = new Map();
     const productCatalog = new Map();
     const categoryCache = new Map();
+    const PRICE_UNSET_LABEL = "尚未設定售價";
     const draftKey = config.customerId ? "sales_order_draft_" + config.customerId : null;
     let searchTimer = null;
     let toastTimer = null;
@@ -106,7 +107,18 @@
       return Number.isFinite(n) ? n : id;
     }
 
+    function mergePricesIntoMap(products) {
+      (products || []).forEach(function (p) {
+        if (!p || p.id == null) return;
+        const price = p.resolved_unit_price;
+        if (price && price !== "0") {
+          config.customerPriceMap[String(p.id)] = String(price);
+        }
+      });
+    }
+
     function seedCatalog(items) {
+      mergePricesIntoMap(items);
       (items || []).forEach(function (p) {
         if (p && p.id != null) productCatalog.set(productKey(p.id), p);
       });
@@ -241,19 +253,53 @@
       saveConfirmModal.hidden = false;
     }
 
+    function hasResolvedPrice(price) {
+      if (price == null || price === "") return false;
+      const n = parseFloat(String(price).replace(/,/g, ""));
+      return !isNaN(n) && n > 0;
+    }
+
     function defaultPrice(product) {
       const mapPrice = config.customerPriceMap && config.customerPriceMap[String(product.id)];
-      if (mapPrice && mapPrice !== "0") return String(mapPrice);
-      if (product.last_unit_price && product.last_unit_price !== "0") {
-        return String(product.last_unit_price);
-      }
-      const frequent = (config.frequentProducts || []).find(function (fp) {
-        return productKey(fp.id) === productKey(product.id);
-      });
-      if (frequent && frequent.last_unit_price && frequent.last_unit_price !== "0") {
-        return String(frequent.last_unit_price);
+      if (hasResolvedPrice(mapPrice)) return String(mapPrice);
+      if (hasResolvedPrice(product.resolved_unit_price)) {
+        return String(product.resolved_unit_price);
       }
       return "0";
+    }
+
+    function formatLineSubtotal(qty, price) {
+      if (!hasResolvedPrice(price)) return PRICE_UNSET_LABEL;
+      return formatMoney(qty * (parseFloat(price) || 0));
+    }
+
+    function fetchProductPrice(productId) {
+      if (!config.customerId || !config.pricingResolveUrl) {
+        return Promise.resolve(null);
+      }
+      const url =
+        config.pricingResolveUrl +
+        "?customer=" +
+        encodeURIComponent(config.customerId) +
+        "&product_id=" +
+        encodeURIComponent(productId);
+      return fetch(url, { headers: { Accept: "application/json" } })
+        .then(function (r) {
+          if (!r.ok) throw new Error("fetch failed");
+          return r.json();
+        })
+        .then(function (data) {
+          if (hasResolvedPrice(data.unit_price)) {
+            config.customerPriceMap[String(productId)] = String(data.unit_price);
+            const cached = productCatalog.get(productKey(productId));
+            if (cached) cached.resolved_unit_price = String(data.unit_price);
+            return String(data.unit_price);
+          }
+          return null;
+        })
+        .catch(function () {
+          return null;
+        });
     }
 
     function customerQuery() {
@@ -270,19 +316,25 @@
       if (!lineCountEl || !orderTotalEl) return;
       let total = 0;
       let count = 0;
+      let hasUnsetPrice = false;
       lines.forEach(function (line) {
         const qty = getLineQty(line);
         const price = parseFloat(line.priceHidden.value) || 0;
+        const hasPrice = hasResolvedPrice(line.priceHidden.value);
         if (qty > 0) {
           count += 1;
-          total += qty * price;
+          if (hasPrice) total += qty * price;
+          else hasUnsetPrice = true;
         }
-        line.subtotalEl.textContent = formatMoney(qty * price);
+        if (line.unitPriceEl) {
+          line.unitPriceEl.textContent = hasPrice ? formatMoney(price) : PRICE_UNSET_LABEL;
+        }
+        line.subtotalEl.textContent = formatLineSubtotal(qty, line.priceHidden.value);
         line.minusBtn.disabled = qty <= 0;
       });
       lineCountEl.textContent = String(count);
       orderTotalEl.textContent = formatMoney(total);
-      setSaveEnabled(count > 0 && !isSubmitting);
+      setSaveEnabled(count > 0 && !isSubmitting && !hasUnsetPrice);
       if (orderLinesEmpty) orderLinesEmpty.hidden = true;
       saveDraft();
     }
@@ -529,6 +581,24 @@
           removeLineWithUndo(key);
         });
       });
+      if (line.subtotalEl) {
+        line.subtotalEl.style.cursor = "pointer";
+        line.subtotalEl.title = "點一下修改單價";
+        line.subtotalEl.addEventListener("click", function (e) {
+          e.preventDefault();
+          const current = line.priceHidden.value || "0";
+          const next = window.prompt("單價（" + product.name + "）", current);
+          if (next === null) return;
+          const parsed = parseFloat(String(next).replace(/,/g, ""));
+          if (isNaN(parsed) || parsed < 0) {
+            showToast("單價格式不正確");
+            return;
+          }
+          line.priceHidden.value = String(parsed);
+          updateTotals();
+          showToast("已更新 " + product.name + " 單價");
+        });
+      }
     }
 
     function addLine(product, defaults) {
@@ -597,6 +667,8 @@
         "</div>" +
         '<div class="touch-order-line-footer">' +
           '<div class="touch-order-line-subtotal-wrap">' +
+            '<span class="touch-order-line-subtotal-label">單價</span>' +
+            '<span class="touch-order-line-unit-price">$0</span>' +
             '<span class="touch-order-line-subtotal-label">小計</span>' +
             '<span class="touch-order-line-subtotal">$0</span>' +
           "</div>" +
@@ -613,6 +685,7 @@
         qtyDisplay: row.querySelector(".touch-qty-display"),
         qtyHidden: row.querySelector(".touch-qty-hidden"),
         priceHidden: row.querySelector(".touch-price-hidden"),
+        unitPriceEl: row.querySelector(".touch-order-line-unit-price"),
         subtotalEl: row.querySelector(".touch-order-line-subtotal"),
         minusBtn: row.querySelector(".touch-qty-minus"),
         plusBtn: row.querySelector(".touch-qty-plus"),
@@ -656,14 +729,24 @@
       options = options || {};
       qty = Math.max(1, parseInt(qty, 10) || 1);
       const key = productKey(product.id);
-      const resolvedPrice = price || defaultPrice(product);
+      let resolvedPrice = price || defaultPrice(product);
+
+      if (!hasResolvedPrice(resolvedPrice) && !options.priceFetchAttempted) {
+        fetchProductPrice(product.id).then(function (fetched) {
+          const next = Object.assign({}, options, { priceFetchAttempted: true });
+          addProductQty(product, qty, fetched || "0", next);
+          if (!fetched && !options.silent) showToast(PRICE_UNSET_LABEL);
+        });
+        return;
+      }
+
       const hadLine = lines.has(key);
       const prevQty = hadLine ? getLineQty(lines.get(key)) : 0;
       const prevPrice = hadLine ? lines.get(key).priceHidden.value : resolvedPrice;
 
       if (hadLine) {
         setLineQty(lines.get(key), prevQty + qty);
-        if (resolvedPrice && resolvedPrice !== "0") {
+        if (hasResolvedPrice(resolvedPrice)) {
           lines.get(key).priceHidden.value = String(resolvedPrice);
         }
         updateTotals();

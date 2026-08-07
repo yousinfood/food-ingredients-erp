@@ -120,15 +120,18 @@
           <div class="touch-product-pick-group touch-product-pick-group--flat">
             <div class="touch-frequent-grid" id="frequent-products">
               {% for product in frequent_products %}
-              <div class="touch-product-card" data-product="{{ product.id }}" data-price="{{ product.last_unit_price }}"
+              <div class="touch-product-card" data-product="{{ product.id }}" data-price="{% firstof product.resolved_unit_price product.last_unit_price '0' %}"
                    data-product-name="{{ product.name }}" data-product-sku="{{ product.sku }}"
                    data-product-unit="{{ product.unit_label }}" data-product-spec="{{ product.spec }}">
                 <button type="button" class="touch-product-card-main touch-product-pick-main">
                   <span class="touch-frequent-name">{{ product.name }}</span>
                   <span class="touch-product-card-sku">{{ product.sku }}</span>
                   <span class="touch-product-card-pack">{{ product.unit_label }}{% if product.spec %} · {{ product.spec }}{% endif %}</span>
-                  {% if product.last_unit_price != "0" %}
-                  <span class="touch-product-card-price">${{ product.last_unit_price }}</span>
+                  {% firstof product.resolved_unit_price product.last_unit_price as product_price %}
+                  {% if product_price and product_price != "0" %}
+                  <span class="touch-product-card-price">${{ product_price }}</span>
+                  {% elif product.price_unset %}
+                  <span class="touch-product-card-price touch-product-card-price--unset">尚未設定售價</span>
                   {% endif %}
                 </button>
                 <div class="touch-product-card-actions">
@@ -267,6 +270,7 @@
 <script>
   window.SALES_ORDER_CONFIG = {
     searchUrl: "{% url 'sales:product_search_api' %}",
+    pricingResolveUrl: "{% url 'sales:pricing_resolve_api' %}",
     customerId: {{ customer.pk }},
     flourCategory: "麵粉",
     flourSeries: ["低筋", "中筋", "高筋", "油條"],
@@ -335,6 +339,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260729naturalStarchSeries"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20260802touchUnitPrice"></script>
 {% endif %}
 {% endblock %}

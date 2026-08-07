@@ -1,9 +1,10 @@
 from django import forms
 from django.forms import inlineformset_factory
+from django.utils import timezone
 
 from apps.inventory.models import Product
 
-from .models import Customer, SalesOrder, SalesOrderItem
+from .models import Customer, CustomerProductPrice, SalesOrder, SalesOrderItem
 
 
 class CustomerForm(forms.ModelForm):
@@ -86,3 +87,25 @@ SalesOrderItemFormSet = inlineformset_factory(
     min_num=1,
     validate_min=True,
 )
+
+
+class CustomerProductPriceForm(forms.ModelForm):
+    class Meta:
+        model = CustomerProductPrice
+        fields = ["customer", "product", "price", "effective_from", "note"]
+        widgets = {
+            "price": forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "售價"}),
+            "effective_from": forms.DateInput(attrs={"type": "date"}),
+            "note": forms.TextInput(attrs={"placeholder": "備註（選填）"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["customer"].queryset = Customer.objects.filter(is_active=True).order_by("code")
+        self.fields["product"].queryset = Product.objects.filter(
+            is_active=True,
+            is_for_sale=True,
+            product_kind__in=[Product.ProductKind.FINISHED, Product.ProductKind.DUAL],
+        ).order_by("sku")
+        if not self.initial.get("effective_from") and not self.data:
+            self.initial["effective_from"] = timezone.localdate()

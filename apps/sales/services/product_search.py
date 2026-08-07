@@ -4,12 +4,6 @@ from apps.inventory.models import Product
 
 
 def saleable_products_queryset():
-    from apps.inventory.services.google_sheet_product_sync import maybe_sync_products_from_google_sheet
-
-    try:
-        maybe_sync_products_from_google_sheet()
-    except Exception:
-        pass
     return Product.objects.filter(
         is_active=True,
         is_for_sale=True,

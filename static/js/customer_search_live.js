@@ -6,7 +6,10 @@
   var EVENTS_PATH = "/api/customers/events/";
   var REVISION_POLL_MS = 30000;
   var SEARCH_TIMEOUT_MS = 1000;
-  var ASSET_TAG = "20260804search-p0";
+  if (typeof global.YOUSIN_CUSTOMER_SEARCH_TIMEOUT_MS === "number") {
+    SEARCH_TIMEOUT_MS = global.YOUSIN_CUSTOMER_SEARCH_TIMEOUT_MS;
+  }
+  var ASSET_TAG = "20260806dev-timeout";
 
   function buildSearchUrl(params) {
     var q = (params && params.q) || "";

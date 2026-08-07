@@ -41,6 +41,7 @@ class Product(models.Model):
         ML = "ml", "毫升"
         PCS = "pcs", "件"
         BOX = "box", "箱"
+        PACK = "pack", "包"
 
     class ProductKind(models.TextChoices):
         FINISHED = "finished", "成品"

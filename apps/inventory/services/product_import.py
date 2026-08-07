@@ -25,6 +25,7 @@ HEADER_ALIASES = {
     "can_be_raw_material": ("可做原料",),
     "is_active": ("啟用",),
     "notes": ("備註",),
+    "unit_cost": ("成本",),
 }
 
 SALES_UNIT_MAP = {
@@ -38,7 +39,7 @@ SALES_UNIT_MAP = {
 }
 
 INVENTORY_UNIT_MAP = {
-    "包": Product.Unit.PCS,
+    "包": Product.Unit.PACK,
     "罐": Product.Unit.PCS,
     "袋": Product.Unit.PCS,
     "箱": Product.Unit.BOX,
@@ -102,6 +103,15 @@ def _bool_from_sheet(value, *, default=True) -> bool:
     if _uncheckmark(value):
         return False
     return default
+
+
+def _parse_decimal(value):
+    if value in (None, ""):
+        return None
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return None
 
 
 def _header_map(header_row) -> dict[str, int]:
@@ -216,6 +226,7 @@ def parse_product_rows(rows) -> ProductImportReport:
                 "can_be_raw_material": can_be_raw,
                 "is_active": _bool_from_sheet(_cell(cells, headers.get("is_active")), default=True),
                 "notes": _norm(_cell(cells, headers.get("notes"))) or "",
+                "unit_cost": _parse_decimal(_cell(cells, headers.get("unit_cost"))),
                 "product_kind": Product.ProductKind.DUAL if can_be_raw else Product.ProductKind.FINISHED,
                 "packaging": _packaging_from_row(spec=spec, unit_label=unit_label),
             }
@@ -272,6 +283,7 @@ def execute_import(report: ProductImportReport) -> ProductImportReport:
                 "sales_unit": row["packaging"]["sales_unit"],
                 "net_weight_value": row["packaging"].get("net_weight_value"),
                 "net_weight_unit": row["packaging"].get("net_weight_unit", ""),
+                "unit_cost": row["unit_cost"],
             }
             if existing is None:
                 defaults["unit"] = _map_inventory_unit(row["unit_label"])

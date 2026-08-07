@@ -6,7 +6,7 @@ import secrets
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -22,8 +22,8 @@ from .services.customer_sheet_push_ui import (
     push_customer_sheet_or_warn,
 )
 from apps.sales.signals import resume_sheet_push, skip_sheet_push
-from .forms import CustomerForm
-from .models import Customer, SalesOrder, SalesOrderItem
+from .forms import CustomerForm, CustomerProductPriceForm
+from .models import Customer, CustomerProductPrice, SalesOrder, SalesOrderItem
 from .services.customer_center import (
     build_customer_center,
     compute_accounts_receivable,
@@ -287,20 +287,51 @@ def sales_order_copy(request, pk):
     return sales_order_reorder(request, pk)
 
 
-def _customer_price_map(customer):
-    from apps.sales.services.customer_order_context import _latest_prices_by_product
+def _customer_price_map(customer, product_ids=None):
+    from apps.sales.services.customer_product_price import build_price_map
 
-    items = (
-        SalesOrderItem.objects.filter(sales_order__customer=customer)
-        .exclude(sales_order__status=SalesOrder.Status.CANCELLED)
-        .values_list("product_id", flat=True)
-        .distinct()
-    )
-    product_ids = list(items)
-    if not product_ids:
-        return {}
-    prices = _latest_prices_by_product(customer, product_ids)
-    return {str(pid): str(prices.get(pid, Decimal("0"))) for pid in product_ids}
+    ids = set(product_ids or [])
+    if not ids:
+        items = (
+            SalesOrderItem.objects.filter(sales_order__customer=customer)
+            .exclude(sales_order__status=SalesOrder.Status.CANCELLED)
+            .values_list("product_id", flat=True)
+            .distinct()
+        )
+        ids.update(items)
+    return build_price_map(customer, list(ids))
+
+
+@require_GET
+def pricing_resolve_api(request):
+    from apps.inventory.models import Product
+    from apps.sales.services.customer_product_price import resolve_sale_price_detail
+
+    customer_id = request.GET.get("customer", "").strip()
+    product_id = request.GET.get("product_id", "").strip()
+    if not customer_id or not product_id:
+        return JsonResponse({"error": "缺少客戶或商品"}, status=400)
+    customer = Customer.objects.filter(pk=customer_id, is_active=True).first()
+    if customer is None:
+        return JsonResponse({"error": "找不到客戶"}, status=404)
+    try:
+        pid = int(product_id)
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "商品無效"}, status=400)
+    product = Product.objects.filter(pk=pid, is_active=True, is_for_sale=True).first()
+    if product is None:
+        return JsonResponse({"error": "找不到商品"}, status=404)
+    price, source, version = resolve_sale_price_detail(product, customer)
+    if price is None:
+        return JsonResponse({"unit_price": None, "price_unset": True, "price_source": ""})
+    payload = {
+        "unit_price": str(price),
+        "price_unset": False,
+        "price_source": source,
+    }
+    if version is not None:
+        payload["price_version"] = version
+    return JsonResponse(payload)
 
 
 @require_GET
@@ -311,16 +342,16 @@ def product_search_api(request):
     customer_id = request.GET.get("customer", "").strip()
     limit = 80 if category else 25
     products = search_saleable_products(query=query, category=category, series=series, limit=limit)
-    price_map = {}
+    customer = None
     if customer_id:
         customer = Customer.objects.filter(pk=customer_id, is_active=True).first()
-        if customer:
-            price_map = _customer_price_map(customer)
     results = []
     for p in products:
         item = product_to_dict(p)
-        if str(p.pk) in price_map:
-            item["last_unit_price"] = price_map[str(p.pk)]
+        if customer:
+            from apps.sales.services.customer_product_price import enrich_product_pricing
+
+            enrich_product_pricing(item, customer, p)
         results.append(item)
     return JsonResponse({"results": results})
 
@@ -332,6 +363,20 @@ def _parse_decimal(value, default=Decimal("0")):
         return Decimal(str(value).strip())
     except (InvalidOperation, ValueError):
         return default
+
+
+def _resolve_touch_line_unit_price(product, customer, posted_price: Decimal):
+    """Trust posted price when > 0; otherwise resolve customer / standard sale price."""
+    from apps.sales.services.customer_product_price import resolve_sale_price_detail
+
+    resolved_price, price_source, price_version = resolve_sale_price_detail(product, customer)
+    if posted_price is None or posted_price <= 0:
+        if resolved_price is not None:
+            return resolved_price, price_source, price_version
+        return Decimal("0"), "", None
+    if resolved_price is not None and posted_price == resolved_price:
+        return posted_price, price_source, price_version
+    return posted_price, "", None
 
 
 def _parse_order_lines(request):
@@ -409,11 +454,19 @@ def _order_form_context(customer, request=None, **overrides):
     }
     categories = ctx.get("product_categories") or []
     default_category = categories[0] if categories else "有信品牌粉"
-    default_products = [
-        product_to_dict(p)
-        for p in search_saleable_products(category=default_category, limit=80)
-    ]
+    from apps.sales.services.customer_product_price import enrich_product_pricing
+
+    default_products = []
+    for p in search_saleable_products(category=default_category, limit=80):
+        item = product_to_dict(p)
+        enrich_product_pricing(item, customer, p)
+        default_products.append(item)
     ctx["default_category"] = default_category
+    product_ids = {p["id"] for p in ctx["frequent_products"]}
+    product_ids.update(p["id"] for p in default_products)
+    last_order = ctx.get("last_order")
+    if last_order:
+        product_ids.update(item["id"] for item in last_order.get("items") or [])
     ctx["last_order_json"] = json.dumps(ctx["last_order"], ensure_ascii=False)
     ctx["frequent_products_json"] = json.dumps(ctx["frequent_products"], ensure_ascii=False)
     ctx["initial_lines_json"] = json.dumps(initial_lines or [], ensure_ascii=False)
@@ -427,7 +480,7 @@ def _order_form_context(customer, request=None, **overrides):
         )
     else:
         ctx["saved_order_json"] = "null"
-    price_map = _customer_price_map(customer)
+    price_map = _customer_price_map(customer, product_ids=list(product_ids))
     ctx["customer_price_map_json"] = json.dumps(price_map, ensure_ascii=False)
     saved = overrides.get("saved_order")
     if request is not None and not saved:
@@ -550,13 +603,22 @@ def sales_order_create(request):
                         initial_lines=_initial_lines_from_post(request),
                     ),
                 )
-            SalesOrderItem.objects.create(
-                sales_order=order,
-                product_id=line["product_id"],
-                quantity=line["quantity"],
-                unit_price=line["unit_price"],
-                sale_price_snapshot=line["unit_price"],
+            product = Product.objects.get(pk=line["product_id"])
+            unit_price, price_source, price_version = _resolve_touch_line_unit_price(
+                product, customer, line["unit_price"]
             )
+            item_kwargs = {
+                "sales_order": order,
+                "product_id": line["product_id"],
+                "quantity": line["quantity"],
+                "unit_price": unit_price,
+                "sale_price_snapshot": unit_price,
+            }
+            if price_source:
+                item_kwargs["price_source"] = price_source
+            if price_version is not None:
+                item_kwargs["price_version"] = price_version
+            SalesOrderItem.objects.create(**item_kwargs)
 
         customer.last_transaction_date = order_date
         customer.save(update_fields=["last_transaction_date"])
@@ -624,3 +686,48 @@ def sales_order_success(request, pk):
             "nearby_recommendations": nearby,
         },
     )
+
+
+def customer_product_price_list(request):
+    customer_q = request.GET.get("customer_q", "").strip()
+    product_q = request.GET.get("product_q", "").strip()
+    prices = CustomerProductPrice.objects.select_related("customer", "product").filter(is_active=True)
+    if customer_q:
+        prices = prices.filter(
+            Q(customer__name__icontains=customer_q) | Q(customer__code__icontains=customer_q)
+        )
+    if product_q:
+        prices = prices.filter(
+            Q(product__name__icontains=product_q) | Q(product__sku__icontains=product_q)
+        )
+    prices = prices.order_by("-effective_from", "-pk")[:200]
+    return render(
+        request,
+        "sales/customer_product_price_list.html",
+        {
+            "prices": prices,
+            "form": CustomerProductPriceForm(),
+            "customer_q": customer_q,
+            "product_q": product_q,
+        },
+    )
+
+
+@require_POST
+def customer_product_price_create(request):
+    form = CustomerProductPriceForm(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "已新增客戶售價")
+    else:
+        messages.error(request, "無法新增售價，請檢查欄位")
+    return redirect("sales:customer_product_price_list")
+
+
+@require_POST
+def customer_product_price_deactivate(request, pk):
+    row = get_object_or_404(CustomerProductPrice, pk=pk, is_active=True)
+    row.is_active = False
+    row.save(update_fields=["is_active", "updated_at"])
+    messages.success(request, "已停用售價")
+    return redirect("sales:customer_product_price_list")

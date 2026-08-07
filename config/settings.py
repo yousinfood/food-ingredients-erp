@@ -72,6 +72,10 @@ def _detect_local_lan_ips() -> list[str]:
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key-change-in-production")
 DEBUG = _env_bool("DEBUG", default=True)
+# Local dev often hits remote PostgreSQL (~2s); production (DEBUG=False) keeps 1s P0 timeout.
+CUSTOMER_SEARCH_TIMEOUT_MS = int(
+    os.environ.get("CUSTOMER_SEARCH_TIMEOUT_MS", "5000" if DEBUG else "1000")
+)
 RAILWAY_PUBLIC_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
 CLOUDFLARE_TUNNEL_HOSTNAME = os.environ.get("CLOUDFLARE_TUNNEL_HOSTNAME", "").strip()
 

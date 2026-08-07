@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}客戶商品售價 - 食品原料 ERP{% endblock %}
+
+{% block content %}
+<div class="page-header page-header--row">
+  <div>
+    <h2>客戶商品售價</h2>
+    <p>客戶專屬售價；無設定時接單會使用商品標準售價</p>
+  </div>
+</div>
+
+{% if messages %}
+<div class="flash-messages">
+  {% for message in messages %}
+  <p class="flash flash--{{ message.tags }}">{{ message }}</p>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="get" class="search-bar">
+  <input type="search" name="customer_q" value="{{ customer_q }}" placeholder="搜尋客戶（名稱或編號）" class="search-input">
+  <input type="search" name="product_q" value="{{ product_q }}" placeholder="搜尋商品（SKU 或品名）" class="search-input">
+  <button type="submit" class="btn btn-outline">搜尋</button>
+</form>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+  <h3 style="margin-top: 0;">新增客戶售價</h3>
+  <form method="post" action="{% url 'sales:customer_product_price_create' %}" class="form-grid">
+    {% csrf_token %}
+    {{ form.customer.label_tag }} {{ form.customer }}
+    {{ form.product.label_tag }} {{ form.product }}
+    {{ form.price.label_tag }} {{ form.price }}
+    {{ form.effective_from.label_tag }} {{ form.effective_from }}
+    {{ form.note.label_tag }} {{ form.note }}
+    <div>
+      <button type="submit" class="btn btn-primary">新增售價</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>客戶</th>
+        <th>商品</th>
+        <th>售價</th>
+        <th>生效日</th>
+        <th>失效日</th>
+        <th>備註</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in prices %}
+      <tr>
+        <td>{{ row.customer.code }} · {{ row.customer.name }}</td>
+        <td>{{ row.product.sku }} · {{ row.product.name }}</td>
+        <td>{{ row.price }}</td>
+        <td>{{ row.effective_from }}</td>
+        <td>{{ row.effective_to|default:"—" }}</td>
+        <td>{{ row.note|default:"" }}</td>
+        <td>
+          <form method="post" action="{% url 'sales:customer_product_price_deactivate' row.pk %}" onsubmit="return confirm('確定停用這筆售價？');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm">停用</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">尚無有效客戶售價</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

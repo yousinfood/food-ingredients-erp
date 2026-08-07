@@ -133,7 +133,6 @@ def get_frequent_products(customer, limit=12):
         )
     }
 
-    last_prices = _latest_prices_by_product(customer, product_ids)
     last_qtys = _latest_quantities_by_product(customer, product_ids)
 
     results = []
@@ -145,7 +144,9 @@ def get_frequent_products(customer, limit=12):
         item["order_count"] = row["order_count"]
         item["order_count_30"] = row["order_count_30"]
         item["order_count_90"] = row["order_count_90"]
-        item["last_unit_price"] = str(last_prices.get(product.pk, Decimal("0")))
+        from apps.sales.services.customer_product_price import enrich_product_pricing
+
+        enrich_product_pricing(item, customer, product)
         item["last_quantity"] = str(last_qtys.get(product.pk, Decimal("1")))
         results.append(item)
         if len(results) >= limit:

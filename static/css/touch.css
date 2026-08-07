@@ -1419,6 +1419,17 @@ button.touch-stat--btn .touch-stat-label {
   color: #555;
 }
 
+.touch-order-cart-panel--confirm .touch-order-line-unit-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-right: 16px;
+}
+
+.touch-order-cart-panel--confirm .touch-order-line-unit-price:empty {
+  display: none;
+}
+
 .touch-order-cart-panel--confirm .touch-order-line-subtotal {
   font-size: 28px;
   font-weight: 800;
@@ -2860,6 +2871,11 @@ button.touch-stat--btn .touch-stat-label {
   font-weight: 800;
   color: var(--touch-primary);
   margin-top: 0.2rem;
+}
+
+.touch-product-card-price--unset {
+  color: #b45309;
+  font-weight: 700;
 }
 
 .touch-product-card-actions {
