@@ -1,12 +1,15 @@
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.sales.views_customer_sync_webhook import customer_sync_webhook_api
+
 admin.site.site_header = "食品原料 ERP 管理後台"
 admin.site.site_title = "食品原料 ERP"
 admin.site.index_title = "系統管理"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/sync/customer/", customer_sync_webhook_api, name="customer_sync_webhook_api"),
     path("", include("apps.core.urls")),
     path("inventory/", include("apps.inventory.urls")),
     path("procurement/", include("apps.procurement.urls")),

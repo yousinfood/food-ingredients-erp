@@ -251,6 +251,9 @@ CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS = int(
     os.environ.get("CUSTOMER_SHEET_SYNC_INTERVAL_SECONDS", "15")
 )
 
+# Google Sheet 客戶 webhook（Apps Script POST → ERP）
+GOOGLE_SHEET_WEBHOOK_TOKEN = os.environ.get("GOOGLE_SHEET_WEBHOOK_TOKEN", "").strip()
+
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 
 # Log full tracebacks for 500 errors to stdout (Railway deploy logs).
