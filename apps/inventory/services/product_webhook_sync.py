@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from django.db import transaction
@@ -15,6 +16,8 @@ from apps.inventory.services.product_import import (
     _parse_decimal,
 )
 from apps.sales.services.customer_webhook_sync import verify_webhook_token
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["upsert_product_from_webhook", "verify_webhook_token"]
 
@@ -97,15 +100,31 @@ def parse_product_webhook_payload(data: dict) -> tuple[str, dict, str]:
 
 def upsert_product_from_webhook(data: dict) -> dict:
     sku, defaults, unit_label = parse_product_webhook_payload(data)
+    logger.info(
+        "Product webhook upsert start: sku=%r name=%r is_active=%s is_for_sale=%s is_sellable=%s",
+        sku,
+        defaults.get("name"),
+        defaults.get("is_active"),
+        defaults.get("is_for_sale"),
+        defaults.get("is_sellable"),
+    )
 
     with transaction.atomic():
         existing = Product.objects.filter(sku=sku).first()
         if existing is None:
             defaults["unit"] = _map_inventory_unit(unit_label)
-        _, created = Product.objects.update_or_create(sku=sku, defaults=defaults)
+        product, created = Product.objects.update_or_create(sku=sku, defaults=defaults)
 
+    action = "created" if created else "updated"
+    logger.info(
+        "Product webhook upsert done: sku=%r product_id=%s action=%s",
+        sku,
+        product.pk,
+        action,
+    )
     return {
         "success": True,
         "product_code": sku,
-        "action": "created" if created else "updated",
+        "action": action,
+        "product_id": product.pk,
     }

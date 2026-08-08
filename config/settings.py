@@ -278,5 +278,15 @@ LOGGING = {
             "level": "ERROR",
             "propagate": False,
         },
+        "apps.inventory.services.product_webhook_sync": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "apps.inventory.views_product_sync_webhook": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
