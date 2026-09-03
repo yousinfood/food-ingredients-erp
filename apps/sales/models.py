@@ -68,6 +68,15 @@ class SalesOrder(models.Model):
         COMPLETED = "completed", "已完成"
         CANCELLED = "cancelled", "已作廢"
 
+    class SpecialPriceReason(models.TextChoices):
+        PRE_INCREASE = "pre_increase", "漲價前優惠"
+        BULK_PURCHASE = "bulk_purchase", "大量採購優惠"
+        LONG_TERM_CUSTOMER = "long_term_customer", "長期客戶優惠"
+        SPECIAL_FAVOR = "special_favor", "特殊優待"
+        COMPENSATION = "compensation", "補償客戶"
+        PRICE_COMMITMENT = "price_commitment", "報價承諾"
+        OTHER = "other", "其他"
+
     ACTIVE_STATUSES = (
         Status.DRAFT,
         Status.CREATED,
@@ -83,6 +92,20 @@ class SalesOrder(models.Model):
     delivery_date = models.DateField("交貨日期", null=True, blank=True)
     shipping_address = models.CharField("送貨地址", max_length=300, blank=True)
     notes = models.TextField("備註", blank=True)
+
+    special_price_reason = models.CharField(
+        "特殊成交原因",
+        max_length=30,
+        blank=True,
+        default="",
+        choices=SpecialPriceReason.choices,
+    )
+    special_price_reason_note = models.CharField(
+        "特殊成交原因說明",
+        max_length=200,
+        blank=True,
+        default="",
+    )
     created_by = models.ForeignKey(
         "auth.User",
         on_delete=models.SET_NULL,
@@ -110,6 +133,15 @@ class SalesOrder(models.Model):
 
     def __str__(self):
         return self.order_no
+
+
+    def save(self, *args, **kwargs):
+        # PostgreSQL column is NOT NULL; never persist Python None for optional text fields.
+        if self.special_price_reason is None:
+            self.special_price_reason = ""
+        if self.special_price_reason_note is None:
+            self.special_price_reason_note = ""
+        super().save(*args, **kwargs)
 
     @property
     def total_amount(self):
