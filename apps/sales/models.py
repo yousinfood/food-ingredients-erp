@@ -106,6 +106,19 @@ class SalesOrder(models.Model):
         blank=True,
         default="",
     )
+    is_walk_in = models.BooleanField("現場客訂單", default=False)
+    walk_in_contact_label = models.CharField(
+        "現場客稱呼",
+        max_length=200,
+        blank=True,
+        help_text="選填：姓名或店名（未來歸戶用）",
+    )
+    walk_in_phone = models.CharField(
+        "現場客電話",
+        max_length=30,
+        blank=True,
+        help_text="選填：電話（未來歸戶用）",
+    )
     created_by = models.ForeignKey(
         "auth.User",
         on_delete=models.SET_NULL,
@@ -141,6 +154,8 @@ class SalesOrder(models.Model):
             self.special_price_reason = ""
         if self.special_price_reason_note is None:
             self.special_price_reason_note = ""
+        if self.is_walk_in is None:
+            self.is_walk_in = False
         super().save(*args, **kwargs)
 
     @property
