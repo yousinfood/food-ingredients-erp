@@ -192,6 +192,20 @@ class SalesOrderItem(models.Model):
     unit_price = models.DecimalField(
         "單價", max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))]
     )
+    original_unit_price = models.DecimalField(
+        "原始單價",
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))],
+        help_text="接單當下依客戶／標準售價解析的單價",
+    )
+    discount_amount = models.DecimalField(
+        "折讓金額",
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0"),
+        validators=[MinValueValidator(Decimal("0"))],
+    )
     sale_price_snapshot = models.DecimalField(
         "成交售價快照",
         max_digits=12,
@@ -220,6 +234,15 @@ class SalesOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.sales_order.order_no} - {self.product.sku}"
+
+    def save(self, *args, **kwargs):
+        if self.original_unit_price is None:
+            self.original_unit_price = (
+                self.sale_price_snapshot if self.sale_price_snapshot else self.unit_price
+            )
+        if self.discount_amount is None:
+            self.discount_amount = Decimal("0")
+        super().save(*args, **kwargs)
 
     @property
     def line_total(self):
