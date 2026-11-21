@@ -978,7 +978,7 @@
         series
           .map(function (s) {
             const tone =
-              s.key === "red" || s.key === "zhong"
+              s.key === "red"
                 ? "touch-brand-flour-series-btn--red"
                 : "touch-brand-flour-series-btn--blue";
             return (
