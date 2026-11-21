@@ -84,15 +84,15 @@ class ProductImportCategoryErpWinsTests(TestCase):
         Product.objects.create(
             sku="FG0047",
             name="忠／小粗粒粉",
-            category="天然澱粉",
+            category="有信品牌粉",
             standard_price=Decimal("100"),
             **self._base_product(),
         )
         rows = [
             ["產品編號", "產品名稱", "產品分類", "單位", "是否販售", "可做原料", "啟用"],
-            ["FG0047", "忠／小粗粒粉", "有信品牌粉", "包", "✓", "✗", "✓"],
+            ["FG0047", "忠／小粗粒粉", "天然澱粉", "包", "✓", "✗", "✓"],
         ]
         run_sync_from_rows(rows)
         p = Product.objects.get(sku="FG0047")
-        self.assertEqual(p.category, "天然澱粉")
+        self.assertEqual(p.category, "有信品牌粉")
         self.assertEqual(p.standard_price, Decimal("100"))

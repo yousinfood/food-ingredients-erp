@@ -935,8 +935,40 @@
 
     function filterBrandFlourProducts(products, seriesKey) {
       const def = brandFlourSeriesDef(seriesKey);
-      if (!def || !def.productNames) return [];
-      return filterProductsByNameList(products, def.productNames);
+      if (!def) return [];
+      const list = products || [];
+      const picked = [];
+
+      function addProduct(p) {
+        if (!picked.some(function (x) {
+          return x.id === p.id;
+        })) {
+          picked.push(p);
+        }
+      }
+
+      (def.productNames || []).forEach(function (target) {
+        const needle = (target || "").trim();
+        if (!needle) return;
+        list.forEach(function (p) {
+          const n = (p.name || "").trim();
+          if (!n || n.indexOf(needle) < 0) return;
+          addProduct(p);
+        });
+      });
+
+      (def.productSkus || []).forEach(function (targetSku) {
+        const skuNeedle = (targetSku || "").trim().toUpperCase();
+        if (!skuNeedle) return;
+        list.forEach(function (p) {
+          const sku = (p.sku || "").trim().toUpperCase();
+          if (sku && sku === skuNeedle) {
+            addProduct(p);
+          }
+        });
+      });
+
+      return picked;
     }
 
     function renderBrandFlourPickerHtml() {
@@ -946,7 +978,7 @@
         series
           .map(function (s) {
             const tone =
-              s.key === "red"
+              s.key === "red" || s.key === "zhong"
                 ? "touch-brand-flour-series-btn--red"
                 : "touch-brand-flour-series-btn--blue";
             return (
