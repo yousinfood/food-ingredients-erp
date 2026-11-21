@@ -12,6 +12,16 @@ from apps.inventory.packaging import parse_packaging_spec
 DEFAULT_EXCEL_PATH = settings.BASE_DIR / "data" / "有信ERP.xlsx"
 PRODUCT_SHEET = "產品資料"
 
+# 接單「天然澱粉 → 粒粉」：Sheet 同步時強制分類，避免被「有信品牌粉」蓋回
+NATURAL_STARCH_GRANULE_SKUS = frozenset({"FG0047", "FG0048"})
+NATURAL_STARCH_CATEGORY = "天然澱粉"
+
+
+def category_from_sheet_row(sku: str, category: str) -> str:
+    if (sku or "").strip() in NATURAL_STARCH_GRANULE_SKUS:
+        return NATURAL_STARCH_CATEGORY
+    return category or ""
+
 HEADER_ALIASES = {
     "sku": ("產品編號", "料號"),
     "name": ("產品名稱", "品名"),
@@ -270,7 +280,7 @@ def execute_import(report: ProductImportReport) -> ProductImportReport:
             existing = Product.objects.filter(sku=row["sku"]).first()
             defaults = {
                 "name": row["name"],
-                "category": row["category"],
+                "category": category_from_sheet_row(row["sku"], row["category"]),
                 "brand": row["brand"],
                 "series": row["series"],
                 "spec": row["spec"],

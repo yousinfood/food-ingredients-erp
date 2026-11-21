@@ -308,7 +308,18 @@
       {
         key: "granule",
         label: "粒粉",
-        productNames: ["R1粒粉", "一品紅粒粉", "一品橘", "小粗", "中粗"],
+        productNames: [
+          "R1粒粉",
+          "一品紅粒粉",
+          "一品橘",
+          "小粗",
+          "中粗",
+          "忠／小粗",
+          "忠／中粗",
+          "忠/小粗",
+          "忠/中粗"
+        ],
+        productSkus: ["FG0047", "FG0048"],
         bg: "#F6E6BF",
         color: "#6A5312",
       },
@@ -339,6 +350,6 @@
       : null,
   };
 </script>
-<script src="{% static 'js/sales_order_touch.js' %}?v=20260802touchUnitPrice"></script>
+<script src="{% static 'js/sales_order_touch.js' %}?v=20261121granule-skus"></script>
 {% endif %}
 {% endblock %}

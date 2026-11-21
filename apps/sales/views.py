@@ -336,6 +336,9 @@ def pricing_resolve_api(request):
 
 @require_GET
 def product_search_api(request):
+    from apps.inventory.services.google_sheet_product_sync import maybe_sync_products_from_google_sheet
+
+    maybe_sync_products_from_google_sheet()
     query = request.GET.get("q", "").strip()
     category = request.GET.get("category", "").strip()
     series = request.GET.get("series", "").strip()

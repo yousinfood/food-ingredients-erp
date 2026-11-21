@@ -1074,6 +1074,17 @@
         });
       });
 
+      (def.productSkus || []).forEach(function (targetSku) {
+        const skuNeedle = (targetSku || "").trim().toUpperCase();
+        if (!skuNeedle) return;
+        list.forEach(function (p) {
+          const sku = (p.sku || "").trim().toUpperCase();
+          if (sku && sku === skuNeedle) {
+            addProduct(p);
+          }
+        });
+      });
+
       return picked;
     }
 
