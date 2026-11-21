@@ -14,6 +14,7 @@ from apps.inventory.services.product_import import (
     _map_inventory_unit,
     _packaging_from_row,
     _parse_decimal,
+    category_from_sheet_row,
 )
 from apps.sales.services.customer_webhook_sync import verify_webhook_token
 
@@ -71,7 +72,7 @@ def parse_product_webhook_payload(data: dict) -> tuple[str, dict, str]:
 
     defaults = {
         "name": name,
-        "category": _first_value(data, "category"),
+        "category": category_from_sheet_row(sku, _first_value(data, "category")),
         "brand": _first_value(data, "brand"),
         "series": _first_value(data, "series"),
         "spec": spec,
