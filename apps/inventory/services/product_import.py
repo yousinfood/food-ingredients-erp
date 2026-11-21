@@ -12,12 +12,13 @@ from apps.inventory.packaging import parse_packaging_spec
 DEFAULT_EXCEL_PATH = settings.BASE_DIR / "data" / "有信ERP.xlsx"
 PRODUCT_SHEET = "產品資料"
 
-# 接單「天然澱粉 → 粒粉」：Sheet 同步時強制分類，避免被「有信品牌粉」蓋回
+# 新商品自 Sheet 匯入時：FG0047/FG0048 預設天然澱粉（接單粒粉）；既有商品分類以 ERP 為準、同步不覆寫
 NATURAL_STARCH_GRANULE_SKUS = frozenset({"FG0047", "FG0048"})
 NATURAL_STARCH_CATEGORY = "天然澱粉"
 
 
 def category_from_sheet_row(sku: str, category: str) -> str:
+    """僅用於「新建」Product；更新既有商品時 execute_import 不寫入 category。"""
     if (sku or "").strip() in NATURAL_STARCH_GRANULE_SKUS:
         return NATURAL_STARCH_CATEGORY
     return category or ""
@@ -280,7 +281,6 @@ def execute_import(report: ProductImportReport) -> ProductImportReport:
             existing = Product.objects.filter(sku=row["sku"]).first()
             defaults = {
                 "name": row["name"],
-                "category": category_from_sheet_row(row["sku"], row["category"]),
                 "brand": row["brand"],
                 "series": row["series"],
                 "spec": row["spec"],
@@ -296,6 +296,7 @@ def execute_import(report: ProductImportReport) -> ProductImportReport:
                 "unit_cost": row["unit_cost"],
             }
             if existing is None:
+                defaults["category"] = category_from_sheet_row(row["sku"], row["category"])
                 defaults["unit"] = _map_inventory_unit(row["unit_label"])
 
             product, created = Product.objects.update_or_create(

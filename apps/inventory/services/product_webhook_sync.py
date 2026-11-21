@@ -114,6 +114,8 @@ def upsert_product_from_webhook(data: dict) -> dict:
         existing = Product.objects.filter(sku=sku).first()
         if existing is None:
             defaults["unit"] = _map_inventory_unit(unit_label)
+        else:
+            defaults.pop("category", None)
         product, created = Product.objects.update_or_create(sku=sku, defaults=defaults)
 
     action = "created" if created else "updated"
